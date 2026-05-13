@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>概要设计报告 · 校园二手交易平台</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-light: #818CF8;
+      --secondary: #7C3AED;
+      --bg: #F8FAFC;
+      --card: #FFFFFF;
+      --text: #1E293B;
+      --text-light: #64748B;
+      --border: #E2E8F0;
+      --success: #059669;
+      --warning: #D97706;
+      --danger: #DC2626;
+      --code-bg: #1E293B;
+      --shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+      --shadow-hover: 0 10px 34px rgba(15, 23, 42, 0.10);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 15px;
+    }
+    .hero {
+      background: linear-gradient(135deg, #4338CA 0%, #7C3AED 48%, #EC4899 100%);
+      color: white;
+      text-align: center;
+      padding: 52px 24px 58px;
+    }
+    .hero .badge {
+      display: inline-block;
+      padding: 5px 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 30px;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+    .hero .desc {
+      max-width: 700px;
+      margin: 14px auto 0;
+      opacity: 0.9;
+      font-size: 14px;
+    }
+    .hero .meta {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      font-size: 13px;
+    }
+    .hero .meta span {
+      background: rgba(255,255,255,0.15);
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+    }
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0 14px;
+    }
+    .nav-inner::-webkit-scrollbar { display: none; }
+    nav a {
+      color: var(--text-light);
+      text-decoration: none;
+      padding: 14px 12px;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      font-size: 13.5px;
+      transition: 0.2s;
+    }
+    nav a:hover, nav a.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      font-weight: 600;
+    }
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 36px 20px 88px;
+    }
+    h2 {
+      margin: 48px 0 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary);
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      scroll-margin-top: 78px;
+    }
+    h2 .num {
+      width: 31px;
+      height: 31px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    h3 {
+      font-size: 17px;
+      margin: 24px 0 12px;
+      color: var(--text);
+      scroll-margin-top: 78px;
+    }
+    h4 {
+      font-size: 15px;
+      margin: 18px 0 10px;
+      color: #475569;
+    }
+    p { margin-bottom: 12px; }
+    ul, ol { padding-left: 24px; margin-bottom: 12px; }
+    li { margin-bottom: 4px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .card:hover { box-shadow: var(--shadow-hover); }
+    .card h3:first-child { margin-top: 0; }
+    .info-box {
+      border-left: 4px solid var(--primary);
+      background: #EEF2FF;
+      color: #1E3A8A;
+      padding: 14px 18px;
+      border-radius: 10px;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+    .info-box.warning {
+      background: #FFFBEB;
+      color: #92400E;
+      border-left-color: var(--warning);
+    }
+    .info-box.success {
+      background: #ECFDF5;
+      color: #065F46;
+      border-left-color: var(--success);
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 12px 0 16px;
+      background: white;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 560px;
+      font-size: 14px;
+    }
+    thead { background: #F1F5F9; }
+    th, td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: #475569;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #F8FAFC; }
+    .code-box, pre {
+      background: var(--code-bg);
+      color: #CBD5E1;
+      border-radius: 12px;
+      padding: 18px 22px;
+      overflow-x: auto;
+      line-height: 1.8;
+      font-family: "Consolas", "Courier New", monospace;
+      font-size: 13px;
+      margin: 14px 0 18px;
+      white-space: pre;
+    }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+      margin: 18px 0 32px;
+    }
+    .toc-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      text-decoration: none;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      transition: 0.2s;
+    }
+    .toc-item:hover {
+      transform: translateY(-1px);
+      color: var(--primary);
+      border-color: var(--primary-light);
+    }
+    .toc-num {
+      width: 27px;
+      height: 27px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .module-card {
+      border: 1px solid var(--border);
+      background: white;
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 2px 12px rgba(15,23,42,0.04);
+    }
+    .module-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--primary);
+    }
+    .tag {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: #EEF2FF;
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 4px;
+    }
+    .footer {
+      text-align: center;
+      color: var(--text-light);
+      font-size: 13px;
+      margin-top: 42px;
+      padding-top: 22px;
+      border-top: 1px solid var(--border);
+    }
+    .back-top {
+      position: fixed;
+      right: 26px;
+      bottom: 26px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(79,70,229,0.35);
+      font-size: 20px;
+    }
+
+    .mermaid {
+      background: #FAFBFF;
+      border: 1.5px solid #C7D2FE;
+      border-radius: 14px;
+      padding: 24px 16px;
+      margin: 16px 0 20px;
+      text-align: center;
+      overflow-x: auto;
+      min-height: 260px;
+    }
+    .diagram-note {
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-left: 4px solid var(--primary);
+      border-radius: 10px;
+      padding: 13px 16px;
+      color: #1E40AF;
+      font-size: 13.5px;
+      margin: 14px 0;
+    }
+    .diagram-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .diagram-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      box-shadow: 0 2px 12px rgba(15,23,42,0.04);
+    }
+    .diagram-card h4 { margin-top: 0; }
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .pipeline-step {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+    .pipeline-step strong {
+      display: block;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    /* DFD 模块样式 - 扁平化、自适应边框 */
+    .dfd-module-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+      margin-bottom: 36px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .dfd-module-header {
+      padding: 12px 24px;
+      font-weight: 700;
+      font-size: 18px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dfd-module-header .num {
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .dfd-module-content {
+      padding: 20px 24px;
+      background: #FFFFFF;
+    }
+    .dfd-mermaid {
+      background: #FAFBFF;
+      border-radius: 12px;
+      text-align: center;
+      width: 100%;
+    }
+    .dfd-mermaid .mermaid {
+      width: 100%;
+      margin: 0;
+      padding: 20px;
+      border: none;
+      background: transparent;
+      min-height: auto;
+    }
+    .c1 { background: linear-gradient(135deg, #4F46E5, #6366F1); }
+    .c2 { background: linear-gradient(135deg, #059669, #10B981); }
+    .c3 { background: linear-gradient(135deg, #D97706, #F59E0B); }
+    .c4 { background: linear-gradient(135deg, #DC2626, #EF4444); }
+    .c5 { background: linear-gradient(135deg, #7C3AED, #8B5CF6); }
+    .c6 { background: linear-gradient(135deg, #0891B2, #06B6D4); }
+    .c7 { background: linear-gradient(135deg, #475569, #64748B); }
+
+    /* DFD 图全局样式 - 扁平化布局，自适应边框 */
+    svg.dfd-chart {
+      width: 100%;
+      height: auto;
+    }
+    svg.dfd-chart .edgePath .path {
+      stroke: #5B6E8C !important;
+      stroke-width: 1.8px !important;
+    }
+    svg.dfd-chart .marker polygon {
+      fill: #5B6E8C !important;
+      stroke: #5B6E8C !important;
+    }
+    svg.dfd-chart text {
+      fill: #1E293B !important;
+      font-size: 14px !important;
+      font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif !important;
+      font-weight: 500 !important;
+    }
+    svg.dfd-chart .node rect {
+      fill: #FFFFFF !important;
+      stroke: #4F46E5 !important;
+      stroke-width: 1.5px !important;
+      rx: 8px !important;
+      ry: 8px !important;
+    }
+    svg.dfd-chart .node .label {
+      font-weight: 500 !important;
+    }
+    svg.dfd-chart .cluster rect {
+      fill: #F8FAFC !important;
+      stroke: #CBD5E1 !important;
+      stroke-width: 1px !important;
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 36px 16px 44px; }
+      .hero h1 { font-size: 24px; }
+      main { padding: 24px 12px 78px; }
+      .card { padding: 18px; }
+      h2 { font-size: 19px; }
+      table { min-width: 640px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="badge">🧩 概要设计报告 · HLD</div>
+    <h1>校园二手交易平台</h1>
+    <p class="desc">面向高校在校学生的二手交易微信小程序 · 系统架构、模块划分、数据库与接口概要设计</p>
+    <div class="meta">
+      <span>项目编号：HLD-2026-001</span>
+      <span>版本：v1.2</span>
+      <span>形态：微信小程序 + FastAPI 后端服务</span>
+      <span>依据：需求分析报告 v1.2</span>
+    </div>
+  </div>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="#sec1">引言</a>
+      <a href="#sec2">总体架构</a>
+      <a href="#sec3">模块划分</a>
+      <a href="#sec4">概念数据模型</a>
+      <a href="#sec5">接口原则</a>
+      <a href="#sec6">关键流程</a>
+      <a href="#sec7">非功能与部署</a>
+      <a href="#sec8">后续计划</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="card">
+      <h3>目录</h3>
+      <div class="toc-grid">
+        <a class="toc-item" href="#sec1"><span class="toc-num">1</span>引言</a>
+        <a class="toc-item" href="#sec2"><span class="toc-num">2</span>系统总体架构</a>
+        <a class="toc-item" href="#sec3"><span class="toc-num">3</span>模块划分与职责</a>
+        <a class="toc-item" href="#sec4"><span class="toc-num">4</span>概念数据模型</a>
+        <a class="toc-item" href="#sec5"><span class="toc-num">5</span>接口设计原则</a>
+        <a class="toc-item" href="#sec6"><span class="toc-num">6</span>关键业务流程</a>
+        <a class="toc-item" href="#sec7"><span class="toc-num">7</span>非功能与部署</a>
+        <a class="toc-item" href="#sec8"><span class="toc-num">8</span>后续详细设计计划</a>
+      </div>
+    </div>
+
+    <h2 id="sec1"><span class="num">一</span>引言</h2>
+    <div class="card">
+      <h3>1.1 编写目的</h3>
+      <p>本文档为《校园二手交易平台》的概要设计报告，依据需求分析结果，对系统的宏观结构、模块划分、核心数据模型、接口风格、关键流程、非功能策略、部署环境和后续详细设计计划进行说明。</p>
+      <p>概要设计只回答“系统由几部分构成、各部分如何协作、数据核心关系是什么”，不展开字段级数据库设计、接口参数明细、类图或伪代码。</p>
+      <p>本文档的作用是给后续详细设计和实现阶段提供统一蓝图，保证前端页面组织、后端服务边界、数据关系和流程状态在同一套设计语义下展开。</p>
+      <div class="info-box success"><strong>边界说明：</strong>若后续需要详细设计，可在此基础上继续展开数据库物理表、完整接口文档、状态机详表和类图。</div>
+    </div>
+    <div class="card">
+      <h3>1.2 文档范围</h3>
+      <p>本报告覆盖系统整体架构、模块划分、概念数据模型、接口约定、关键流程、非功能策略、部署环境以及后续详细设计规划，重点在于形成“从需求到实现”的过渡性设计说明。</p>
+      <p>报告内容面向课程作业场景进行组织，因此既保留足够的工程化表达，也避免进入字段级、代码级和脚本级的详细实现层面。</p>
+    </div>
+    <div class="card">
+      <h3>1.3 术语与约定</h3>
+      <ul>
+        <li>“普通用户”指完成微信登录并注册的在校学生，统一承担买卖两类行为。</li>
+        <li>“管理员”指平台运营和审核人员，拥有内容审核和违规处理权限。</li>
+        <li>“在售、保留中、交易中、已完成、已取消”用于描述商品或订单的主流程状态。</li>
+        <li>文中出现的模块名称和流程名称，均按系统宏观职责划分理解，不对应具体类名。</li>
+      </ul>
+    </div>
+
+    <h2 id="sec2"><span class="num">二</span>系统总体架构</h2>
+    <div class="card">
+      <h3>2.1 架构风格</h3>
+      <p>系统采用前后端分离的分层架构：微信小程序负责页面与交互，FastAPI 负责业务编排与接口输出，MySQL 承载持久化数据，Redis 和对象存储承担缓存与资源存储，微信开放平台提供身份认证能力。</p>
+      <p>从实现视角看，前端只负责“展示、提交、反馈”，后端负责“鉴权、校验、流程控制、数据读写”，中间通过标准化 JSON 接口通信，便于分工和后续扩展。</p>
+      <div class="mermaid">
+flowchart LR
+    U[微信小程序前端] -->|HTTPS / JSON| N[Nginx 反向代理]
+    N --> A[FastAPI 应用服务]
+    A --> M[业务模块层]
+    M --> AU[账号与认证]
+    M --> UM[用户与管理]
+    M --> PM[商品与审核]
+    M --> TM[交易与评价]
+    M --> RM[举报与投诉]
+    M --> SM[统计与运维]
+    AU --> D[(MySQL)]
+    UM --> D
+    PM --> D
+    TM --> D
+    RM --> D
+    SM --> D
+    A --> R[(Redis 缓存)]
+    A --> O[(对象存储)]
+    A --> W[微信开放平台]
+      </div>
+      <p>从整体上看，系统的边界非常清晰：用户访问链路从微信小程序开始，经由 Nginx 转发进入后端服务，再由后端服务访问数据库和外部资源。这样可以让前端、后端和数据层彼此独立演进，降低耦合。</p>
+      <p>在运行方式上，系统更接近“轻客户端 + 业务中台”的组合形态。前端承担较少的业务判断，复杂的审核、状态切换和权限控制统一收敛到后端处理，从而保证规则一致性和数据可靠性。</p>
+      <div class="diagram-note"><strong>职责说明：</strong>前端只负责展示与交互，后端只负责业务规则和数据访问；接口通信采用 HTTPS 和 JSON，不在本阶段定义具体端口和路径实现细节。Redis 主要用于热点商品、验证码或临时状态缓存，对象存储主要用于商品图片、头像等静态资源。</div>
+    </div>
+    <div class="card">
+      <h3>2.2 分层职责</h3>
+     <div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>层次</th><th>职责</th><th>通信方式</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>客户端层</td><td>首页浏览、商品发布、交易处理、个人中心、后台入口</td><td>HTTPS / JSON</td></tr>
+      <tr><td>接口层</td><td>统一鉴权、参数校验、响应封装、版本控制</td><td>RESTful API</td></tr>
+      <tr><td>业务层</td><td>用户、商品、交易、审核、举报、收藏、统计</td><td>服务间方法调用</td></tr>
+      <tr><td>数据层</td><td>MySQL 持久化、Redis 缓存、对象存储</td><td>ORM / 缓存读写</td></tr>
+      <tr><td>外部依赖</td><td>微信登录、图片存储、消息通知预留</td><td>开放平台接口</td></tr>
+    </tbody>
+  </table>
+</div>
+      <div class="info-box"><strong>架构补充：</strong>接口层统一处理登录态、异常码和参数校验，业务层按“账号、用户、商品、交易、举报、统计”拆分职责，减少跨模块直接访问数据库的情况。收藏功能归属于“用户与管理”模块下的个人中心子功能，无需独立模块。</div>
+      <p>这种分层方式的直接好处，是可以将展示问题、业务问题和数据问题分离处理。例如，页面跳转和交互属于前端职责，交易是否成立、商品是否可售属于业务职责，而数据一致性和历史记录留存则由持久化层负责。</p>
+      <p>同时，外部依赖被控制在最外层，微信登录和对象存储都通过标准接口接入，不会影响核心业务模块的设计稳定性。后续如果增加支付、消息通知或校园认证，也可以沿着同样的分层边界扩展。</p>
+    </div>
+
+    <h2 id="sec3"><span class="num">三</span>模块划分与职责</h2>
+    <div class="card">
+      <h3>3.1 核心模块</h3>
+      <div class="diagram-grid">
+        <div class="diagram-card"><h4>账号与认证</h4><p>负责微信登录、首次注册、Token 签发与注销。</p></div>
+        <div class="diagram-card"><h4>用户与管理</h4><p>负责普通用户资料、信誉分、封禁解封和收藏管理。</p></div>
+        <div class="diagram-card"><h4>商品与审核</h4><p>负责商品发布、编辑、上下架、审核与图片管理。</p></div>
+        <div class="diagram-card"><h4>交易与评价</h4><p>负责购买请求、确认、完成、取消、评价与信誉联动。</p></div>
+        <div class="diagram-card"><h4>举报与投诉</h4><p>负责用户举报提交、举报处理、投诉跟踪与状态反馈。</p></div>
+        <div class="diagram-card"><h4>统计与运维</h4><p>负责运营统计、管理员后台、日志与可观测性。</p></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>模块</th><th>输入</th><th>输出</th><th>协作对象</th></tr></thead>
+          <tbody>
+            <tr><td>账号与认证</td><td>微信code、注册资料</td><td>登录态、用户身份</td><td>用户与管理、权限层</td></tr>
+            <tr><td>用户与管理</td><td>用户信息、收藏请求、封禁指令</td><td>用户资料、信誉分、收藏列表</td><td>账号与认证、商品与审核</td></tr>
+            <tr><td>商品与审核</td><td>商品信息、图片、审核意见</td><td>商品状态、上架结果</td><td>交易与评价、统计与运维、举报与投诉</td></tr>
+            <tr><td>交易与评价</td><td>购买请求、确认动作、评价内容</td><td>交易状态、信誉变化</td><td>商品与审核、用户与管理</td></tr>
+            <tr><td>举报与投诉</td><td>举报内容、投诉信息</td><td>举报处理状态、投诉结果</td><td>商品与审核、用户与管理</td></tr>
+            <tr><td>统计与运维</td><td>统计数据查询条件</td><td>日/周/月报表、运营指标</td><td>所有业务模块</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mermaid">
+graph LR
+    A[账号认证] --> U[用户与管理]
+    U --> P[商品与审核]
+    P --> T[交易与评价]
+    T --> R[举报与投诉]
+    R --> B[后台审核]
+    P --> C[统计与运维]
+    T --> C
+    R --> C
+      </div>
+      <p>模块划分采用“按业务能力切片”的方式组织，而不是按页面或按钮进行简单拆分。这样做的目的，是确保每个模块都能围绕一个明确目标独立演进，并在接口层面形成稳定边界。</p>
+      <p>在课程作业场景下，这种划分也更便于后续分工：账号认证、商品发布、交易确认、举报处理、后台审核和统计分析可以分别展开，既能体现系统完整性，也便于在后续详细设计中逐项补充。</p>
+      <div class="info-box"><strong>设计说明：</strong>收藏功能归属于“用户与管理”模块的个人中心子功能，无需独立模块。举报与投诉独立成模块，因其涉及管理员审核流程和后续处理，与普通收藏行为性质不同。</div>
+    </div>
+
+    <!-- ================= 新增 3.2 模块DFD数据流图 ================= -->
+    <h3>3.2 模块 DFD 数据流图</h3>
+    <div class="card">
+      <p>本节采用 DFD（数据流图）对核心模块进行数据视角的建模，仅表达“输入 → 处理 → 输出”，不涉及具体接口、函数或代码实现。处理过程使用抽象动词（如“验证数据”、“登记信息”、“更新状态”），不展开内部判断逻辑。</p>
+      <div class="info-box">图例：矩形表示外部实体，圆角矩形表示处理过程，右侧数据表符号表示数据存储，箭头表示数据流动方向。</div>
+    </div>
+
+    <!-- 01. 账号认证 DFD - 扁平化自适应 -->
+    <div class="dfd-module-card">
+      <div class="dfd-module-header c1">
+        <span class="num">01</span> 账号认证
+      </div>
+      <div class="dfd-module-content">
+        <div class="dfd-mermaid">
+          <div class="mermaid dfd-chart">
+graph TB
+    U([用户])
+    WX([微信平台])
+
+    subgraph P[处理]
+        A1[验证授权数据]
+        A2[登记用户信息]
+        A3[生成登录凭证]
+    end
+
+    subgraph D[存储]
+        S[(用户账号库)]
+    end
+
+    WX -->|授权码| A1
+    U -->|确认授权| A1
+    A1 -->|用户标识| A2
+    U -->|补充资料| A2
+    A2 -->|写入账号| S
+    A2 -->|触发| A3
+    A3 -->|登录凭证| U
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02. 用户与管理 DFD - 扁平化自适应 -->
+    <div class="dfd-module-card">
+      <div class="dfd-module-header c2">
+        <span class="num">02</span> 用户与管理
+      </div>
+      <div class="dfd-module-content">
+        <div class="dfd-mermaid">
+          <div class="mermaid dfd-chart">
+graph TB
+    U([用户])
+    AD([管理员])
+
+    subgraph P[处理]
+        U1[维护用户信息]
+        U2[管理信誉评分]
+        U3[管理收藏关系]
+        U4[变更账号状态]
+    end
+
+    subgraph D[存储]
+        D1[(用户资料库)]
+        D2[(信誉记录)]
+        D3[(收藏关系库)]
+    end
+
+    U -->|提交资料| U1
+    U -->|收藏请求| U3
+    AD -->|封禁指令| U4
+
+    U1 -->|更新| D1
+    U4 -->|状态变更| D1
+    U3 -->|读写| D3
+
+    D1 -->|用户数据| U2
+    D2 -->|历史记录| U2
+    U2 -->|信誉展示| U
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03. 商品与审核 DFD - 扁平化自适应 -->
+    <div class="dfd-module-card">
+      <div class="dfd-module-header c3">
+        <span class="num">03</span> 商品与审核
+      </div>
+      <div class="dfd-module-content">
+        <div class="dfd-mermaid">
+          <div class="mermaid dfd-chart">
+graph TB
+    U([用户])
+    AD([管理员])
+
+    subgraph P1[商品处理]
+        P11[发布商品]
+        P12[编辑下架]
+        P13[浏览检索]
+    end
+    
+    subgraph P2[审核处理]
+        P21[审核商品]
+    end
+
+    subgraph D[存储]
+        D1[(商品信息库)]
+        D2[(审核队列)]
+    end
+
+    U -->|商品信息/图片| P11
+    U -->|修改/下架| P12
+    U -->|检索条件| P13
+    AD -->|审核意见| P21
+
+    P11 -->|写入| D1
+    P11 -->|提交审核| D2
+    P12 -->|更新| D1
+    P13 -->|读取| D1
+    D2 -->|待审核| P21
+    P21 -->|审核结果| D1
+    P21 -->|通知| U
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04. 交易与评价 DFD - 扁平化自适应 -->
+    <div class="dfd-module-card">
+      <div class="dfd-module-header c4">
+        <span class="num">04</span> 交易与评价
+      </div>
+      <div class="dfd-module-content">
+        <div class="dfd-mermaid">
+          <div class="mermaid dfd-chart">
+graph TB
+    B([买家行为])
+    S([卖家行为])
+
+    subgraph P[处理]
+        T1[发起购买请求]
+        T2[处理交易请求]
+        T3[完成交易评价]
+    end
+
+    subgraph D[存储]
+        O1[(交易订单库)]
+        O2[(评价记录)]
+    end
+
+    B -->|购买请求| T1
+    S -->|确认/拒绝| T2
+    T1 -->|创建订单| O1
+    T2 -->|更新状态| O1
+    O1 -->|交易数据| T3
+    T3 -->|写入评价| O2
+    T3 -->|信誉更新| B
+    T3 -->|信誉更新| S
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05. 举报与投诉 DFD - 扁平化自适应 -->
+    <div class="dfd-module-card">
+      <div class="dfd-module-header c5">
+        <span class="num">05</span> 举报与投诉
+      </div>
+      <div class="dfd-module-content">
+        <div class="dfd-mermaid">
+          <div class="mermaid dfd-chart">
+graph TB
+    U([用户])
+    AD([管理员])
+
+    subgraph P1[举报处理]
+        R1[提交举报]
+        R2[审核举报]
+    end
+
+    subgraph P2[审核内部]
+        R21[验证举报内容]
+        R22[判定处理方式]
+        R23[执行处理动作]
+    end
+
+    subgraph D[存储]
+        RD[(举报记录库)]
+        RL[(处理日志)]
+    end
+
+    U -->|举报内容| R1
+    R1 -->|写入| RD
+    RD -->|待处理| R2
+    AD -->|审核决定| R2
+    
+    R2 -->|数据| R21
+    R21 -->|合法判断| R22
+    R22 -->|处理指令| R23
+    R23 -->|记录| RL
+    R23 -->|处理结果| U
+    R23 -->|封禁/下架| 商品与审核
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 06. 后台审核 DFD - 扁平化自适应 -->
+    <div class="dfd-module-card">
+      <div class="dfd-module-header c6">
+        <span class="num">06</span> 后台审核
+      </div>
+      <div class="dfd-module-content">
+        <div class="dfd-mermaid">
+          <div class="mermaid dfd-chart">
+graph TB
+    AD([管理员])
+
+    subgraph P[处理]
+        A1[审核商品队列]
+        A2[处理举报投诉]
+        A3[管理用户状态]
+        A4[查看运营数据]
+    end
+
+    subgraph D[存储]
+        D1[(商品审核队列)]
+        D2[(举报队列)]
+        D3[(用户资料库)]
+        D4[(统计数据)]
+    end
+
+    AD -->|浏览指令| A1
+    AD -->|浏览指令| A2
+    AD -->|浏览指令| A3
+    AD -->|浏览指令| A4
+
+    D1 -->|待审商品| A1
+    D2 -->|待处理举报| A2
+    D3 -->|用户信息| A3
+    D4 -->|汇总数据| A4
+
+    A1 -->|结果| D1
+    A2 -->|结果| D2
+    A3 -->|变更| D3
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 07. 统计与运维 DFD - 扁平化自适应 -->
+    <div class="dfd-module-card">
+      <div class="dfd-module-header c7">
+        <span class="num">07</span> 统计与运维
+      </div>
+      <div class="dfd-module-content">
+        <div class="dfd-mermaid">
+          <div class="mermaid dfd-chart">
+graph TB
+    AD([管理员])
+
+    subgraph P[处理]
+        S1[统计商品数据]
+        S2[统计交易数据]
+        S3[统计用户活跃]
+        S4[生成报表]
+    end
+
+    subgraph D[存储]
+        DS1[(商品业务库)]
+        DS2[(交易业务库)]
+        DS3[(用户业务库)]
+        DS4[(统计结果库)]
+    end
+
+    AD -->|查询条件| S1
+    AD -->|查询条件| S2
+    AD -->|查询条件| S3
+
+    DS1 -->|商品源数据| S1
+    DS2 -->|交易源数据| S2
+    DS3 -->|用户源数据| S3
+
+    S1 -->|统计结果| S4
+    S2 -->|统计结果| S4
+    S3 -->|统计结果| S4
+    S4 -->|写入| DS4
+    DS4 -->|报表输出| AD
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 id="sec4"><span class="num">四</span>概念数据模型</h2>
+    <div class="card">
+      <h3>4.1 核心实体</h3>
+      <p>概念模型仅保留实体和关系：用户、管理员、商品、商品图片、商品类别、交易订单、收藏、评价、举报、管理员日志和统计汇总。用户统一建模，不单独拆分“买家账号”和“卖家账号”。</p>
+      <p>其中，商品是业务主对象，交易是流程主对象，评价和举报是治理主对象，统计汇总则服务于运营分析与后续优化决策。</p>
+      <div class="mermaid">
+erDiagram
+    USER ||--o{ PRODUCT : publishes
+    CATEGORY ||--o{ PRODUCT : classifies
+    PRODUCT ||--o{ PRODUCT_IMAGE : has
+    USER ||--o{ TRADE_ORDER : buys
+    USER ||--o{ TRADE_ORDER : sells
+    PRODUCT ||--o{ TRADE_ORDER : relates_to
+    USER ||--o{ FAVORITE : creates
+    PRODUCT ||--o{ FAVORITE : collected_by
+    TRADE_ORDER ||--o{ REVIEW : produces
+    USER ||--o{ REVIEW : writes
+    USER ||--o{ REPORT : submits
+    USER ||--o{ ADMIN_LOG : operates
+      </div>
+      <p>从概念层看，商品、交易和评价构成了平台最核心的业务闭环：商品为交易提供载体，交易为评价提供触发条件，评价又反过来影响用户信誉。这个闭环决定了系统的主要数据流向。</p>
+      <p>举报和管理员日志的加入，则体现出平台治理能力。它们不直接参与商品交易，但对平台安全、秩序维护和事后追踪非常重要，因此在概念模型中应当被明确表达。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>关系</th><th>类型</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>用户 - 商品</th><td>1:N</th><td>一个用户可发布多个商品</th></tr>
+            <tr><td>商品类别 - 商品</th><td>1:N</th><td>一个类别下包含多个商品</th></tr>
+            <tr><td>商品 - 图片</th><td>1:N</th><td>一件商品可对应多张图片</th></tr>
+            <tr><td>用户 - 收藏 - 商品</th><td>N:N</th><td>收藏通过中间关系表达</th></tr>
+            <tr><td>用户 - 交易 - 商品</th><td>1:N / 1:N</th><td>交易记录连接买家、卖家与商品</th></tr>
+            <tr><td>交易 - 评价</th><td>1:N</th><td>完成后形成双向评价</th></tr>
+            <tr><td>用户 - 举报 / 管理日志</th><td>1:N</th><td>记录举报和管理员操作轨迹</th></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="diagram-note">只到实体与关系级别，不出现字段、数据类型、主键外键等物理设计内容。举报和日志采用“对象类型 + 对象编号”的方式表达，便于统一管理商品举报和用户举报两类场景。</div>
+    </div>
+
+    <h2 id="sec5"><span class="num">五</span>接口设计原则</h2>
+    <div class="card">
+      <h3>5.1 接口约定</h3>
+      <ul>
+        <li>接口采用 RESTful 风格，统一以 <strong>/api/v1</strong> 作为版本前缀。</li>
+        <li>身份认证采用微信登录 + JWT，管理员接口额外进行角色校验。</li>
+        <li>统一返回结构只保留 code、message、data 三部分，避免不同模块返回风格不一致。</li>
+        <li>接口只展示 URI、方法和用途，不展开完整请求和响应字段。</li>
+      </ul>
+      <p>本阶段仅以普通用户核心接口为例说明规范。管理员审核、用户管理、举报处理、统计报表等接口遵循相同 RESTful 风格，具体路径、请求与响应字段在详细设计阶段定义。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>示例接口</th><th>方法</th><th>简要说明</th></tr></thead>
+          <tbody>
+            <tr><td>/api/v1/auth/wx-login</th><td>POST</th><td>微信登录并签发 Token</th></tr>
+            <tr><td>/api/v1/products</th><td>GET / POST</th><td>获取商品列表或发布商品</th></tr>
+            <tr><td>/api/v1/orders/{id}/confirm</th><td>PUT</th><td>卖家确认交易请求</th></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>接口设计还应遵循“前端易调用、后端易维护”的原则。也就是说，路径命名尽量体现资源语义，返回值尽量保持稳定，避免同一接口在不同模块中出现不同的报文风格。</p>
+      <p>对于课程作业而言，示例接口足以说明系统的接口边界和调用方式；更细的字段级说明、分页参数和错误码定义可以留给详细设计阶段展开。</p>
+      <div class="diagram-note">接口层的主要任务是统一鉴权、统一返回、统一版本，不负责具体数据表结构定义。这个阶段只给出接口骨架，详细参数、字段约束和示例报文放到后续详细设计。</div>
+    </div>
+
+    <h2 id="sec6"><span class="num">六</span>关键业务流程</h2>
+    <div class="card">
+      <h3>6.1 商品发布与审核流程</h3>
+      <p>该流程是平台最典型的主链路：用户先提交商品信息，管理员完成审核后，商品才进入可交易状态。这个设计能保证平台内容质量，也能降低违规商品直接上架的风险。</p>
+      <div class="mermaid">
+flowchart TD
+    A[用户登录] --> B[填写商品信息]
+    B --> C[上传图片]
+    C --> D[提交审核]
+    D --> E[管理员审核]
+    E --> F{审核结果}
+    F -->|通过| G[商品上架]
+    F -->|拒绝| H[退回修改]
+      </div>
+      <p>发布流程体现了平台对内容质量的前置把控。用户侧只负责录入商品信息和上传图片，审核判断统一交给管理员处理，这样可以避免普通用户直接暴露复杂的规则判断。</p>
+      <p>在流程设计上，“审核中”是重要的过渡态，它确保商品不会在内容未校验的情况下进入交易界面。对于课程设计来说，这种流程很适合展示平台治理能力和状态控制能力。</p>
+      <h3>6.2 交易流转状态机</h3>
+      <p>交易流程围绕“请求、确认、进行、完成、取消”五个阶段展开，保留超时取消机制，以避免商品长期处于保留状态而影响平台流转效率。</p>
+      <div class="mermaid">
+stateDiagram-v2
+    [*] --> 在售
+    在售 --> 保留中: 发起购买请求
+    保留中 --> 交易中: 卖家确认
+    保留中 --> 在售: 卖家拒绝/超时取消
+    交易中 --> 已完成: 双方确认完成
+    交易中 --> 在售: 交易取消
+    已完成 --> [*]
+      </div>
+      <p>交易状态机的作用，是将线下交易过程转化为可追踪、可回放的系统状态。这样即使交易过程发生取消、超时或争议，也能够通过状态记录还原问题经过。</p>
+      <p>该状态机同时说明了系统的一个设计原则，即以“当前状态 + 状态变更事件”来组织交易逻辑，而不是让前端自行推断交易是否完成。这样有助于保证订单一致性和业务可控性。</p>
+      <h3>6.3 举报与投诉处理流程</h3>
+      <p>用户对商品或用户发起举报后，举报进入待处理队列；管理员在后台审核，可做出“驳回”、“警告被举报人”、“下架商品（商品举报）”或“封禁用户”等处理，处理结果通知举报人。</p>
+      <div class="diagram-note">时序图和状态机只展示主要参与对象及状态流转，不展开异常分支的代码级处理逻辑。</div>
+    </div>
+
+    <h2 id="sec7"><span class="num">七</span>非功能与部署</h2>
+    <div class="card">
+      <h3>7.1 非功能需求实现策略</h3>
+      <div class="diagram-grid">
+        <div class="diagram-card"><h4>性能</h4><p>分页查询、Redis 缓存、商品封面图压缩、统计结果预聚合。</p></div>
+        <div class="diagram-card"><h4>安全</h4><p>HTTPS、JWT、后台角色校验、联系方式脱敏、上传文件校验。</p></div>
+        <div class="diagram-card"><h4>可用性</h4><p>统一错误提示、超时任务扫描、关键操作日志和状态回滚。</p></div>
+        <div class="diagram-card"><h4>可维护性</h4><p>前后端分离、模块化代码组织、接口分层、日志与监控预留。</p></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>非功能维度</th><th>策略</th><th>目的</th></tr></thead>
+          <tbody>
+            <tr><td>性能</th><td>缓存热点数据、分页加载、资源压缩</th><td>缩短首屏和搜索响应时间</th></tr>
+            <tr><td>安全</th><td>鉴权、权限、脱敏、上传限制、日志审计</th><td>降低越权与泄露风险</th></tr>
+            <tr><td>可用性</th><td>统一错误处理、超时任务、状态回滚</th><td>提升业务连续性</th></tr>
+            <tr><td>可维护性</th><td>模块化、接口分层、配置外置</th><td>方便扩展与后期修改</th></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3>7.2 部署与运行环境</h3>
+      <p>系统建议以云服务器或校内服务器方式部署，后端服务与数据库分离，静态资源可放在对象存储或独立文件目录中。这样既方便课程演示，也便于后续上线扩容。</p>
+      <div class="mermaid">
+flowchart LR
+    C[微信客户端] --> P[微信小程序]
+    P --> N[Nginx / HTTPS]
+    N --> S[FastAPI 服务]
+    S --> M[(MySQL 8.0)]
+    S --> R[(Redis)]
+    S --> O[(对象存储)]
+    S --> W[微信开放平台]
+      </div>
+      <p>部署拓扑尽量保持简洁，核心思路是将入口、应用、数据和资源存储分开部署。这样不仅便于后期扩容和维护，也能在出现问题时快速定位故障所在层级。</p>
+      <p>对于课程作业展示，这种部署方式足以体现现代 Web 应用的基本运行形态：用户请求先经过反向代理，再进入应用服务，最后访问数据库或外部资源，层次分明且易于理解。</p>
+      <div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>组件</th><th>建议</th><th>作用</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>操作系统</td><td>Windows / Linux</td><td>承载后端与中间件</td></tr>
+            <tr><td>Web 入口</td><td>Nginx</td><td>反向代理与 HTTPS</td></tr>
+            <tr><td>应用服务</td><td>Python 3.11 + FastAPI</td><td>业务接口与流程编排</td></tr>
+            <tr><td>数据库</td><td>MySQL 8.0</td><td>持久化核心业务数据</td></tr>
+            <tr><td>缓存</td><td>Redis</td><td>热点数据和短期状态</td></tr>
+            <tr><td>静态资源</td><td>对象存储或本地文件</td><td>商品图片与附件</td></tr>
+        </tbody>
+    </table>
+</div>
+
+    <h2 id="sec8"><span class="num">八</span>后续详细设计计划</h2>
+    <div class="card">
+      <h3>8.1 待产出内容</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>任务</th><th>输出物</th></tr></thead>
+          <tbody>
+            <tr><td>接口详设计</th><td>完整 API 文档、请求/响应字段定义、错误码表</th></tr>
+            <tr><td>数据库详设计</th><td>物理表结构、索引、约束、初始化脚本</th></tr>
+            <tr><td>流程详设计</th><td>状态机详表、异常分支、超时与回滚策略</th></tr>
+            <tr><td>前端详设计</th><td>页面路由、交互细节、组件拆分</th></tr>
+            <tr><td>测试详设计</th><td>测试用例集、验收标准、回归清单</th></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>如果需要进一步推进，实现阶段建议优先完成账号认证、商品发布、商品浏览和交易请求四个主链路，然后再补齐举报、统计和后台审核等治理类功能。</p>
+      <div class="diagram-note">下一阶段重点是把概要设计中的模块和流程落实到字段、接口、页面和用例级别。</div>
+    </div>
+
+    <div class="footer">
+      <p>文档版本 v2.0 · 校园二手交易平台概要设计报告 · 面向课程设计与后续详细设计</p>
+    </div>
+  </main>
+
+  <a class="back-top" href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">↑</a>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'base',
+      themeVariables: {
+        primaryColor: '#FFFFFF',
+        primaryTextColor: '#1E293B',
+        primaryBorderColor: '#4F46E5',
+        lineColor: '#5B6E8C',
+        secondaryColor: '#F8FAFC',
+        tertiaryColor: '#FFFFFF'
+      },
+      flowchart: {
+        htmlLabels: true,
+        curve: 'basis',
+        useMaxWidth: true,
+        padding: 20
+      }
+    });
+  </script>
+</body>
+</html>
