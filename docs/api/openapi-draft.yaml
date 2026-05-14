@@ -1,0 +1,981 @@
+openapi: 3.0.3
+info:
+  title: Campus Second-hand Market API
+  version: 0.1.0-draft
+  description: |
+    Draft OpenAPI for the WeChat mini program backend.
+    Base conventions are aligned with team_docs/概要设计v1.4.html section 5.
+servers:
+  - url: https://api.example.com
+    description: Production placeholder
+  - url: http://localhost:8000
+    description: Local development
+
+tags:
+  - name: Auth
+  - name: User
+  - name: Product
+  - name: Order
+  - name: Report
+  - name: Admin
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/auth/wx-login:
+    post:
+      tags: [Auth]
+      summary: WeChat login and token issue
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WxLoginRequest'
+      responses:
+        '200':
+          description: Login success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthTokens'
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout current session
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current authenticated user
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+
+  /api/users/me:
+    get:
+      tags: [User]
+      summary: Get personal profile and score
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+    put:
+      tags: [User]
+      summary: Update personal profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/users/me/favorites:
+    get:
+      tags: [User]
+      summary: List my favorite products
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Favorite list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProductListPayload'
+
+  /api/users/me/favorites/{productId}:
+    post:
+      tags: [User]
+      summary: Add favorite
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+    delete:
+      tags: [User]
+      summary: Remove favorite
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/products:
+    get:
+      tags: [Product]
+      summary: Search products with paging/filter
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Keyword'
+        - $ref: '#/components/parameters/Sort'
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProductListPayload'
+    post:
+      tags: [Product]
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreateRequest'
+      responses:
+        '200':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Product'
+
+  /api/products/{productId}:
+    get:
+      tags: [Product]
+      summary: Get product detail
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Product'
+    put:
+      tags: [Product]
+      summary: Update product
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+    delete:
+      tags: [Product]
+      summary: Delete or unlist product
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/products/{productId}/images:
+    post:
+      tags: [Product]
+      summary: Upload product images
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/products/{productId}/images/{imageId}:
+    delete:
+      tags: [Product]
+      summary: Delete product image
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/orders:
+    post:
+      tags: [Order]
+      summary: Create order request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+      responses:
+        '200':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+
+  /api/orders/{orderId}:
+    get:
+      tags: [Order]
+      summary: Get order detail
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Order detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+
+  /api/orders/{orderId}/seller-confirm:
+    post:
+      tags: [Order]
+      summary: Seller confirms order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/orders/{orderId}/cancel:
+    post:
+      tags: [Order]
+      summary: Cancel order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/orders/{orderId}/complete:
+    post:
+      tags: [Order]
+      summary: Complete order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/orders/{orderId}/reviews:
+    post:
+      tags: [Order]
+      summary: Submit review for order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [score, content]
+              properties:
+                score:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                content:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/reports:
+    post:
+      tags: [Report]
+      summary: Create report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCreateRequest'
+      responses:
+        '200':
+          description: Report created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Report'
+
+  /api/reports/{reportId}:
+    get:
+      tags: [Report]
+      summary: Get report processing status
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: Report detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Report'
+
+  /api/appeals:
+    post:
+      tags: [Report]
+      summary: Submit appeal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetType, targetId, reason]
+              properties:
+                targetType:
+                  type: string
+                  enum: [report, user_status]
+                targetId:
+                  type: integer
+                reason:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: Admin list users
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Keyword'
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          list:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/UserProfile'
+                          page:
+                            $ref: '#/components/schemas/PageMeta'
+
+  /api/admin/users/{userId}/status:
+    patch:
+      tags: [Admin]
+      summary: Admin ban/unban user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [active, banned]
+                reason:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/admin/products/pending:
+    get:
+      tags: [Admin]
+      summary: Get pending products for review
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Pending products
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProductListPayload'
+
+  /api/admin/products/{productId}/review:
+    post:
+      tags: [Admin]
+      summary: Submit product review result
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [result]
+              properties:
+                result:
+                  type: string
+                  enum: [approved, rejected]
+                reason:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/admin/reports:
+    get:
+      tags: [Admin]
+      summary: Get report queue
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Report queue
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          list:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Report'
+                          page:
+                            $ref: '#/components/schemas/PageMeta'
+
+  /api/admin/reports/{reportId}/handle:
+    post:
+      tags: [Admin]
+      summary: Admin handles report
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [reject, warning, unlist_product, ban_user]
+                reason:
+                  type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/admin/stats/overview:
+    get:
+      tags: [Admin]
+      summary: Get operation overview metrics
+      responses:
+        '200':
+          description: Overview stats
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          users:
+                            type: integer
+                          products:
+                            type: integer
+                          orders:
+                            type: integer
+                          reports:
+                            type: integer
+
+  /api/admin/stats/products:
+    get:
+      tags: [Admin]
+      summary: Product statistics
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/admin/stats/trades:
+    get:
+      tags: [Admin]
+      summary: Trade statistics
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/admin/stats/users:
+    get:
+      tags: [Admin]
+      summary: User activity and credit statistics
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/admin/logs:
+    get:
+      tags: [Admin]
+      summary: Get admin operation logs
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Admin logs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          list:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/AdminLog'
+                          page:
+                            $ref: '#/components/schemas/PageMeta'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Keyword:
+      name: keyword
+      in: query
+      schema:
+        type: string
+    Sort:
+      name: sort
+      in: query
+      schema:
+        type: string
+        example: createdAt_desc
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: integer
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      schema:
+        type: integer
+    ReportId:
+      name: reportId
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+    SimpleOk:
+      description: Generic success response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+    TokenResponse:
+      description: Token payload response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ApiResponse'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AuthTokens'
+
+  schemas:
+    ApiResponse:
+      type: object
+      required: [code, message, requestId, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: ok
+        data:
+          nullable: true
+        requestId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    PageMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+
+    WxLoginRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+        clientId:
+          type: string
+
+    AuthTokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        user:
+          $ref: '#/components/schemas/UserProfile'
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        nickname:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        score:
+          type: integer
+        status:
+          type: string
+          enum: [active, banned]
+
+    UserProfileUpdateRequest:
+      type: object
+      properties:
+        nickname:
+          type: string
+        avatar:
+          type: string
+          format: uri
+        college:
+          type: string
+        contact:
+          type: string
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        categoryId:
+          type: integer
+        status:
+          type: string
+          enum: [draft, pending, published, removed, sold]
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        createdAt:
+          type: string
+          format: date-time
+
+    ProductCreateRequest:
+      type: object
+      required: [title, price, categoryId]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        categoryId:
+          type: integer
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+
+    ProductUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: float
+        categoryId:
+          type: integer
+        status:
+          type: string
+          enum: [pending, published, removed]
+
+    ProductListPayload:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        buyerId:
+          type: integer
+        sellerId:
+          type: integer
+        amount:
+          type: number
+          format: float
+        status:
+          type: string
+          enum: [created, reserved, confirmed, completed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+        expireAt:
+          type: string
+          format: date-time
+
+    OrderCreateRequest:
+      type: object
+      required: [productId]
+      properties:
+        productId:
+          type: integer
+        remark:
+          type: string
+
+    Report:
+      type: object
+      properties:
+        id:
+          type: integer
+        reporterId:
+          type: integer
+        targetType:
+          type: string
+          enum: [product, user, order]
+        targetId:
+          type: integer
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [open, rejected, handled]
+        createdAt:
+          type: string
+          format: date-time
+        handledAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ReportCreateRequest:
+      type: object
+      required: [targetType, targetId, reason]
+      properties:
+        targetType:
+          type: string
+          enum: [product, user, order]
+        targetId:
+          type: integer
+        reason:
+          type: string
+
+    AdminLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        actorId:
+          type: integer
+        action:
+          type: string
+        targetType:
+          type: string
+        targetId:
+          type: integer
+        remark:
+          type: string
+        createdAt:
+          type: string
+          format: date-time

@@ -1,0 +1,111 @@
+name: campus-secondhand-api-mock-examples
+version: 0.1.0-draft
+basePath: /api
+description: Minimal mock examples for frontend-backend parallel development.
+
+examples:
+  auth:
+    wx-login:
+      request:
+        code: "wx-code-demo"
+      response:
+        code: 0
+        message: ok
+        data:
+          accessToken: draft-access-token
+          refreshToken: draft-refresh-token
+          expiresIn: 3600
+          user:
+            id: 1
+            nickname: Demo User
+            avatar: ""
+            score: 100
+            status: active
+        requestId: req-demo-1
+        timestamp: "2026-05-14T08:00:00Z"
+
+  users:
+    profile:
+      response:
+        code: 0
+        message: ok
+        data:
+          id: 1
+          nickname: Demo User
+          avatar: ""
+          score: 100
+          status: active
+          favorites: 2
+        requestId: req-demo-2
+        timestamp: "2026-05-14T08:00:10Z"
+
+  products:
+    list:
+      response:
+        code: 0
+        message: ok
+        data:
+          list:
+            - id: 1001
+              ownerId: 1
+              title: 二手高数教材
+              description: 九成新，可小刀
+              price: 35.0
+              categoryId: 3
+              status: published
+              images:
+                - https://cdn.example.com/p/1001-1.jpg
+              createdAt: "2026-05-14T08:10:00Z"
+          page:
+            page: 1
+            size: 20
+            total: 1
+        requestId: req-demo-3
+        timestamp: "2026-05-14T08:10:01Z"
+
+  orders:
+    create:
+      request:
+        productId: 1001
+        remark: 想今晚当面交付
+      response:
+        code: 0
+        message: ok
+        data:
+          id: 5001
+          productId: 1001
+          status: created
+          remark: 想今晚当面交付
+        requestId: req-demo-4
+        timestamp: "2026-05-14T08:20:00Z"
+
+  reports:
+    create:
+      request:
+        targetType: product
+        targetId: 1001
+        reason: 疑似虚假信息
+      response:
+        code: 0
+        message: ok
+        data:
+          id: 7001
+          targetType: product
+          targetId: 1001
+          reason: 疑似虚假信息
+          status: open
+        requestId: req-demo-5
+        timestamp: "2026-05-14T08:30:00Z"
+
+  admin:
+    stats-overview:
+      response:
+        code: 0
+        message: ok
+        data:
+          users: 132
+          products: 67
+          orders: 28
+          reports: 3
+        requestId: req-demo-6
+        timestamp: "2026-05-14T08:40:00Z"
