@@ -1,0 +1,7 @@
+<view class="item-card">
+  <image src="{{img}}" mode="aspectFill" />
+  <view class="meta">
+    <text>{{title}}</text>
+    <text>¥{{price}}</text>
+  </view>
+</view>

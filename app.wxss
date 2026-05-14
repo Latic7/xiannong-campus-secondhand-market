@@ -1,0 +1,4 @@
+/* 全局样式（占位） */
+page {
+  background-color: #f8fafc;
+}

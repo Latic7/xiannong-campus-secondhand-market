@@ -1,0 +1,8 @@
+<view class="container">
+  <view class="hero">
+    <text>校园二手交易</text>
+  </view>
+  <view class="list">
+    <text>最新商品（占位）</text>
+  </view>
+</view>

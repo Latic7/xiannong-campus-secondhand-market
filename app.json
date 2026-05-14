@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/list/index",
+    "pages/detail/index",
+    "pages/post/index",
+    "pages/user/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "校园二手交易",
+    "navigationBarBackgroundColor": "#4F46E5",
+    "navigationBarTextStyle": "white"
+  }
+}
