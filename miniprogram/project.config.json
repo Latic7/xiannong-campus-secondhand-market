@@ -1,0 +1,10 @@
+{
+  "description": "校园二手交易微信小程序前端",
+  "compileType": "miniprogram",
+  "libVersion": "3.4.7",
+  "miniprogramRoot": "./",
+  "projectname": "校园二手交易",
+  "setting": {
+    "urlCheck": false
+  }
+}

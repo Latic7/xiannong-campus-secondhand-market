@@ -1,0 +1,1 @@
+"""Centralized status enums placeholder."""

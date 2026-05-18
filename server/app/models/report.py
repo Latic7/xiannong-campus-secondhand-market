@@ -1,0 +1,1 @@
+"""Report ORM model placeholder."""
