@@ -6,13 +6,22 @@ This folder contains a runnable FastAPI skeleton aligned with `docs/api/openapi-
 
 1. Create and activate a virtual environment.
 2. Install dependencies from `requirements.txt`.
-3. Start server:
+3. Create local config file `.env` (you can copy from `.env.example`) and fill WeChat app credentials.
+4. Start server:
 
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
 
-4. Open docs:
+Required `.env` keys:
+
+- `WECHAT_APP_ID`
+- `WECHAT_APP_SECRET`
+- `JWT_SECRET`
+- `JWT_EXPIRES_SECONDS`
+- `JWT_REFRESH_EXPIRES_SECONDS`
+
+5. Open docs:
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - ReDoc: `http://127.0.0.1:8000/redoc`
 
