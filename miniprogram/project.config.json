@@ -6,7 +6,8 @@
   "projectname": "校园二手交易",
   "setting": {
     "urlCheck": false,
-    "es6": false,
+    "es6": true,
+    "enhance": true,
     "postcss": false,
     "compileWorklet": false,
     "minified": false,

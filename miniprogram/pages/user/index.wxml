@@ -1,3 +1,110 @@
-<view>
-  <text>我的（占位）</text>
+<view class="page-body">
+
+  <!-- ── 头部用户卡片 ──────────────────────── -->
+  <view class="user-header">
+    <!-- 背景装饰 -->
+    <view class="header-bg"></view>
+
+    <view class="user-card">
+      <!-- 头像区域（无论是否登录都展示） -->
+      <view class="avatar-section" bindtap="{{isLoggedIn ? 'onEditProfile' : 'onLogin'}}">
+        <image
+          class="user-avatar"
+          src="{{user.avatar || ''}}"
+          mode="aspectFill"
+        />
+        <view wx:if="{{!user.avatar}}" class="avatar-placeholder">
+          <text class="avatar-icon">👤</text>
+        </view>
+      </view>
+
+      <!-- 用户信息 -->
+      <view class="user-info">
+        <view wx:if="{{isLoggedIn}}" class="info-logged-in">
+          <text class="user-nickname">{{user.nickname}}</text>
+          <view class="reputation-row">
+            <text class="reputation-star">⭐</text>
+            <text class="reputation-score" style="color:{{user.reputationColor}}">
+              {{user.reputation}}分
+            </text>
+            <text class="reputation-label" style="color:{{user.reputationColor}}">
+              · {{user.reputationText}}
+            </text>
+          </view>
+        </view>
+
+        <view wx:else class="info-logged-out" bindtap="onLogin">
+          <text class="login-prompt">{{user.nickname}}</text>
+          <text class="login-hint">点击登录，享受更多功能</text>
+        </view>
+      </view>
+
+      <!-- 设置/退出按钮 -->
+      <view wx:if="{{isLoggedIn}}" class="logout-btn" bindtap="onLogout">
+        <text>退出</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ── 数据统计 ──────────────────────────── -->
+  <view wx:if="{{isLoggedIn}}" class="stats-section">
+    <view class="stat-item" bindtap="onMyPublished">
+      <text class="stat-num">{{stats.published}}</text>
+      <text class="stat-label">已发布</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item" bindtap="onMyOrders">
+      <text class="stat-num">{{stats.sold}}</text>
+      <text class="stat-label">已售出</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item" bindtap="onMyFavorites">
+      <text class="stat-num">{{stats.favorites}}</text>
+      <text class="stat-label">收藏</text>
+    </view>
+  </view>
+
+  <!-- ── 功能菜单 ──────────────────────────── -->
+  <view class="menu-section">
+    <!-- 我的发布 -->
+    <view class="menu-item" bindtap="onMyPublished">
+      <view class="menu-left">
+        <text class="menu-icon">📦</text>
+        <text class="menu-text">我的发布</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <!-- 我的收藏 -->
+    <view class="menu-item" bindtap="onMyFavorites">
+      <view class="menu-left">
+        <text class="menu-icon">❤️</text>
+        <text class="menu-text">我的收藏</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+
+    <!-- 我的订单 -->
+    <view class="menu-item" bindtap="onMyOrders">
+      <view class="menu-left">
+        <text class="menu-icon">📋</text>
+        <text class="menu-text">我的订单</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="menu-section">
+    <!-- 关于 -->
+    <view class="menu-item" bindtap="onAbout">
+      <view class="menu-left">
+        <text class="menu-icon">ℹ️</text>
+        <text class="menu-text">关于我们</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 底部留白 -->
+  <view class="bottom-spacer"></view>
 </view>

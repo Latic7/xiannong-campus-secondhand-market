@@ -5,7 +5,7 @@
 // ──────────────────────────────────────────────
 
 // ── 商品状态 ───────────────────────────────────
-export const PRODUCT_STATUS = {
+const PRODUCT_STATUS = {
   draft: { label: '草稿', color: '#999' },
   pending: { label: '待审核', color: '#f0ad4e' },
   published: { label: '已发布', color: '#5cb85c' },
@@ -14,7 +14,7 @@ export const PRODUCT_STATUS = {
 }
 
 // ── 订单状态 ───────────────────────────────────
-export const ORDER_STATUS = {
+const ORDER_STATUS = {
   created: { label: '待确认', color: '#f0ad4e' },
   reserved: { label: '已预订', color: '#5bc0de' },
   confirmed: { label: '已确认', color: '#5cb85c' },
@@ -23,20 +23,20 @@ export const ORDER_STATUS = {
 }
 
 // ── 举报状态 ───────────────────────────────────
-export const REPORT_STATUS = {
+const REPORT_STATUS = {
   open: { label: '处理中', color: '#f0ad4e' },
   rejected: { label: '已驳回', color: '#999' },
   handled: { label: '已处理', color: '#5cb85c' },
 }
 
 // ── 用户状态 ───────────────────────────────────
-export const USER_STATUS = {
+const USER_STATUS = {
   active: { label: '正常', color: '#5cb85c' },
   banned: { label: '已封禁', color: '#d9534f' },
 }
 
 // ── 排序选项 ───────────────────────────────────
-export const SORT_OPTIONS = [
+const SORT_OPTIONS = [
   { value: 'createdAt_desc', label: '最新发布' },
   { value: 'createdAt_asc', label: '最早发布' },
   { value: 'price_asc', label: '价格从低到高' },
@@ -44,17 +44,30 @@ export const SORT_OPTIONS = [
 ]
 
 // ── 分页默认值 ────────────────────────────────
-export const PAGE_DEFAULT = 1
-export const SIZE_DEFAULT = 20
+const PAGE_DEFAULT = 1
+const SIZE_DEFAULT = 20
 
 // ── 图片上传限制 ───────────────────────────────
-export const IMAGE_MAX_COUNT = 9
-export const IMAGE_MAX_SIZE = 5 * 1024 * 1024  // 5MB
+const IMAGE_MAX_COUNT = 9
+const IMAGE_MAX_SIZE = 5 * 1024 * 1024  // 5MB
 
-// ── 存储键（供 utils/storage.js 使用，导出以便调试）──
-export const STORAGE_KEYS = {
+// ── 存储键（供 utils/storage.js 使用）──────────
+const STORAGE_KEYS = {
   ACCESS_TOKEN: 'auth_access_token',
   REFRESH_TOKEN: 'auth_refresh_token',
   TOKEN_EXPIRE_AT: 'auth_expire_at',
   USER_INFO: 'auth_user_info',
+}
+
+module.exports = {
+  PRODUCT_STATUS,
+  ORDER_STATUS,
+  REPORT_STATUS,
+  USER_STATUS,
+  SORT_OPTIONS,
+  PAGE_DEFAULT,
+  SIZE_DEFAULT,
+  IMAGE_MAX_COUNT,
+  IMAGE_MAX_SIZE,
+  STORAGE_KEYS,
 }

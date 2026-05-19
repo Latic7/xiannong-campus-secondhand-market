@@ -14,72 +14,68 @@ const KEY = {
 
 // ── 底层原子读写（与微信原生 API 之间加一层 try-catch）──
 
-export function setItem(key, value) {
+function setItem(key, value) {
   try { wx.setStorageSync(key, value); return true; } catch (e) { return false; }
 }
-export function getItem(key) {
+function getItem(key) {
   try { return wx.getStorageSync(key); } catch (e) { return null; }
 }
-export function removeItem(key) {
+function removeItem(key) {
   try { wx.removeStorageSync(key); return true; } catch (e) { return false; }
 }
 
 // ── Token 读写 ────────────────────────────────
 
 /** 获取当前 accessToken，不存在或已过期返回 null */
-export function getAccessToken() {
+function getAccessToken() {
   if (isTokenExpired()) return null
   return getItem(KEY.ACCESS_TOKEN)
 }
 
-export function setAccessToken(token) {
+function setAccessToken(token) {
   return setItem(KEY.ACCESS_TOKEN, token)
 }
 
-export function getRefreshToken() {
+function getRefreshToken() {
   return getItem(KEY.REFRESH_TOKEN)
 }
 
-export function setRefreshToken(token) {
+function setRefreshToken(token) {
   return setItem(KEY.REFRESH_TOKEN, token)
 }
 
 // ── Token 过期时间管理 ─────────────────────────
 
-/**
- * 获取 token 过期时刻的毫秒时间戳（Date.now() 基准）
- * 未存储时返回 0
- */
-export function getTokenExpireAt() {
+function getTokenExpireAt() {
   const v = getItem(KEY.TOKEN_EXPIRE_AT)
   return v ? Number(v) : 0
 }
 
-export function setTokenExpireAt(expireAt) {
+function setTokenExpireAt(expireAt) {
   return setItem(KEY.TOKEN_EXPIRE_AT, expireAt)
 }
 
 // ── 用户信息缓存 ──────────────────────────────
 
-export function getUserInfo() {
+function getUserInfo() {
   return getItem(KEY.USER_INFO)
 }
 
-export function setUserInfo(user) {
+function setUserInfo(user) {
   return setItem(KEY.USER_INFO, user)
 }
 
 // ── 登录态判定 ────────────────────────────────
 
 /** token 存在且未过期 */
-export function isLoggedIn() {
+function isLoggedIn() {
   const token = getItem(KEY.ACCESS_TOKEN)
   if (!token) return false
   return !isTokenExpired()
 }
 
 /** 当前 token 是否已过期（提前 60 秒视为过期，避免边界问题） */
-export function isTokenExpired() {
+function isTokenExpired() {
   const expireAt = getTokenExpireAt()
   if (!expireAt) return true
   return Date.now() > expireAt - 60000
@@ -87,15 +83,7 @@ export function isTokenExpired() {
 
 // ── 一次写入 / 一次清除 ───────────────────────
 
-/**
- * 登录成功后调用：一次写入 token + 用户信息。
- * @param {Object} authData  对应 OpenAPI AuthTokens 结构
- * @param {string} authData.accessToken
- * @param {string} authData.refreshToken
- * @param {number} authData.expiresIn  秒数
- * @param {Object} authData.user       UserProfile
- */
-export function saveAuth(authData) {
+function saveAuth(authData) {
   const { accessToken, refreshToken, expiresIn, user } = authData
   setAccessToken(accessToken)
   setRefreshToken(refreshToken || '')
@@ -104,7 +92,7 @@ export function saveAuth(authData) {
 }
 
 /** 退出登录 / 登录过期时调用：清空全部认证数据 */
-export function clearAuth() {
+function clearAuth() {
   removeItem(KEY.ACCESS_TOKEN)
   removeItem(KEY.REFRESH_TOKEN)
   removeItem(KEY.TOKEN_EXPIRE_AT)
@@ -112,7 +100,7 @@ export function clearAuth() {
 }
 
 // ── 调试工具（仅开发期使用）────────────────────
-export function dumpAuth() {
+function dumpAuth() {
   return {
     accessToken: getItem(KEY.ACCESS_TOKEN),
     refreshToken: getItem(KEY.REFRESH_TOKEN),
@@ -120,4 +108,23 @@ export function dumpAuth() {
     isLoggedIn: isLoggedIn(),
     user: getUserInfo(),
   }
+}
+
+module.exports = {
+  setItem,
+  getItem,
+  removeItem,
+  getAccessToken,
+  setAccessToken,
+  getRefreshToken,
+  setRefreshToken,
+  getTokenExpireAt,
+  setTokenExpireAt,
+  getUserInfo,
+  setUserInfo,
+  isLoggedIn,
+  isTokenExpired,
+  saveAuth,
+  clearAuth,
+  dumpAuth,
 }
