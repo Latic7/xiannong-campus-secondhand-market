@@ -12,3 +12,7 @@ env/
 
 # Local secrets
 server/.env
+
+
+#备忘录 encoding=utf-8
+cc备忘录/
