@@ -21,8 +21,8 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          # 根据仓库需要同时分析的语言调整此处
-          languages: ['javascript','python']
+          # 根据仓库需要同时分析的语言调整此处（以逗号分隔的字符串）
+          languages: javascript,python
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
