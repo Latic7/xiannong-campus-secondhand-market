@@ -1,5 +1,8 @@
 App({
   onLaunch() {
-    // 初始化代码：可放授权、全局配置、日志等
+    console.log('小程序启动了')
+  },
+  globalData: {
+    userInfo: null
   }
 })
