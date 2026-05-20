@@ -1,7 +1,11 @@
-<view class="item-card">
-  <image src="{{img}}" mode="aspectFill" />
-  <view class="meta">
-    <text>{{title}}</text>
-    <text>¥{{price}}</text>
+<view class="item-card" bindtap="onTap">
+  <view class="image-wrapper">
+    <image src="{{computedImage}}" mode="aspectFill" class="product-image" />
+    <view class="status-tag {{computedStatusClass}}">{{displayStatus}}</view>
+  </view>
+  <view class="info">
+    <view class="title">{{item.title}}</view>
+    <view class="desc">{{item.description || '暂无描述'}}</view>
+    <view class="price">¥{{item.price}}</view>
   </view>
 </view>

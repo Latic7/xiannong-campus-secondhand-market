@@ -1,3 +1,8 @@
 {
-  "navigationBarTitleText": "首页"
+  "usingComponents": {
+    "item-card": "/components/item-card/item-card",
+    "empty-state": "/components/empty-state/empty-state",
+    "loading-state": "/components/loading-state/loading-state"
+  },
+  "navigationStyle": "custom"
 }

@@ -1,3 +1,80 @@
-<view>
-  <text>商品列表（占位）</text>
+<view class="container">
+  <view class="search-bar">
+    <input
+      class="search-input"
+      placeholder="搜索商品"
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      bindconfirm="onSearchConfirm"
+    />
+    <view class="filter-btn" bindtap="onFilterToggle">
+      <text>筛选</text>
+    </view>
+  </view>
+
+  <view class="filter-bar">
+    <scroll-view class="category-scroll" scroll-x>
+      <view class="category-list">
+        <block wx:for="{{categories}}" wx:key="id">
+          <view
+            class="category-item {{item.id === categoryId ? 'active' : ''}}"
+            data-id="{{item.id}}"
+            bindtap="onCategoryChange"
+          >
+            <text>{{item.name}}</text>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+    <view class="filter-actions">
+      <view
+        class="sort-btn {{selectedSort !== 'createdAt_desc' ? 'active' : ''}}"
+        data-value="{{selectedSort}}"
+        bindtap="onSortChange"
+      >
+        <text>{{currentSortLabel}}</text>
+      </view>
+      <view class="filter-icon" bindtap="onFilterToggle">
+        <text>⚙</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="filter-panel" wx:if="{{showFilter}}">
+    <view class="filter-section">
+      <view class="filter-label">价格区间</view>
+      <scroll-view class="price-range-scroll" scroll-x>
+        <view class="price-range-list">
+          <block wx:for="{{priceRanges}}" wx:key="index">
+            <view
+              class="price-range-item {{selectedPriceIndex === index ? 'active' : ''}}"
+              data-min="{{item.min}}"
+              data-max="{{item.max}}"
+              data-index="{{index}}"
+              bindtap="onPriceRangeChange"
+            >
+              <text>{{item.label}}</text>
+            </view>
+          </block>
+        </view>
+      </scroll-view>
+    </view>
+    <view class="filter-summary">
+      <text wx:if="{{hasActiveFilter}}">当前筛选：{{filterSummary}}</text>
+      <text wx:else>暂无筛选条件</text>
+    </view>
+  </view>
+
+  <view class="product-list">
+    <block wx:for="{{products}}" wx:key="id">
+      <item-card item="{{item}}" bind:tap="onCardTap" />
+    </block>
+  </view>
+
+  <view class="bottom-tip">
+    <text wx:if="{{loading}}">正在加载...</text>
+    <text wx:elif="{{!hasMore && products.length > 0}}">没有更多了</text>
+  </view>
+
+  <empty-state wx:if="{{!loading && products.length === 0}}" message="暂无商品" />
 </view>
