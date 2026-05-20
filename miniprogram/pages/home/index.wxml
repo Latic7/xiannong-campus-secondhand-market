@@ -1,8 +1,56 @@
 <view class="container">
-  <view class="hero">
-    <text>校园二手交易</text>
+  <!-- 自定义导航栏 -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-content">
+      <image class="logo" src="/assets/icons/中国农业大学-logo-2048px.png" mode="aspectFit" />
+      <text class="app-title">校园二手交易</text>
+    </view>
   </view>
-  <view class="list">
-    <text>最新商品（占位）</text>
+
+  <!-- 搜索栏 -->
+  <view class="search-bar" bindtap="onSearchTap">
+    <text class="search-placeholder">搜索商品...</text>
+  </view>
+
+  <view class="section">
+    <view class="section-title">分类</view>
+    <scroll-view class="category-scroll" scroll-x>
+      <view class="category-list">
+        <block wx:for="{{categories}}" wx:key="id">
+          <view class="category-item" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="onCategoryTap">
+            <text class="category-icon">{{item.icon}}</text>
+            <text class="category-name">{{item.name}}</text>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">推荐商品</view>
+    <scroll-view class="recommend-scroll" scroll-x>
+      <view class="recommend-list">
+        <block wx:for="{{recommends}}" wx:key="id">
+          <view class="recommend-item" data-product-id="{{item.id}}" bindtap="onProductTap">
+            <image class="recommend-image" src="{{item.images[0]}}" mode="aspectFill" />
+            <view class="recommend-info">
+              <text class="recommend-title">{{item.title}}</text>
+              <text class="recommend-price">¥{{item.price}}</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">最新发布</view>
+    <view class="product-list">
+      <block wx:for="{{latestProducts}}" wx:key="id">
+        <item-card item="{{item}}" bind:tap="onProductTap" />
+      </block>
+    </view>
+    <loading-state wx:if="{{loading}}" message="加载中..." />
+    <empty-state wx:if="{{!loading && latestProducts.length === 0}}" message="暂无商品" />
   </view>
 </view>
