@@ -4,6 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS users (
   id BIGINT PRIMARY KEY,
+  openid VARCHAR(64) NULL,
   nickname VARCHAR(64) NOT NULL,
   avatar VARCHAR(255) NOT NULL DEFAULT '',
   score INT NOT NULL DEFAULT 100,
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   contact VARCHAR(64) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY ux_users_openid (openid),
   INDEX idx_users_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -69,4 +71,26 @@ CREATE TABLE IF NOT EXISTS reports (
   handled_at DATETIME NULL,
   INDEX idx_reports_status_created (status, created_at),
   INDEX idx_reports_target (target_type, target_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS favorites (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  product_id BIGINT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_favorites_user_product (user_id, product_id),
+  INDEX idx_favorites_user (user_id),
+  INDEX idx_favorites_product (product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  user_id BIGINT NOT NULL,
+  token VARCHAR(255) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  revoked TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_refresh_tokens_token (token),
+  INDEX idx_refresh_tokens_user (user_id),
+  INDEX idx_refresh_tokens_expires (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
