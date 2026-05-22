@@ -2,7 +2,7 @@
   <!-- 自定义导航栏 -->
   <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
     <view class="nav-content">
-      <image class="logo" src="/assets/icons/中国农业大学-logo-2048px.png" mode="aspectFit" />
+      <image class="logo" src="/assets/icons/中国农业大学-logo-2048px白.png" mode="aspectFit" />
       <text class="app-title">校园二手交易</text>
     </view>
   </view>
