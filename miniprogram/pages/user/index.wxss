@@ -1,6 +1,6 @@
 /* ── 页面容器 ──────────────────────────────── */
 page { background: #f5f5f5; }
-.page-body { min-height: 100vh; }
+.page-body { min-height: 100vh; background: transparent; }
 
 /* ── 头部区域 ──────────────────────────────── */
 .user-header { position: relative; overflow: hidden; }

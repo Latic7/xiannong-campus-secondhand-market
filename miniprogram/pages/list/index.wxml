@@ -1,4 +1,7 @@
 <view class="container">
+  <!-- 背景图 -->
+  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+
   <view class="search-bar">
     <input
       class="search-input"
