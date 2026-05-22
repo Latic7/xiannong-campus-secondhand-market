@@ -1,4 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
+from app.schemas.orders import OrderCreateRequest, OrderReviewRequest
+from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
 
 
 class WxLoginRequest(BaseModel):
@@ -15,32 +18,6 @@ class UserProfileUpdateRequest(BaseModel):
     avatar: str | None = None
     college: str | None = None
     contact: str | None = None
-
-
-class ProductCreateRequest(BaseModel):
-    title: str
-    price: float
-    categoryId: int
-    description: str | None = None
-    images: list[str] = Field(default_factory=list)
-
-
-class ProductUpdateRequest(BaseModel):
-    title: str | None = None
-    price: float | None = None
-    categoryId: int | None = None
-    description: str | None = None
-    status: str | None = None
-
-
-class OrderCreateRequest(BaseModel):
-    productId: int
-    remark: str | None = None
-
-
-class OrderReviewRequest(BaseModel):
-    score: int
-    content: str
 
 
 class ReportCreateRequest(BaseModel):
