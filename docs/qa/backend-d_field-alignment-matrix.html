@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>后端D - 字段核对表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', '微软雅黑', Roboto, 'Helvetica Neue', sans-serif;
+            background-color: #f0f2f5;
+            padding: 32px 24px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0f172a;
+            border-left: 5px solid #3b82f6;
+            padding-left: 16px;
+        }
+        .sub {
+            color: #475569;
+            margin-bottom: 32px;
+            font-size: 0.9rem;
+            padding-left: 21px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            margin-bottom: 32px;
+            overflow-x: auto;
+            transition: box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .card-header {
+            background: #f8fafc;
+            padding: 14px 20px;
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #1e40af;
+            letter-spacing: -0.2px;
+        }
+        .card-header small {
+            font-weight: normal;
+            font-size: 0.8rem;
+            color: #475569;
+            margin-left: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            min-width: 500px;
+        }
+        th {
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            font-weight: 600;
+            color: #0c4a6e;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        td {
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            vertical-align: top;
+            background-color: white;
+        }
+        .badge-pass {
+            background-color: #dcfce7;
+            color: #15803d;
+            font-weight: 500;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        .badge-fail {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            font-weight: 500;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        .badge-warn {
+            background-color: #fff3cd;
+            color: #856404;
+            font-weight: 500;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+        .note {
+            background: #fefce8;
+            border-left: 4px solid #eab308;
+            padding: 12px 16px;
+            margin: 16px 20px 20px 20px;
+            font-size: 0.8rem;
+            color: #713f12;
+            border-radius: 8px;
+        }
+        .section-title {
+            font-weight: 700;
+            margin: 0 0 6px 0;
+            color: #0f172a;
+            font-size: 0.9rem;
+        }
+        hr {
+            margin: 8px 0;
+            border-color: #e2e8f0;
+        }
+        .footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 32px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📋 后端D - 字段核对表</h1>
+    <div class="sub">第一阶段最小范围 · 基于 openapi-draft.yaml 与当前实现代码</div>
+
+    <!-- 全局结构 -->
+    <div class="card">
+        <div class="card-header">📦 A. 全局统一返回结构（所有接口）</div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr><th>字段</th><th>OpenAPI 期望</th><th>当前实现（实际表现）</th><th>结论</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>code</td><td>integer，成功为 0</td><td>成功固定 0；错误使用业务码</td><td><span class="badge-pass">对齐</span></td></tr>
+                    <tr><td>message</td><td>string，默认 ok</td><td>成功 "ok"；错误为具体文本</td><td><span class="badge-pass">对齐</span></td></tr>
+                    <tr><td>data</td><td>object/nullable</td><td>成功 data 为 dict；错误可为 null</td><td><span class="badge-pass">对齐</span></td></tr>
+                    <tr><td>requestId</td><td>string</td><td>uuid4 字符串</td><td><span class="badge-pass">对齐</span></td></tr>
+                    <tr><td>timestamp</td><td>date-time(UTC)</td><td>ISO8601 +00:00</td><td><span class="badge-pass">对齐</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="note">⚠️ 注意：触发 FastAPI/Pydantic 默认 422 错误时，响应为默认结构（非 ApiResponse），见问题 ISSUE-002。</div>
+    </div>
+
+    <!-- B1 -->
+    <div class="card">
+        <div class="card-header">🔐 B1. POST /api/auth/wx-login</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>层级/字段</th><th>必填</th><th>类型/枚举</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>请求体 · code</td><td>是</td><td>string</td><td>读取并用于换取 openid</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>请求体 · clientId</td><td>否</td><td>string</td><td>允许传入</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.accessToken</td><td>是</td><td>string</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.refreshToken</td><td>是</td><td>string</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.expiresIn</td><td>是</td><td>int</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.user</td><td>是</td><td>UserProfile</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>user.id / nickname / avatar</td><td>是</td><td>int/string/uri</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>user.score / status</td><td>是</td><td>int / active,banned</td><td>score=100 / status=active</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>user.favorites/college/contact</td><td>否</td><td>nullable</td><td>未返回</td><td><span class="badge-pass">可接受(nullable)</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B2 -->
+    <div class="card">
+        <div class="card-header">🔄 B2. POST /api/auth/refresh</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>字段/项目</th><th>OpenAPI 要求</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>请求体 refreshToken</td><td>必填 string</td><td>有校验(jwt decode)</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.accessToken</td><td>必填</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.refreshToken</td><td>必填</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.expiresIn</td><td>必填</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.user</td><td>必填</td><td>缺失</td><td><span class="badge-fail">不通过（字段不一致）</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B3 -->
+    <div class="card">
+        <div class="card-header">👤 B3. GET /api/auth/me</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>检查项</th><th>OpenAPI 期望</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>Bearer 鉴权</td><td>需要</td><td>已校验，无效401</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>id/nickname/avatar/score/status</td><td>必填</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>favorites/college/contact</td><td>nullable</td><td>未返回</td><td><span class="badge-pass">可接受</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B4 -->
+    <div class="card">
+        <div class="card-header">👥 B4. GET /api/users/me</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>检查项</th><th>OpenAPI 期望</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>Bearer 鉴权</td><td>需要</td><td>未校验，不带 token 也返回 200</td><td><span class="badge-fail">不通过（权限语义不一致）</span></td></tr>
+                    <tr><td>UserProfile 必填字段</td><td>id/nickname/avatar/score/status</td><td>有</td><td><span class="badge-pass">字段层面通过</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B5 产品列表 -->
+    <div class="card">
+        <div class="card-header">📦 B5. GET /api/products</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>参数/字段</th><th>OpenAPI 要求</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>分页 page</td><td>≥1 默认1</td><td>不校验，page=0 也接受</td><td><span class="badge-fail">不通过（参数校验缺失）</span></td></tr>
+                    <tr><td>分页 size</td><td>1~100 默认20</td><td>不校验，size=999 也接受</td><td><span class="badge-fail">不通过（参数校验缺失）</span></td></tr>
+                    <tr><td>keyword/sort/categoryId</td><td>可选</td><td>回显到 filters</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>data.list</td><td>Product[]</td><td>[] 空数组</td><td><span class="badge-pass">最小可用</span></td></tr>
+                    <tr><td>data.page.page/size/total</td><td>必填</td><td>page/size回显, total=0</td><td><span class="badge-pass">最小可用</span></td></tr>
+                    <tr><td>data.filters</td><td>可选对象</td><td>keyword/sort/categoryId</td><td><span class="badge-pass">通过</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B6 创建商品 -->
+    <div class="card">
+        <div class="card-header">➕ B6. POST /api/products</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>项目</th><th>OpenAPI 要求</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>Bearer 鉴权</td><td>需要</td><td>未校验</td><td><span class="badge-fail">不通过</span></td></tr>
+                    <tr><td>title/price/categoryId 必填</td><td>是</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>description/images 可选</td><td>nullable / uri[]</td><td>有/空列表</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>响应 data.id / title / price</td><td>必填</td><td>1001 / 回显</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>响应 data.status</td><td>枚举(draft/pending/...)</td><td>pending</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>其他可空字段(ownerId/images/createdAt)</td><td>nullable</td><td>部分有</td><td><span class="badge-pass">可接受</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B7 商品详情 -->
+    <div class="card">
+        <div class="card-header">🔍 B7. GET /api/products/{productId}</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>检查项</th><th>OpenAPI 期望</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>必填字段 id/title/price/status</td><td>必须有</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>资源不存在时 404</td><td>应返回 404</td><td>始终 200 返回“Draft Product”</td><td><span class="badge-fail">不通过（语义缺失）</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B8 创建订单 -->
+    <div class="card">
+        <div class="card-header">📦 B8. POST /api/orders</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>项目</th><th>OpenAPI / 约定</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>Bearer 鉴权</td><td>需要</td><td>未校验</td><td><span class="badge-fail">不通过</span></td></tr>
+                    <tr><td>请求体 productId 必填</td><td>是</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>响应 id / productId / status</td><td>必填</td><td>id=5001, status=created</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>重复下单/状态机限制</td><td>幂等或拒绝</td><td>未实现，永远成功</td><td><span class="badge-fail">不通过</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B9 订单详情 -->
+    <div class="card">
+        <div class="card-header">📄 B9. GET /api/orders/{orderId}</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>检查项</th><th>OpenAPI 期望</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>响应 data 字段完整性</td><td>完整 Order (productId/status等)</td><td>只返回 {id, status}（缺少 productId等）</td><td><span class="badge-fail">不通过（字段缺失）</span></td></tr>
+                    <tr><td>资源不存在 404</td><td>应返回 404</td><td>始终 200</td><td><span class="badge-fail">不通过</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B10 创建举报 -->
+    <div class="card">
+        <div class="card-header">⚠️ B10. POST /api/reports</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>项目</th><th>OpenAPI / 约定</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>Bearer 鉴权</td><td>需要</td><td>未校验</td><td><span class="badge-fail">不通过</span></td></tr>
+                    <tr><td>targetType/targetId/reason 必填</td><td>是</td><td>有</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>响应 id / status</td><td>id=7001, status=open</td><td>符合</td><td><span class="badge-pass">通过</span></td></tr>
+                    <tr><td>重复举报幂等</td><td>应幂等或拒绝</td><td>未实现</td><td><span class="badge-fail">不通过</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B11 举报详情 -->
+    <div class="card">
+        <div class="card-header">📋 B11. GET /api/reports/{reportId}</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>检查项</th><th>OpenAPI 期望</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>响应 data 完整 Report 字段</td><td>targetType/targetId/reason/status 等</td><td>只返回 {id, status}（大量缺失）</td><td><span class="badge-fail">不通过（字段不一致）</span></td></tr>
+                    <tr><td>资源不存在 404</td><td>需要</td><td>始终 200</td><td><span class="badge-fail">不通过</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- B12 管理后台统计 -->
+    <div class="card">
+        <div class="card-header">📊 B12. GET /api/admin/stats/overview</div>
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>字段</th><th>OpenAPI 期望</th><th>当前实现</th><th>结论</th></tr></thead>
+                <tbody>
+                    <tr><td>users / products / orders / reports</td><td>int 计数</td><td>全部返回 0</td><td><span class="badge-pass">通过（最小可用）</span></td></tr>
+                    <tr><td>管理员鉴权</td><td>应限制管理员</td><td>未实现 stub</td><td><span class="badge-warn">待完善（约定未细化）</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="note">📌 鉴权说明：OpenAPI 未细化管理员角色，但按项目约定后续需增加权限控制；当前 stub 阶段未实现。</div>
+    </div>
+
+    <div class="footer">
+        ✅ 基于静态代码 + OpenAPI 对比生成 · 实际表现以运行时测试为准
+    </div>
+</div>
+</body>
+</html>
