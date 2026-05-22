@@ -22,11 +22,18 @@
     "miniprogram": {
       "list": [
         {
-          "name": "pages/list/index",
-          "pathName": "pages/list/index",
+          "name": "pages/admin/index",
+          "pathName": "pages/admin/index",
           "query": "",
           "scene": null,
           "launchMode": "default"
+        },
+        {
+          "name": "pages/list/index",
+          "pathName": "pages/list/index",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
         },
         {
           "name": "pages/home/index",
