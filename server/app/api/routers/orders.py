@@ -41,4 +41,4 @@ def complete_order(order_id: int) -> dict:
 
 @router.post("/{order_id}/reviews")
 def create_review(order_id: int, payload: OrderReviewRequest) -> dict:
-    return api_ok({"orderId": order_id, "score": payload.score, "content": payload.content})
+    return api_ok(order_service.create_review(order_id, payload))

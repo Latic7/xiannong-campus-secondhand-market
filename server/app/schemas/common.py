@@ -1,4 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
+from app.schemas.orders import OrderCreateRequest, OrderReviewRequest
+from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
 
 from app.core.status import ProductStatus, ReportTargetType, UserStatus
 
