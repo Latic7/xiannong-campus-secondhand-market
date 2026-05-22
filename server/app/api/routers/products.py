@@ -1,8 +1,8 @@
 from fastapi import APIRouter, File, UploadFile
 
 from app.core.response import api_ok
-from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
-from app.services import product_service
+from app.core.status import ProductStatus
+from app.schemas.common import ProductCreateRequest, ProductUpdateRequest
 
 router = APIRouter(prefix="/api/products", tags=["Product"])
 
@@ -20,12 +20,12 @@ def list_products(
 
 @router.post("")
 def create_product(payload: ProductCreateRequest) -> dict:
-    return api_ok(product_service.create_product(payload))
+    return api_ok({"id": 1001, **payload.model_dump(), "status": ProductStatus.PENDING.value})
 
 
 @router.get("/{product_id}")
 def get_product(product_id: int) -> dict:
-    return api_ok(product_service.get_product(product_id))
+    return api_ok({"id": product_id, "title": "Draft Product", "price": 0, "status": ProductStatus.PUBLISHED.value})
 
 
 @router.put("/{product_id}")
