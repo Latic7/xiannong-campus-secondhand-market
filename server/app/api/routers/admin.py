@@ -19,7 +19,7 @@ def admin_list_users(page: int = 1, size: int = 20, keyword: str | None = None) 
 
 @router.patch("/users/{user_id}/status")
 def patch_user_status(user_id: int, payload: UserStatusPatchRequest) -> dict:
-    return api_ok({"userId": user_id, **payload.model_dump()})
+    return api_ok({"userId": user_id, "status": payload.status.value, "reason": payload.reason})
 
 
 @router.get("/products/pending")

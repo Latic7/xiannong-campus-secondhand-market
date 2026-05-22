@@ -605,7 +605,7 @@ paths:
               properties:
                 status:
                   type: string
-                  enum: [active, banned]
+                  enum: [ACTIVE, BANNED]
                 reason:
                   type: string
       responses:
@@ -962,7 +962,7 @@ components:
                     nickname: Demo User
                     avatar: ''
                     score: 100
-                    status: active
+                    status: ACTIVE
                 requestId: req-demo-1
                 timestamp: '2026-05-14T08:00:00Z'
     ErrorResponse:
@@ -1090,8 +1090,8 @@ components:
         status:
           type: string
           description: Account status.
-          enum: [active, banned]
-          example: active
+          enum: [ACTIVE, BANNED]
+          example: ACTIVE
         favorites:
           type: integer
           description: Number of favorite products.
@@ -1166,8 +1166,8 @@ components:
         status:
           type: string
           description: Lifecycle status of the product.
-          enum: [draft, pending, published, removed, sold]
-          example: published
+          enum: [DRAFT, PENDING, PUBLISHED, REMOVED, SOLD]
+          example: PUBLISHED
         images:
           type: array
           description: Product image URLs.
@@ -1252,7 +1252,7 @@ components:
         status:
           type: string
           description: Target lifecycle status.
-          enum: [pending, published, removed]
+          enum: [PENDING, PUBLISHED, REMOVED]
 
     ProductListPayload:
       type: object
@@ -1316,8 +1316,8 @@ components:
         status:
           type: string
           description: Order lifecycle status.
-          enum: [created, reserved, confirmed, completed, cancelled]
-          example: created
+          enum: [CREATED, RESERVED, CONFIRMED, COMPLETED, CANCELLED]
+          example: CREATED
         createdAt:
           type: string
           format: date-time
@@ -1377,8 +1377,8 @@ components:
         targetType:
           type: string
           description: Report target type.
-          enum: [product, user, order]
-          example: product
+          enum: [PRODUCT, USER, ORDER]
+          example: PRODUCT
         targetId:
           type: integer
           description: Target entity identifier.
@@ -1390,8 +1390,8 @@ components:
         status:
           type: string
           description: Report processing status.
-          enum: [open, rejected, handled]
-          example: open
+          enum: [OPEN, REJECTED, HANDLED]
+          example: OPEN
         createdAt:
           type: string
           format: date-time
@@ -1423,8 +1423,8 @@ components:
         targetType:
           type: string
           description: Report target type.
-          enum: [product, user, order]
-          example: product
+          enum: [PRODUCT, USER, ORDER]
+          example: PRODUCT
         targetId:
           type: integer
           description: Target identifier.
@@ -1461,8 +1461,8 @@ components:
         status:
           type: string
           description: Target account status.
-          enum: [active, banned]
-          example: banned
+          enum: [ACTIVE, BANNED]
+          example: BANNED
         reason:
           type: string
           description: Administrative reason.

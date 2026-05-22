@@ -6,6 +6,7 @@ import jwt
 from app.core.response import api_ok, api_error
 from app.core.settings import settings
 from app.core.database import get_db
+from app.core.status import UserStatus
 from app.models.user import User
 from app.models.favorite import Favorite
 from app.schemas.common import UserProfileUpdateRequest
@@ -63,7 +64,7 @@ def get_profile(
             "nickname": user.nickname,
             "avatar": user.avatar,
             "score": user.score,
-            "status": user.status.value,
+            "status": UserStatus(user.status).value,
             "college": user.college,
             "contact": user.contact,
             "favorites": favorites_count,

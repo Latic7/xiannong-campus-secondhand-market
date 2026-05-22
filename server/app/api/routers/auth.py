@@ -7,9 +7,9 @@ import httpx
 import jwt
 
 from app.core.response import api_error, api_ok
+from app.core.status import UserStatus
 from app.core.settings import settings
 from app.core.database import get_db
-from app.core.status import UserStatus
 from app.models.user import User
 from app.schemas.common import TokenRefreshRequest, WxLoginRequest
 
