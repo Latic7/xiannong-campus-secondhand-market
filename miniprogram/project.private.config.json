@@ -22,25 +22,11 @@
     "miniprogram": {
       "list": [
         {
-          "name": "pages/admin/index",
-          "pathName": "pages/admin/index",
+          "name": "pages/detail/index",
+          "pathName": "pages/detail/index",
           "query": "",
           "scene": null,
           "launchMode": "default"
-        },
-        {
-          "name": "pages/list/index",
-          "pathName": "pages/list/index",
-          "query": "",
-          "launchMode": "default",
-          "scene": null
-        },
-        {
-          "name": "pages/home/index",
-          "pathName": "pages/home/index",
-          "query": "",
-          "launchMode": "default",
-          "scene": null
         },
         {
           "name": "pages/user/index",
@@ -57,8 +43,15 @@
           "scene": null
         },
         {
-          "name": "pages/detail/index",
-          "pathName": "pages/detail/index",
+          "name": "pages/home/index",
+          "pathName": "pages/home/index",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "pages/user/index",
+          "pathName": "pages/user/index",
           "query": "",
           "launchMode": "default",
           "scene": null
