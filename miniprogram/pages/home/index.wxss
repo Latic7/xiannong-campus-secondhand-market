@@ -57,9 +57,11 @@
   margin-bottom: 40rpx;
 }
 
-.search-icon {
-  font-size: 32rpx;
+.search-icon-img {
+  width: 40rpx;
+  height: 40rpx;
   flex-shrink: 0;
+  opacity: 0.5;
 }
 
 .search-placeholder {
@@ -130,8 +132,9 @@
   box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 
-.category-icon {
-  font-size: 40rpx;
+.category-icon-img {
+  width: 48rpx;
+  height: 48rpx;
 }
 
 .category-name {
@@ -223,4 +226,54 @@
   display: flex;
   flex-direction: column;
   gap: 24rpx;
+}
+
+/* 推荐商品骨架屏 */
+.recommend-skeleton {
+  width: 300rpx;
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.recommend-skeleton-img {
+  width: 300rpx;
+  height: 300rpx;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.recommend-skeleton-info {
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.recommend-skeleton-title {
+  height: 30rpx;
+  width: 80%;
+  border-radius: 8rpx;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  animation-delay: 0.1s;
+}
+
+.recommend-skeleton-price {
+  height: 34rpx;
+  width: 110rpx;
+  border-radius: 8rpx;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  animation-delay: 0.2s;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

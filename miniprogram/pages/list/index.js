@@ -16,6 +16,9 @@ Page({
     priceMax: null,
 
     showFilter: false,
+    customPriceMin: '',
+    customPriceMax: '',
+    activeTags: [],
 
     categories: [
       { id: null, name: '全部' },
@@ -35,19 +38,8 @@ Page({
       { label: '100元+', min: 100, max: null }
     ],
     selectedPriceIndex: 0,
-
-    sortOptions: [
-      { value: 'createdAt_desc', label: '最新发布' },
-      { value: 'price_asc', label: '价格从低到高' },
-      { value: 'price_desc', label: '价格从高到低' },
-      { value: 'hot', label: '热门' }
-    ],
-    selectedSort: 'createdAt_desc',
-
-    currentSortLabel: '排序',
-    hasActiveFilter: false,
-    filterSummary: ''
   },
+
   onLoad(options) {
     if (options.keyword) {
       this.setData({ keyword: options.keyword });
@@ -55,8 +47,35 @@ Page({
     if (options.categoryId) {
       this.setData({ categoryId: parseInt(options.categoryId) });
     }
+    this.computeActiveTags();
     this.loadData();
   },
+
+  // ---- 筛选状态管理 ----
+
+  computeActiveTags() {
+    const { keyword, categoryId, categories, priceMin, priceMax } = this.data;
+    const tags = [];
+    if (keyword) {
+      tags.push({ key: 'keyword', label: keyword, prefix: '搜索' });
+    }
+    if (categoryId !== null) {
+      const cat = categories.find(c => c.id === categoryId);
+      if (cat) tags.push({ key: 'category', label: cat.name, prefix: '分类' });
+    }
+    if (priceMin !== null || priceMax !== null) {
+      const low = priceMin !== null ? priceMin : '0';
+      const high = priceMax !== null ? priceMax : '∞';
+      tags.push({ key: 'price', label: '¥' + low + ' - ¥' + high, prefix: '价格' });
+    }
+    this.setData({ activeTags: tags });
+  },
+
+  hasActiveFilters() {
+    const { keyword, categoryId, priceMin, priceMax } = this.data;
+    return !!(keyword || categoryId !== null || priceMin !== null || priceMax !== null);
+  },
+
   buildParams() {
     const { page, size, keyword, categoryId, sort, priceMin, priceMax } = this.data;
     const params = { page, size, sort };
@@ -69,30 +88,25 @@ Page({
     });
     return params;
   },
-  updateFilterState() {
-    const { sortOptions, selectedSort, keyword, categoryId, priceMin, priceMax, categories } = this.data;
-    const sortLabel = sortOptions.find(s => s.value === selectedSort)?.label || '排序';
-    const categoryName = categories.find(c => c.id === categoryId)?.name;
-    const parts = [];
-    if (keyword) parts.push('关键词:' + keyword);
-    if (categoryName) parts.push('分类:' + categoryName);
-    if (priceMin !== null || priceMax !== null) {
-      parts.push('价格:' + (priceMin || 0) + '-' + (priceMax || '∞') + '元');
-    }
-    this.setData({
-      currentSortLabel: sortLabel,
-      hasActiveFilter: parts.length > 0,
-      filterSummary: parts.join(' ')
-    });
-  },
+
+  // ---- 数据加载 ----
+
   async loadData() {
     const { loading } = this.data;
     if (loading) return;
 
+    const MIN_LOADING_TIME = 600;
+    const startTime = Date.now();
+
     this.setData({ loading: true });
-    this.updateFilterState();
     try {
       const data = await fetchProductList(this.buildParams());
+
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_LOADING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
+      }
+
       this.setData({
         products: data.list || [],
         total: data.page?.total || 0,
@@ -101,13 +115,25 @@ Page({
         loading: false
       });
     } catch (err) {
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_LOADING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
+      }
       this.setData({ loading: false });
     }
   },
-  onPullDownRefresh() {
+
+  reload() {
     this.setData({ page: 1, products: [], hasMore: true });
-    this.loadData().then(() => wx.stopPullDownRefresh());
+    this.computeActiveTags();
+    this.loadData();
   },
+
+  onPullDownRefresh() {
+    this.reload();
+    wx.stopPullDownRefresh();
+  },
+
   onReachBottom() {
     const { loading, hasMore, page, size } = this.data;
     if (loading || !hasMore) return;
@@ -129,38 +155,113 @@ Page({
       wx.showToast({ title: '加载失败，请重试', icon: 'none' });
     });
   },
+
+  // ---- 搜索 ----
+
   onSearchInput(e) {
     this.setData({ keyword: e.detail.value });
   },
+
   onSearchConfirm(e) {
-    this.setData({ keyword: e.detail.value, page: 1, products: [], hasMore: true });
-    this.loadData();
+    const kw = e.detail.value || '';
+    this.setData({ keyword: kw });
+    this.reload();
   },
+
+  // ---- 分类 ----
+
   onCategoryChange(e) {
     const { id } = e.currentTarget.dataset;
-    this.setData({ categoryId: id, page: 1, products: [], hasMore: true });
-    this.loadData();
+    this.setData({ categoryId: id });
+    this.reload();
   },
-  onSortChange(e) {
-    const { value } = e.currentTarget.dataset;
-    this.setData({ sort: value, selectedSort: value, page: 1, products: [], hasMore: true });
-    this.loadData();
+
+  // ---- 排序 ----
+
+  onSortTap(e) {
+    const { sort } = e.currentTarget.dataset;
+    this.setData({ sort });
+    this.reload();
   },
+
+  // ---- 价格筛选 ----
+
   onPriceRangeChange(e) {
     const { min, max, index } = e.currentTarget.dataset;
     this.setData({
+      priceMin: min !== undefined ? min : null,
+      priceMax: max !== undefined ? max : null,
+      selectedPriceIndex: index,
+      customPriceMin: '',
+      customPriceMax: '',
+      showFilter: false
+    });
+    this.reload();
+  },
+
+  onCustomPriceMinInput(e) {
+    this.setData({ customPriceMin: e.detail.value });
+  },
+
+  onCustomPriceMaxInput(e) {
+    this.setData({ customPriceMax: e.detail.value });
+  },
+
+  onCustomPriceConfirm() {
+    const { customPriceMin, customPriceMax } = this.data;
+    const min = customPriceMin !== '' ? Number(customPriceMin) : null;
+    const max = customPriceMax !== '' ? Number(customPriceMax) : null;
+    this.setData({
       priceMin: min,
       priceMax: max,
-      selectedPriceIndex: index,
-      page: 1,
-      products: [],
-      hasMore: true
+      selectedPriceIndex: -1,
+      showFilter: false
     });
-    this.loadData();
+    this.reload();
   },
+
+  // ---- 筛选面板 ----
+
   onFilterToggle() {
     this.setData({ showFilter: !this.data.showFilter });
   },
+
+  // ---- 已选标签操作 ----
+
+  onRemoveTag(e) {
+    const { key } = e.currentTarget.dataset;
+    if (key === 'keyword') {
+      this.setData({ keyword: '' });
+    } else if (key === 'category') {
+      this.setData({ categoryId: null });
+    } else if (key === 'price') {
+      this.setData({
+        priceMin: null,
+        priceMax: null,
+        selectedPriceIndex: 0,
+        customPriceMin: '',
+        customPriceMax: ''
+      });
+    }
+    this.reload();
+  },
+
+  onClearAllFilters() {
+    this.setData({
+      keyword: '',
+      categoryId: null,
+      priceMin: null,
+      priceMax: null,
+      selectedPriceIndex: 0,
+      customPriceMin: '',
+      customPriceMax: '',
+      showFilter: false
+    });
+    this.reload();
+  },
+
+  // ---- 商品卡片 ----
+
   onCardTap(e) {
     const productId = e.detail?.productId || e.currentTarget.dataset?.productId;
     if (productId) {

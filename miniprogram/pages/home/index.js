@@ -4,11 +4,11 @@ Page({
   data: {
     statusBarHeight: 44,
     categories: [
-      { id: 1, name: '书籍', icon: '📚', bgColor: '#EEF2FF' },
-      { id: 2, name: '数码', icon: '📱', bgColor: '#FEF3C7' },
-      { id: 3, name: '生活', icon: '🛋️', bgColor: '#D1FAE5' },
-      { id: 4, name: '服饰', icon: '👕', bgColor: '#FCE7F3' },
-      { id: 5, name: '其他', icon: '📦', bgColor: '#E5E7EB' }
+      { id: 1, name: '书籍', iconPath: '/assets/icons/book-white.svg', bgColor: '#6366F1' },
+      { id: 2, name: '数码', iconPath: '/assets/icons/phone-white.svg', bgColor: '#F59E0B' },
+      { id: 3, name: '生活', iconPath: '/assets/icons/lamp-white.svg', bgColor: '#10B981' },
+      { id: 4, name: '服饰', iconPath: '/assets/icons/shirt-white.svg', bgColor: '#EC4899' },
+      { id: 5, name: '其他', iconPath: '/assets/icons/dots-white.svg', bgColor: '#6B7280' }
     ],
     recommends: [],
     latestProducts: [],
@@ -28,18 +28,31 @@ Page({
     }
   },
   async loadData() {
+    const MIN_LOADING_TIME = 800; // 骨架屏最小可见时长（ms）
+    const startTime = Date.now();
     try {
       this.setData({ loading: true });
-      const [recommendData, latestData] = await Promise.all([
+      const [recommendData, latestData] = await Promise.allSettled([
         fetchProductList({ page: 1, size: 6, sort: 'createdAt_desc' }),
         fetchProductList({ page: 1, size: 10, sort: 'createdAt_desc' })
       ]);
-      this.setData({
-        recommends: recommendData.list || [],
-        latestProducts: latestData.list || [],
-        loading: false
-      });
+
+      const recommends = recommendData.status === 'fulfilled' ? (recommendData.value.list || []) : [];
+      const latestProducts = latestData.status === 'fulfilled' ? (latestData.value.list || []) : [];
+
+      // 保证骨架屏至少可见 MIN_LOADING_TIME，避免请求太快导致一闪而过
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_LOADING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
+      }
+
+      this.setData({ recommends, latestProducts, loading: false });
     } catch (err) {
+      // 兜底：即使出错也保证骨架屏可见
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_LOADING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
+      }
       this.setData({ loading: false });
     }
   },

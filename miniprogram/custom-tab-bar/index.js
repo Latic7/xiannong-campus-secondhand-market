@@ -4,17 +4,20 @@ Component({
     list: [
       {
         "pagePath": "/pages/home/index",
-        "icon": "🏠",
+        "iconPath": "/assets/icons/home-gray.svg",
+        "iconPathActive": "/assets/icons/home-active.svg",
         "text": "首页"
       },
       {
         "pagePath": "/pages/post/index",
-        "icon": "+",
+        "iconPath": "",
+        "iconPathActive": "",
         "text": "发布"
       },
       {
         "pagePath": "/pages/user/index",
-        "icon": "👤",
+        "iconPath": "/assets/icons/user-gray.svg",
+        "iconPathActive": "/assets/icons/user-active.svg",
         "text": "我的"
       }
     ]

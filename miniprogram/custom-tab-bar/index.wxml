@@ -18,7 +18,11 @@
       </block>
       <block wx:else>
         <!-- 常规tab -->
-        <text class="tab-icon">{{item.icon}}</text>
+        <image
+          class="tab-icon-img"
+          src="{{selected === index ? item.iconPathActive : item.iconPath}}"
+          mode="aspectFit"
+        />
         <text class="tab-text">{{item.text}}</text>
       </block>
     </view>
