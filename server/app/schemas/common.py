@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.schemas.orders import OrderCreateRequest, OrderReviewRequest
 from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
