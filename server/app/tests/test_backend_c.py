@@ -11,6 +11,7 @@ SERVER_ROOT = Path(__file__).resolve().parents[2]
 if str(SERVER_ROOT) not in sys.path:
     sys.path.insert(0, str(SERVER_ROOT))
 
+from app.db.init_db import reset_db  # noqa: E402
 from app.main import app  # noqa: E402
 
 
@@ -18,6 +19,9 @@ class BackendCIntegrationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.client = TestClient(app)
+
+    def setUp(self) -> None:
+        reset_db()
 
     def test_report_flow(self) -> None:
         response = self.client.post(
@@ -65,7 +69,7 @@ class BackendCIntegrationTest(unittest.TestCase):
         response = self.client.get("/api/admin/stats/overview")
         payload = response.json()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(payload["data"]["reports"], 3)
+        self.assertEqual(payload["data"]["reports"], 2)
 
         response = self.client.get("/api/admin/stats/products")
         payload = response.json()
@@ -86,8 +90,8 @@ class BackendCIntegrationTest(unittest.TestCase):
         response = self.client.get("/api/admin/logs")
         payload = response.json()
         self.assertEqual(response.status_code, 200)
-        self.assertGreaterEqual(payload["data"]["page"]["total"], 0)
-        self.assertGreaterEqual(len(payload["data"]["list"]), 1)
+        self.assertEqual(payload["data"]["page"]["total"], 3)
+        self.assertEqual(len(payload["data"]["list"]), 3)
 
 
 if __name__ == "__main__":

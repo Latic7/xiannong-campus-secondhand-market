@@ -1,20 +1,39 @@
-"""User ORM model placeholder."""
-from sqlalchemy import Column, BigInteger, String, Integer, DateTime, Enum as SQLEnum
-from sqlalchemy.sql import func
+from __future__ import annotations
 
-from app.core.database import Base
-from app.core.status import UserStatus
+from datetime import datetime
+
+from sqlalchemy import DateTime, Enum, Index, String, text
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db.base import Base
+
 
 class User(Base):
-    __tablename__ = "users"
-    
-    id = Column(BigInteger, primary_key=True)
-    openid = Column(String(64), unique=True, nullable=True)
-    nickname = Column(String(64), nullable=False)
-    avatar = Column(String(255), nullable=False, default="")
-    score = Column(Integer, nullable=False, default=100)
-    status = Column(SQLEnum(UserStatus), nullable=False, default=UserStatus.ACTIVE)
-    college = Column(String(128), nullable=True)
-    contact = Column(String(64), nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+	__tablename__ = "users"
+	__table_args__ = (
+		Index("idx_users_status", "status"),
+	)
+
+	id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+	openid: Mapped[str | None] = mapped_column(String(64), unique=True)
+	nickname: Mapped[str] = mapped_column(String(64), nullable=False)
+	avatar: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
+	score: Mapped[int] = mapped_column(nullable=False, server_default=text("100"))
+	status: Mapped[str] = mapped_column(
+		Enum("active", "banned", name="user_status_enum"),
+		nullable=False,
+		server_default="active",
+	)
+	college: Mapped[str | None] = mapped_column(String(128))
+	contact: Mapped[str | None] = mapped_column(String(64))
+	created_at: Mapped[datetime] = mapped_column(
+		DateTime,
+		nullable=False,
+		server_default=text("CURRENT_TIMESTAMP"),
+	)
+	updated_at: Mapped[datetime] = mapped_column(
+		DateTime,
+		nullable=False,
+		server_default=text("CURRENT_TIMESTAMP"),
+		server_onupdate=text("CURRENT_TIMESTAMP"),
+	)

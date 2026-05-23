@@ -4,12 +4,15 @@ from fastapi.responses import JSONResponse
 from app.api.routers import ROUTERS
 from app.core.exceptions import BusinessError
 from app.core.response import api_error, api_ok
+from app.db.init_db import init_db
 
 app = FastAPI(
     title="Campus Second-hand Market API",
     version="0.1.0-draft",
     description="FastAPI skeleton generated from OpenAPI draft.",
 )
+
+init_db()
 
 
 @app.exception_handler(BusinessError)
