@@ -196,3 +196,6 @@
     </radio-group>
   </view>
 </view>
+
+<!-- 自定义 TabBar -->
+<custom-tab-bar />

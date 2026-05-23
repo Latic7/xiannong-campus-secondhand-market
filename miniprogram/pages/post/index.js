@@ -57,6 +57,14 @@ Page({
     }
   },
 
+  onShow() {
+    // 同步底部导航栏选中状态（避免 getCurrentPages 时序问题）
+    const tabBar = this.getTabBar();
+    if (tabBar) {
+      tabBar.setData({ selected: 1 });
+    }
+  },
+
   // ── 输入绑定 ──────────────────────────────
   onTitleInput(e) {
     const val = e.detail.value || ''

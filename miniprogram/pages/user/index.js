@@ -24,6 +24,12 @@ Page({
   },
 
   onShow() {
+    // 同步底部导航栏选中状态（避免 getCurrentPages 时序问题）
+    const tabBar = this.getTabBar();
+    if (tabBar) {
+      tabBar.setData({ selected: 2 });
+    }
+
     // 每次显示时刷新登录态和用户信息
     this.refreshUserState()
   },

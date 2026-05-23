@@ -12,6 +12,7 @@
 
   <!-- 搜索栏 -->
   <view class="search-bar" bindtap="onSearchTap">
+    <image class="search-icon-img" src="/assets/icons/search.svg" mode="aspectFit" />
     <text class="search-placeholder">搜索商品...</text>
   </view>
 
@@ -21,7 +22,9 @@
       <view class="category-list">
         <block wx:for="{{categories}}" wx:key="id">
           <view class="category-item" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="onCategoryTap">
-            <text class="category-icon">{{item.icon}}</text>
+            <view class="category-icon-wrap" style="background: {{item.bgColor}}">
+              <image class="category-icon-img" src="{{item.iconPath}}" mode="aspectFit" />
+            </view>
             <text class="category-name">{{item.name}}</text>
           </view>
         </block>
@@ -31,11 +34,29 @@
 
   <view class="section">
     <view class="section-title">推荐商品</view>
-    <scroll-view class="recommend-scroll" scroll-x>
+
+    <!-- 推荐商品骨架屏 -->
+    <scroll-view class="recommend-scroll" scroll-x wx:if="{{loading}}">
+      <view class="recommend-list">
+        <view class="recommend-skeleton" wx:for="{{[1,2,3]}}" wx:key="*this">
+          <view class="recommend-skeleton-img"></view>
+          <view class="recommend-skeleton-info">
+            <view class="recommend-skeleton-title"></view>
+            <view class="recommend-skeleton-price"></view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 推荐商品真实内容 -->
+    <scroll-view class="recommend-scroll" scroll-x wx:elif="{{recommends.length > 0}}">
       <view class="recommend-list">
         <block wx:for="{{recommends}}" wx:key="id">
           <view class="recommend-item" data-product-id="{{item.id}}" bindtap="onProductTap">
             <image class="recommend-image" src="{{item.images[0]}}" mode="aspectFill" />
+            <view class="recommend-tags">
+              <text class="recommend-condition">{{item.condition || '全新'}}</text>
+            </view>
             <view class="recommend-info">
               <text class="recommend-title">{{item.title}}</text>
               <text class="recommend-price">¥{{item.price}}</text>
@@ -44,6 +65,9 @@
         </block>
       </view>
     </scroll-view>
+
+    <!-- 推荐商品空状态 -->
+    <empty-state wx:elif="{{!loading && recommends.length === 0}}" message="暂无推荐商品" />
   </view>
 
   <view class="section">
@@ -53,7 +77,10 @@
         <item-card item="{{item}}" bind:tap="onProductTap" />
       </block>
     </view>
-    <loading-state wx:if="{{loading}}" message="加载中..." />
+    <loading-state wx:if="{{loading}}" />
     <empty-state wx:if="{{!loading && latestProducts.length === 0}}" message="暂无商品" />
   </view>
+
+  <!-- 自定义 TabBar -->
+  <custom-tab-bar />
 </view>

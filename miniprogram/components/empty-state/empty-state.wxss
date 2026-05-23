@@ -1,1 +1,43 @@
-/* Empty state placeholder styles */
+/* 空状态容器 */
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80rpx 40rpx;
+}
+
+/* 图标包装 */
+.empty-icon-wrap {
+  width: 160rpx;
+  height: 160rpx;
+  background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+}
+
+/* 居中的大 emoji */
+.empty-icon {
+  font-size: 80rpx;
+  line-height: 1;
+}
+
+/* 主提示文字 */
+.empty-message {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #6B7280;
+  margin-bottom: 12rpx;
+  text-align: center;
+}
+
+/* 副提示文字 */
+.empty-sub-message {
+  font-size: 26rpx;
+  color: #9CA3AF;
+  text-align: center;
+}

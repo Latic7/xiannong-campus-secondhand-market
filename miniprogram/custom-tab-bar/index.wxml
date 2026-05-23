@@ -1,0 +1,30 @@
+<view class="tab-bar">
+  <view class="tab-bar-wrapper">
+    <view
+      wx:for="{{list}}"
+      wx:key="index"
+      class="tab-item {{selected === index ? 'active' : ''}} {{index === 1 ? 'middle' : ''}}"
+      data-index="{{index}}"
+      bindtap="switchTab"
+    >
+      <block wx:if="{{index === 1}}">
+        <!-- 中间发布按钮 -->
+        <view class="middle-btn">
+          <view class="middle-btn-inner">
+            <text class="middle-btn-icon">+</text>
+          </view>
+        </view>
+        <text class="tab-text middle-text">{{item.text}}</text>
+      </block>
+      <block wx:else>
+        <!-- 常规tab -->
+        <image
+          class="tab-icon-img"
+          src="{{selected === index ? item.iconPathActive : item.iconPath}}"
+          mode="aspectFit"
+        />
+        <text class="tab-text">{{item.text}}</text>
+      </block>
+    </view>
+  </view>
+</view>
