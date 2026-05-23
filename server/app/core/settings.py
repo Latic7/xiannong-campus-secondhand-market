@@ -17,4 +17,12 @@ class Settings:
     )
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./campus_market.db")
 
+    # 兼容旧代码中使用的大写配置名
+    WECHAT_APP_ID: str = wechat_app_id
+    WECHAT_APP_SECRET: str = wechat_app_secret
+    JWT_SECRET: str = jwt_secret
+    JWT_EXPIRES_SECONDS: int = jwt_expires_seconds
+    JWT_REFRESH_EXPIRES_SECONDS: int = jwt_refresh_expires_seconds
+    DATABASE_URL: str = database_url
+
 settings = Settings()

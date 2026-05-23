@@ -26,11 +26,7 @@ def admin_list_users(page: int = 1, size: int = 20, keyword: str | None = None) 
 
 @router.patch("/users/{user_id}/status")
 def patch_user_status(user_id: int, payload: UserStatusPatchRequest) -> dict:
-<<<<<<< HEAD
-    return api_ok({"userId": user_id, "status": payload.status.value, "reason": payload.reason})
-=======
     return api_ok(patch_user_status_service(user_id, payload))
->>>>>>> 7802987 (release: release branch for the first time)
 
 
 @router.get("/products/pending")
