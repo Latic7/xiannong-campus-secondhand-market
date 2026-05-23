@@ -4,11 +4,11 @@ Page({
   data: {
     statusBarHeight: 44,
     categories: [
-      { id: 1, name: '书籍', icon: '📚' },
-      { id: 2, name: '数码', icon: '📱' },
-      { id: 3, name: '生活', icon: '🛋️' },
-      { id: 4, name: '服饰', icon: '👕' },
-      { id: 5, name: '其他', icon: '📦' }
+      { id: 1, name: '书籍', icon: '📚', bgColor: '#EEF2FF' },
+      { id: 2, name: '数码', icon: '📱', bgColor: '#FEF3C7' },
+      { id: 3, name: '生活', icon: '🛋️', bgColor: '#D1FAE5' },
+      { id: 4, name: '服饰', icon: '👕', bgColor: '#FCE7F3' },
+      { id: 5, name: '其他', icon: '📦', bgColor: '#E5E7EB' }
     ],
     recommends: [],
     latestProducts: [],
@@ -18,6 +18,14 @@ Page({
     const systemInfo = wx.getSystemInfoSync();
     this.setData({ statusBarHeight: systemInfo.statusBarHeight });
     this.loadData();
+  },
+
+  onShow() {
+    // 同步底部导航栏选中状态（避免 getCurrentPages 时序问题）
+    const tabBar = this.getTabBar();
+    if (tabBar) {
+      tabBar.setData({ selected: 0 });
+    }
   },
   async loadData() {
     try {
@@ -46,7 +54,10 @@ Page({
     wx.navigateTo({ url: `/pages/list/index?categoryId=${id}&categoryName=${name}` });
   },
   onProductTap(e) {
-    const { productId } = e.detail;
-    wx.navigateTo({ url: `/pages/detail/index?id=${productId}` });
+    // 兼容 item-card 组件的 detail 和推荐卡片的 dataset
+    const productId = e.detail?.productId || e.currentTarget?.dataset?.productId;
+    if (productId) {
+      wx.navigateTo({ url: `/pages/detail/index?id=${productId}` });
+    }
   }
 });

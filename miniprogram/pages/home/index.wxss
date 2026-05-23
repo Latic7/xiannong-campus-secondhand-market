@@ -45,26 +45,25 @@
   letter-spacing: 1rpx;
 }
 
-/* 搜索栏 - 渐变卡片风格 */
+/* 搜索栏 - 白底圆角输入框 */
 .search-bar {
-  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-  padding: 28rpx 36rpx;
+  background: #fff;
+  padding: 24rpx 32rpx;
   border-radius: 48rpx;
   display: flex;
   align-items: center;
   gap: 16rpx;
-  box-shadow: 0 8rpx 24rpx rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
   margin-bottom: 40rpx;
 }
 
-.search-bar::before {
-  content: '🔍';
+.search-icon {
   font-size: 32rpx;
-  opacity: 0.8;
+  flex-shrink: 0;
 }
 
 .search-placeholder {
-  color: rgba(255, 255, 255, 0.85);
+  color: #9CA3AF;
   font-size: 28rpx;
   flex: 1;
 }
@@ -100,7 +99,7 @@
 
 .category-list {
   display: flex;
-  gap: 20rpx;
+  gap: 24rpx;
 }
 
 .category-item {
@@ -108,12 +107,12 @@
   flex-direction: column;
   align-items: center;
   gap: 12rpx;
-  padding: 24rpx 20rpx;
+  padding: 20rpx 16rpx;
   background: #fff;
   border-radius: 20rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
   transition: transform 0.2s, box-shadow 0.2s;
-  min-width: 120rpx;
+  min-width: 130rpx;
 }
 
 .category-item:active {
@@ -121,15 +120,18 @@
   box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
 }
 
-.category-icon {
-  width: 64rpx;
-  height: 64rpx;
-  background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
-  border-radius: 16rpx;
+.category-icon-wrap {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.category-icon {
+  font-size: 40rpx;
 }
 
 .category-name {
@@ -150,7 +152,7 @@
 }
 
 .recommend-item {
-  width: 240rpx;
+  width: 300rpx;
   flex-shrink: 0;
   background: #fff;
   border-radius: 24rpx;
@@ -165,9 +167,24 @@
 }
 
 .recommend-image {
-  width: 240rpx;
-  height: 240rpx;
+  width: 300rpx;
+  height: 300rpx;
   background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+  position: relative;
+}
+
+.recommend-tags {
+  position: absolute;
+  top: 16rpx;
+  left: 16rpx;
+}
+
+.recommend-condition {
+  background: rgba(79, 70, 229, 0.85);
+  color: #fff;
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
 }
 
 .recommend-info {

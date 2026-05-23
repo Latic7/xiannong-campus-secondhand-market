@@ -1,0 +1,112 @@
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120rpx;
+  background: #fff;
+  box-shadow: 0 -2rpx 20rpx rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tab-bar-wrapper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  height: 100rpx;
+  padding: 0 20rpx;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  height: 100%;
+  padding-bottom: 10rpx;
+  transition: transform 0.2s ease;
+}
+
+.tab-item:active {
+  transform: scale(0.9);
+}
+
+.tab-item.middle {
+  position: relative;
+  flex: 1.2;
+}
+
+.tab-icon {
+  font-size: 48rpx;
+  margin-bottom: 4rpx;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.tab-item.active .tab-icon {
+  transform: scale(1.1);
+}
+
+.tab-text {
+  font-size: 22rpx;
+  color: #999;
+  transition: color 0.2s ease;
+}
+
+.tab-item.active .tab-text {
+  color: #4F46E5;
+  font-weight: 500;
+}
+
+/* 中间发布按钮 */
+.middle-btn {
+  position: absolute;
+  top: -30rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100rpx;
+  height: 100rpx;
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(79, 70, 229, 0.4);
+  z-index: 1;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.middle-btn:active {
+  transform: translateX(-50%) scale(0.9);
+  box-shadow: 0 4rpx 12rpx rgba(79, 70, 229, 0.3);
+}
+
+.middle-btn-inner {
+  width: 80rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4rpx solid rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease;
+}
+
+.middle-btn-icon {
+  font-size: 48rpx;
+  font-weight: 300;
+  color: #fff;
+  line-height: 1;
+}
+
+.middle-text {
+  margin-top: 50rpx;
+  transition: color 0.2s ease;
+}
+
+.tab-item.active .middle-text {
+  color: #4F46E5;
+}

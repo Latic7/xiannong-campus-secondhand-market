@@ -12,6 +12,7 @@
 
   <!-- 搜索栏 -->
   <view class="search-bar" bindtap="onSearchTap">
+    <text class="search-icon">🔍</text>
     <text class="search-placeholder">搜索商品...</text>
   </view>
 
@@ -21,7 +22,9 @@
       <view class="category-list">
         <block wx:for="{{categories}}" wx:key="id">
           <view class="category-item" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="onCategoryTap">
-            <text class="category-icon">{{item.icon}}</text>
+            <view class="category-icon-wrap" style="background: {{item.bgColor}}">
+              <text class="category-icon">{{item.icon}}</text>
+            </view>
             <text class="category-name">{{item.name}}</text>
           </view>
         </block>
@@ -36,6 +39,9 @@
         <block wx:for="{{recommends}}" wx:key="id">
           <view class="recommend-item" data-product-id="{{item.id}}" bindtap="onProductTap">
             <image class="recommend-image" src="{{item.images[0]}}" mode="aspectFill" />
+            <view class="recommend-tags">
+              <text class="recommend-condition">{{item.condition || '全新'}}</text>
+            </view>
             <view class="recommend-info">
               <text class="recommend-title">{{item.title}}</text>
               <text class="recommend-price">¥{{item.price}}</text>
@@ -56,4 +62,7 @@
     <loading-state wx:if="{{loading}}" message="加载中..." />
     <empty-state wx:if="{{!loading && latestProducts.length === 0}}" message="暂无商品" />
   </view>
+
+  <!-- 自定义 TabBar -->
+  <custom-tab-bar />
 </view>
