@@ -9,6 +9,7 @@ __pycache__/
 venv/
 env/
 .conda/
+.vscode/
 
 # Local secrets
 server/.env
