@@ -14,7 +14,7 @@ class User(Base):
 		Index("idx_users_status", "status"),
 	)
 
-	id: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+	id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 	openid: Mapped[str | None] = mapped_column(String(64), unique=True)
 	nickname: Mapped[str] = mapped_column(String(64), nullable=False)
 	avatar: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
