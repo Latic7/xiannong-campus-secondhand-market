@@ -14,6 +14,7 @@ class Product(Base):
 	__table_args__ = (
 		Index("idx_products_status_created", "status", "created_at"),
 		Index("idx_products_owner", "owner_id"),
+		Index("idx_products_category", "category_id"),
 	)
 
 	id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
