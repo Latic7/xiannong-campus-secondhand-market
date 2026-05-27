@@ -1,1 +1,30 @@
-/* Global common styles placeholder */
+/* Global common styles */
+.page-bg {
+  opacity: 0.05;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+button::after {
+  border: 0;
+}
+
+.ios-surface {
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.ios-pressable {
+  transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+}
+
+.ios-pressable:active {
+  transform: scale(0.98);
+  opacity: 0.82;
+}

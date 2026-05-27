@@ -1,4 +1,10 @@
+@import "./styles/variables.wxss";
+@import "./styles/common.wxss";
+
 /* 全局样式 */
 page {
-  background-color: transparent;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  letter-spacing: 0;
 }

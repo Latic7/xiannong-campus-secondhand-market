@@ -4,11 +4,11 @@ Page({
   data: {
     statusBarHeight: 44,
     categories: [
-      { id: 1, name: '书籍', iconPath: '/assets/icons/book-white.svg', bgColor: '#6366F1' },
-      { id: 2, name: '数码', iconPath: '/assets/icons/phone-white.svg', bgColor: '#F59E0B' },
-      { id: 3, name: '生活', iconPath: '/assets/icons/lamp-white.svg', bgColor: '#10B981' },
-      { id: 4, name: '服饰', iconPath: '/assets/icons/shirt-white.svg', bgColor: '#EC4899' },
-      { id: 5, name: '其他', iconPath: '/assets/icons/dots-white.svg', bgColor: '#6B7280' }
+      { id: 1, name: '书籍', iconPath: '/assets/icons/book-white.svg', bgColor: '#0B6B43' },
+      { id: 2, name: '数码', iconPath: '/assets/icons/phone-white.svg', bgColor: '#C8A24A' },
+      { id: 3, name: '生活', iconPath: '/assets/icons/lamp-white.svg', bgColor: '#34A853' },
+      { id: 4, name: '服饰', iconPath: '/assets/icons/shirt-white.svg', bgColor: '#FF2D55' },
+      { id: 5, name: '其他', iconPath: '/assets/icons/dots-white.svg', bgColor: '#8E8E93' }
     ],
     recommends: [],
     latestProducts: [],
