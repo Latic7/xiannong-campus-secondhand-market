@@ -6,14 +6,17 @@
   <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
     <view class="nav-content">
       <image class="logo" src="/assets/icons/中国农业大学-logo-2048px白.png" mode="aspectFit" />
-      <text class="app-title">校园二手交易</text>
+      <view class="brand-copy">
+        <text class="app-title">校园二手交易</text>
+        <text class="app-subtitle">中国农业大学</text>
+      </view>
     </view>
   </view>
 
   <!-- 搜索栏 -->
   <view class="search-bar" bindtap="onSearchTap">
     <image class="search-icon-img" src="/assets/icons/search.svg" mode="aspectFit" />
-    <text class="search-placeholder">搜索商品...</text>
+    <text class="search-placeholder">搜索教材、宿舍好物、数码配件</text>
   </view>
 
   <view class="section">
@@ -33,7 +36,7 @@
   </view>
 
   <view class="section">
-    <view class="section-title">推荐商品</view>
+    <view class="section-title">同学推荐</view>
 
     <!-- 推荐商品骨架屏 -->
     <scroll-view class="recommend-scroll" scroll-x wx:if="{{loading}}">
@@ -71,7 +74,7 @@
   </view>
 
   <view class="section">
-    <view class="section-title">最新发布</view>
+    <view class="section-title">新鲜上架</view>
     <view class="product-list">
       <block wx:for="{{latestProducts}}" wx:key="id">
         <item-card item="{{item}}" bind:tap="onProductTap" />

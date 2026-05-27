@@ -6,7 +6,7 @@
   <view class="search-bar">
     <input
       class="search-input"
-      placeholder="搜索商品"
+      placeholder="搜索教材、宿舍好物、数码配件"
       value="{{keyword}}"
       bindinput="onSearchInput"
       bindconfirm="onSearchConfirm"
