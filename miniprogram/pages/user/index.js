@@ -1,26 +1,36 @@
 // ──────────────────────────────────────────────
 //  个人中心页
-//  用户资料、信誉分、收藏入口、发布入口
+//  微信登录、用户资料、信誉分、收藏入口、发布入口
 // ──────────────────────────────────────────────
 const {
-  isLoggedIn, getUserInfo, saveAuth, clearAuth, dumpAuth,
+  isLoggedIn, getUserInfo, saveAuth, clearAuth, setUserInfo,
 } = require('../../utils/storage')
+const authService = require('../../services/auth')
+const userService = require('../../services/user')
+const { setAuthExpiredHandler } = require('../../utils/api')
 
 Page({
   data: {
-    // 用户信息
     user: null,
     isLoggedIn: false,
 
-    // 统计数据
     stats: {
       published: 0,
       sold: 0,
       favorites: 0,
     },
 
-    // UI 状态
     loading: true,
+    loginLoading: false,
+  },
+
+  onLoad() {
+    // 注册全局登录过期回调
+    setAuthExpiredHandler(() => {
+      clearAuth()
+      this.refreshUserState()
+      wx.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
+    })
   },
 
   onShow() {
@@ -35,31 +45,59 @@ Page({
   },
 
   // ── 刷新用户状态 ──────────────────────────
-  refreshUserState() {
+  async refreshUserState() {
     const loggedIn = isLoggedIn()
     let user = null
 
     if (loggedIn) {
+      // 先从本地缓存读取基本信息快速展示
       user = getUserInfo()
-      // TODO: 从服务器拉取最新信誉分和统计数据
-      // await this.fetchUserProfile()
-    }
-
-    this.setData({
-      isLoggedIn: loggedIn,
-      user: this.formatUser(user),
-      loading: false,
-    })
-
-    if (loggedIn) {
-      this.loadStats()
+      this.setData({
+        isLoggedIn: true,
+        user: this.formatUser(user),
+        loading: false,
+      })
+      // 异步从服务器拉取最新资料和统计
+      this.fetchUserProfile()
+    } else {
+      this.setData({
+        isLoggedIn: false,
+        user: this.formatUser(null),
+        loading: false,
+        stats: { published: 0, sold: 0, favorites: 0 },
+      })
     }
   },
 
-  // ── Mock 格式化用户（开发期）──────────────
+  // ── 从服务器拉取最新用户资料 ──────────────
+  async fetchUserProfile() {
+    try {
+      const profile = await userService.getProfile()
+      // 合并更新本地缓存和页面数据
+      const updated = {
+        id: profile.id,
+        nickname: profile.nickname,
+        avatar: profile.avatar,
+        reputation: profile.score,
+      }
+      setUserInfo(updated)
+      this.setData({
+        user: this.formatUser(updated),
+        stats: {
+          published: profile.publishedCount || 0,
+          sold: profile.soldCount || 0,
+          favorites: profile.favorites || 0,
+        },
+      })
+    } catch (err) {
+      // 静默失败，使用本地缓存数据
+      console.warn('获取用户资料失败:', err.message)
+    }
+  },
+
+  // ── 格式化用户展示数据 ────────────────────
   formatUser(u) {
     if (!u) {
-      // 未登录时展示默认占位
       return {
         nickname: '点击登录',
         avatar: '',
@@ -69,7 +107,7 @@ Page({
     }
     return {
       ...u,
-      avatar: u.avatar || 'https://picsum.photos/seed/default_avatar/200/200',
+      avatar: u.avatar || '',
       reputation: u.reputation != null ? u.reputation : 100,
       reputationText: this.getReputationLabel(u.reputation),
       reputationColor: this.getReputationColor(u.reputation),
@@ -90,48 +128,24 @@ Page({
     return '#ef4444'
   },
 
-  // ── 加载统计数据 ──────────────────────────
-  async loadStats() {
-    try {
-      // TODO: 替换为 API → user.getStats()
-      this.setData({
-        stats: {
-          published: 5,
-          sold: 3,
-          favorites: 12,
-        },
-      })
-    } catch (err) {
-      // 静默失败，使用默认值
-    }
-  },
+  // ── 微信登录（真实 API）───────────────────
+  async onLogin() {
+    if (this.data.isLoggedIn || this.data.loginLoading) return
 
-  // ── 登录 ──────────────────────────────────
-  onLogin() {
-    if (this.data.isLoggedIn) return
-
+    this.setData({ loginLoading: true })
     wx.showLoading({ title: '登录中...' })
 
-    // 模拟微信登录流程
-    // TODO: 替换为实际登录 API → auth.login()
-    setTimeout(() => {
-      const mockAuthData = {
-        accessToken: 'mock_token_' + Date.now(),
-        refreshToken: 'mock_refresh_' + Date.now(),
-        expiresIn: 7200,
-        user: {
-          id: 'user_001',
-          nickname: '小明同学',
-          avatar: 'https://picsum.photos/seed/avatar1/200/200',
-          reputation: 98,
-        },
-      }
-
-      saveAuth(mockAuthData)
+    try {
+      await authService.wxLogin()
       wx.hideLoading()
       wx.showToast({ title: '登录成功', icon: 'success' })
       this.refreshUserState()
-    }, 800)
+    } catch (err) {
+      wx.hideLoading()
+      wx.showToast({ title: err.message || '登录失败', icon: 'none' })
+    } finally {
+      this.setData({ loginLoading: false })
+    }
   },
 
   // ── 退出登录 ──────────────────────────────
@@ -139,8 +153,13 @@ Page({
     wx.showModal({
       title: '退出登录',
       content: '确定要退出登录吗？',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
+          try {
+            await authService.logout()
+          } catch (e) {
+            // 忽略后端注销错误
+          }
           clearAuth()
           wx.showToast({ title: '已退出', icon: 'success' })
           this.refreshUserState()
@@ -152,21 +171,18 @@ Page({
   // ── 跳转：我的发布 ────────────────────────
   onMyPublished() {
     if (!this.checkLogin()) return
-    // TODO: 跳转到我的发布列表
     wx.navigateTo({ url: '/pages/list/index?type=my_published' })
   },
 
   // ── 跳转：我的收藏 ────────────────────────
   onMyFavorites() {
     if (!this.checkLogin()) return
-    // TODO: 跳转到我的收藏列表
     wx.navigateTo({ url: '/pages/list/index?type=my_favorites' })
   },
 
   // ── 跳转：我的订单 ────────────────────────
   onMyOrders() {
     if (!this.checkLogin()) return
-    // TODO: 跳转到我的订单页
     wx.showToast({ title: '订单功能开发中', icon: 'none' })
   },
 
@@ -191,7 +207,6 @@ Page({
   // ── 编辑个人资料 ──────────────────────────
   onEditProfile() {
     if (!this.checkLogin()) return
-    // TODO: 跳转编辑资料页
     wx.showToast({ title: '编辑资料功能开发中', icon: 'none' })
   },
 })
