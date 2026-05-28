@@ -17,9 +17,6 @@ server/.env
 # 文档工作区
 文档工作区/
 
-# QA 工作区
-docs/qa/
-
 # miniprogram 本地知识库
 miniprogram/.workbuddy/
 
