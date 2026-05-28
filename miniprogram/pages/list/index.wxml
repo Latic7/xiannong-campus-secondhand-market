@@ -11,12 +11,6 @@
       bindinput="onSearchInput"
       bindconfirm="onSearchConfirm"
     />
-    <view class="filter-toggle-btn {{showFilter ? 'active' : ''}}" bindtap="onFilterToggle">
-      <view class="funnel-icon">
-        <view class="funnel-top"></view>
-        <view class="funnel-body"></view>
-      </view>
-    </view>
   </view>
 
   <!-- 已选筛选标签 -->
@@ -56,40 +50,32 @@
     </view>
   </scroll-view>
 
-  <!-- 排序栏 -->
-  <view class="sort-bar">
-    <view
-      class="sort-pill {{sort === 'createdAt_desc' ? 'active' : ''}}"
-      data-sort="createdAt_desc"
-      bindtap="onSortTap"
-    >
-      <text>最新</text>
-    </view>
-    <view
-      class="sort-pill {{sort === 'price_asc' ? 'active' : ''}}"
-      data-sort="price_asc"
-      bindtap="onSortTap"
-    >
-      <text>价格↑</text>
-    </view>
-    <view
-      class="sort-pill {{sort === 'price_desc' ? 'active' : ''}}"
-      data-sort="price_desc"
-      bindtap="onSortTap"
-    >
-      <text>价格↓</text>
-    </view>
-    <view
-      class="sort-pill {{sort === 'hot' ? 'active' : ''}}"
-      data-sort="hot"
-      bindtap="onSortTap"
-    >
-      <text>热门</text>
-    </view>
+  <!-- 初始加载骨架屏 -->
+  <loading-state wx:if="{{loading && products.length === 0}}" count="4" />
+
+  <!-- 商品列表 -->
+  <view class="product-list" wx:if="{{products.length > 0}}">
+    <block wx:for="{{products}}" wx:key="id">
+      <item-card item="{{item}}" bind:tap="onCardTap" />
+    </block>
   </view>
 
-  <!-- 筛选面板 -->
-  <view class="filter-panel" wx:if="{{showFilter}}">
+  <!-- 空状态 -->
+  <empty-state wx:if="{{!loading && products.length === 0}}" message="暂无商品" />
+
+  <!-- 底部加载提示 -->
+  <view class="bottom-tip" wx:if="{{products.length > 0}}">
+    <text wx:if="{{loading}}">正在加载更多...</text>
+    <text wx:elif="{{!hasMore}}">没有更多了</text>
+  </view>
+
+  <view
+    class="floating-backdrop {{showSortPanel || showFilter ? 'active' : ''}}"
+    catchtap="onCloseFloatingPanels"
+  ></view>
+
+  <!-- 筛选悬浮窗 -->
+  <view class="filter-panel {{showFilter ? 'active' : ''}}" catchtap="noop">
     <view class="filter-section">
       <view class="filter-label">价格区间</view>
       <view class="price-tags">
@@ -128,22 +114,35 @@
     </view>
   </view>
 
-  <!-- 初始加载骨架屏 -->
-  <loading-state wx:if="{{loading && products.length === 0}}" count="4" />
-
-  <!-- 商品列表 -->
-  <view class="product-list" wx:if="{{products.length > 0}}">
-    <block wx:for="{{products}}" wx:key="id">
-      <item-card item="{{item}}" bind:tap="onCardTap" />
-    </block>
-  </view>
-
-  <!-- 空状态 -->
-  <empty-state wx:if="{{!loading && products.length === 0}}" message="暂无商品" />
-
-  <!-- 底部加载提示 -->
-  <view class="bottom-tip" wx:if="{{products.length > 0}}">
-    <text wx:if="{{loading}}">正在加载更多...</text>
-    <text wx:elif="{{!hasMore}}">没有更多了</text>
+  <view class="floating-action-bar" catchtap="noop">
+    <view class="sort-float-stack {{showSortPanel ? 'active' : ''}} {{hasSortSelection ? 'selected' : ''}}">
+      <view class="sort-expanding-panel">
+        <view
+          class="sort-option {{sort === item.value ? 'active' : ''}}"
+          wx:for="{{sortOptions}}"
+          wx:key="value"
+          data-sort="{{item.value}}"
+          data-label="{{item.label}}"
+          bindtap="onSortTap"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+      <view class="floating-action sort-trigger {{showSortPanel ? 'active' : ''}}" bindtap="onSortToggle">
+        <view class="sort-action-icon">
+          <view class="sort-action-line long"></view>
+          <view class="sort-action-line medium"></view>
+          <view class="sort-action-line short"></view>
+        </view>
+        <text>{{currentSortLabel}}</text>
+      </view>
+    </view>
+    <view class="floating-action {{showFilter || hasFilters ? 'active' : ''}}" bindtap="onFilterToggle">
+      <view class="filter-action-icon">
+        <view class="filter-action-row top"></view>
+        <view class="filter-action-row bottom"></view>
+      </view>
+      <text>筛选</text>
+    </view>
   </view>
 </view>
