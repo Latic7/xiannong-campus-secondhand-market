@@ -4,6 +4,17 @@
 // ──────────────────────────────────────────────
 const { isLoggedIn, getUserInfo } = require('../../utils/storage')
 const { PRODUCT_STATUS } = require('../../utils/constants')
+const productService = require('../../services/product')
+const orderService = require('../../services/order')
+const reportService = require('../../services/report')
+const userService = require('../../services/user')
+
+// ── 分类 ID → 名称映射（与后端 categoryId 对齐）──
+const CATEGORY_MAP = {
+  1: '数码电子', 2: '书籍教材', 3: '生活用品',
+  4: '服饰鞋包', 5: '运动户外', 6: '美妆护肤',
+  7: '食品饮料', 8: '其他',
+}
 
 Page({
   data: {
@@ -29,12 +40,12 @@ Page({
     this.loadProduct(productId)
   },
 
-  // ── 加载商品详情 ──────────────────────────
+  // ── 加载商品详情（真实 API）───────────────
   async loadProduct(productId) {
     this.setData({ loading: true, errorMsg: '' })
     try {
-      // TODO: 替换为实际 API → services/product.getDetail(productId)
-      const product = this.mockLoadProduct(productId)
+      const raw = await productService.getDetail(productId)
+      const product = this.mapBackendProduct(raw)
       const formatted = this.formatProduct(product)
       this.setData({
         product: formatted,
@@ -43,39 +54,40 @@ Page({
         isOwner: this.checkIsOwner(formatted),
         isLoggedIn: isLoggedIn(),
       })
-      if (isLoggedIn()) this.checkFavoriteStatus(productId)
+      if (isLoggedIn()) {
+        this.checkFavoriteStatus(productId)
+      }
     } catch (err) {
       this.setData({ loading: false, errorMsg: err.message || '加载失败，请重试' })
     }
   },
 
-  // ── Mock（开发期临时）──────────────────────
-  mockLoadProduct(productId) {
+  // ── 后端数据 → 前端展示数据映射 ───────────
+  mapBackendProduct(raw) {
     return {
-      id: productId,
-      title: '九成新 iPad Pro 2024 M4 11英寸',
-      description: '去年11月购入，使用不到半年，无磕碰无划痕，屏幕贴膜，电池健康98%。附赠原装充电器和包装盒。\n\n因换新款 MacBook 故出，限校内面交。',
-      price: 5200,
-      originalPrice: 6999,
-      images: [
-        'https://picsum.photos/seed/ipad1/750/750',
-        'https://picsum.photos/seed/ipad2/750/750',
-        'https://picsum.photos/seed/ipad3/750/750',
-        'https://picsum.photos/seed/ipad4/750/750',
-      ],
-      category: '数码电子',
-      condition: 'used_like_new',
-      campus: '北校区',
-      status: 'published',
-      viewCount: 328,
-      favoriteCount: 15,
-      seller: {
-        id: 'user_001', nickname: '小明同学',
-        avatar: 'https://picsum.photos/seed/avatar1/200/200',
-        reputation: 98, publishedCount: 12, soldCount: 8,
+      id: raw.id,
+      title: raw.title || '',
+      description: raw.description || '',
+      price: raw.price,
+      originalPrice: raw.originalPrice || null,
+      images: raw.images || [],
+      category: CATEGORY_MAP[raw.categoryId] || '其他',
+      categoryId: raw.categoryId,
+      condition: raw.condition || 'used_good',
+      campus: raw.campus || '',
+      status: raw.status || 'published',
+      viewCount: raw.viewCount || 0,
+      favoriteCount: raw.favoriteCount || 0,
+      seller: raw.seller || {
+        id: raw.ownerId || '',
+        nickname: raw.ownerNickname || '未知用户',
+        avatar: raw.ownerAvatar || '',
+        reputation: raw.ownerScore || 100,
+        publishedCount: 0,
+        soldCount: 0,
       },
-      createdAt: '2026-05-15T10:30:00Z',
-      updatedAt: '2026-05-18T14:20:00Z',
+      createdAt: raw.createdAt || '',
+      updatedAt: raw.updatedAt || '',
     }
   },
 
@@ -102,11 +114,22 @@ Page({
 
   checkIsOwner(product) {
     const u = getUserInfo()
-    return u && product.seller ? u.id === product.seller.id : false
+    if (!u || !product) return false
+    return u.id === product.seller.id || u.id === product.id
   },
 
+  // ── 检查收藏状态 ──────────────────────────
   async checkFavoriteStatus(productId) {
-    // TODO: 替换为 API → product.isFavorited(productId)
+    try {
+      // 通过收藏列表判断是否已收藏
+      const res = await userService.getFavorites(1, 100)
+      const favList = res.list || []
+      this.setData({
+        isFavorited: favList.some(f => f.productId === Number(productId)),
+      })
+    } catch (e) {
+      // 静默失败
+    }
   },
 
   // ── 图片操作 ──────────────────────────────
@@ -122,12 +145,16 @@ Page({
     if (this.data.favoriting) return
     this.setData({ favoriting: true })
     try {
-      // TODO: API → product.toggleFavorite(productId, isFavorited ? 'remove' : 'add')
-      const n = !this.data.isFavorited
-      this.setData({ isFavorited: n })
-      wx.showToast({ title: n ? '已收藏' : '已取消收藏', icon: 'success' })
+      const { productId, isFavorited } = this.data
+      if (isFavorited) {
+        await productService.removeFavorite(productId)
+      } else {
+        await productService.addFavorite(productId)
+      }
+      this.setData({ isFavorited: !isFavorited })
+      wx.showToast({ title: isFavorited ? '已取消收藏' : '已收藏', icon: 'success' })
     } catch (e) {
-      wx.showToast({ title: '操作失败', icon: 'none' })
+      wx.showToast({ title: e.message || '操作失败', icon: 'none' })
     } finally { this.setData({ favoriting: false }) }
   },
 
@@ -140,10 +167,19 @@ Page({
     wx.showModal({
       title: '确认下单',
       content: `确认购买「${p.title}」？\n价格：${p.priceText}`,
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          // TODO: API → order.create(productId)
-          wx.showToast({ title: '下单成功', icon: 'success' })
+          try {
+            wx.showLoading({ title: '下单中...' })
+            await orderService.create({ productId: Number(this.data.productId) })
+            wx.hideLoading()
+            wx.showToast({ title: '下单成功', icon: 'success' })
+            // 刷新详情
+            this.loadProduct(this.data.productId)
+          } catch (e) {
+            wx.hideLoading()
+            wx.showToast({ title: e.message || '下单失败', icon: 'none' })
+          }
         }
       },
     })
@@ -154,10 +190,17 @@ Page({
     if (!this.data.isLoggedIn) { wx.showToast({ title: '请先登录', icon: 'none' }); return }
     wx.showActionSheet({
       itemList: ['信息不实', '违规商品', '侵权内容', '其他原因'],
-      success: (res) => {
+      success: async (res) => {
         const reasons = ['信息不实', '违规商品', '侵权内容', '其他原因']
-        // TODO: API → report.create({ productId, reason: reasons[res.tapIndex] })
-        wx.showToast({ title: '举报已提交', icon: 'success' })
+        try {
+          await reportService.create({
+            productId: Number(this.data.productId),
+            reason: reasons[res.tapIndex],
+          })
+          wx.showToast({ title: '举报已提交', icon: 'success' })
+        } catch (e) {
+          wx.showToast({ title: e.message || '举报失败', icon: 'none' })
+        }
       },
     })
   },
