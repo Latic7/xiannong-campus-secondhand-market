@@ -14,6 +14,15 @@ env/
 # Local secrets
 server/.env
 
+# 文档工作区
+文档工作区/
+
+# QA 工作区
+docs/qa/
+
+# miniprogram 本地知识库
+miniprogram/.workbuddy/
+
 
 #备忘录 encoding=utf-8
 cc备忘录/
