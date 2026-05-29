@@ -16,6 +16,10 @@ Page({
     priceMax: null,
 
     showFilter: false,
+    showSortPanel: false,
+    hasFilters: false,
+    hasSortSelection: false,
+    currentSortLabel: '排序',
     customPriceMin: '',
     customPriceMax: '',
     activeTags: [],
@@ -36,6 +40,13 @@ Page({
       { label: '30-50元', min: 30, max: 50 },
       { label: '50-100元', min: 50, max: 100 },
       { label: '100元+', min: 100, max: null }
+    ],
+
+    sortOptions: [
+      { value: 'createdAt_desc', label: '默认排序' },
+      { value: 'price_desc', label: '价格从高到低' },
+      { value: 'price_asc', label: '价格从低到高' },
+      { value: 'hot', label: '热门推荐' }
     ],
     selectedPriceIndex: 0,
   },
@@ -68,7 +79,10 @@ Page({
       const high = priceMax !== null ? priceMax : '∞';
       tags.push({ key: 'price', label: '¥' + low + ' - ¥' + high, prefix: '价格' });
     }
-    this.setData({ activeTags: tags });
+    this.setData({
+      activeTags: tags,
+      hasFilters: tags.length > 0
+    });
   },
 
   hasActiveFilters() {
@@ -179,8 +193,13 @@ Page({
   // ---- 排序 ----
 
   onSortTap(e) {
-    const { sort } = e.currentTarget.dataset;
-    this.setData({ sort });
+    const { sort, label } = e.currentTarget.dataset;
+    this.setData({
+      sort,
+      currentSortLabel: label || '默认排序',
+      hasSortSelection: true,
+      showSortPanel: false
+    });
     this.reload();
   },
 
@@ -194,7 +213,8 @@ Page({
       selectedPriceIndex: index,
       customPriceMin: '',
       customPriceMax: '',
-      showFilter: false
+      showFilter: false,
+      showSortPanel: false
     });
     this.reload();
   },
@@ -215,16 +235,36 @@ Page({
       priceMin: min,
       priceMax: max,
       selectedPriceIndex: -1,
-      showFilter: false
+      showFilter: false,
+      showSortPanel: false
     });
     this.reload();
   },
 
-  // ---- 筛选面板 ----
+  // ---- 悬浮面板 ----
+
+  onSortToggle() {
+    this.setData({
+      showSortPanel: !this.data.showSortPanel,
+      showFilter: false
+    });
+  },
 
   onFilterToggle() {
-    this.setData({ showFilter: !this.data.showFilter });
+    this.setData({
+      showFilter: !this.data.showFilter,
+      showSortPanel: false
+    });
   },
+
+  onCloseFloatingPanels() {
+    this.setData({
+      showSortPanel: false,
+      showFilter: false
+    });
+  },
+
+  noop() {},
 
   // ---- 已选标签操作 ----
 
@@ -255,7 +295,8 @@ Page({
       selectedPriceIndex: 0,
       customPriceMin: '',
       customPriceMax: '',
-      showFilter: false
+      showFilter: false,
+      showSortPanel: false
     });
     this.reload();
   },
