@@ -1,80 +1,148 @@
 <view class="container">
+  <!-- 背景图 -->
+  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+
+  <!-- 搜索栏 -->
   <view class="search-bar">
     <input
       class="search-input"
-      placeholder="搜索商品"
+      placeholder="搜索教材、宿舍好物、数码配件"
       value="{{keyword}}"
       bindinput="onSearchInput"
       bindconfirm="onSearchConfirm"
     />
-    <view class="filter-btn" bindtap="onFilterToggle">
-      <text>筛选</text>
-    </view>
   </view>
 
-  <view class="filter-bar">
-    <scroll-view class="category-scroll" scroll-x>
-      <view class="category-list">
-        <block wx:for="{{categories}}" wx:key="id">
-          <view
-            class="category-item {{item.id === categoryId ? 'active' : ''}}"
-            data-id="{{item.id}}"
-            bindtap="onCategoryChange"
-          >
-            <text>{{item.name}}</text>
-          </view>
-        </block>
+  <!-- 已选筛选标签 -->
+  <view class="active-tags" wx:if="{{activeTags.length > 0}}">
+    <scroll-view class="tags-scroll" scroll-x>
+      <view class="tags-list">
+        <view
+          class="filter-tag"
+          wx:for="{{activeTags}}"
+          wx:key="key"
+          data-key="{{item.key}}"
+          bindtap="onRemoveTag"
+        >
+          <text class="tag-prefix">{{item.prefix}}：</text>
+          <text class="tag-label">{{item.label}}</text>
+          <text class="tag-remove">✕</text>
+        </view>
       </view>
     </scroll-view>
-    <view class="filter-actions">
+    <view class="clear-all-btn" bindtap="onClearAllFilters">
+      <text>清除全部</text>
+    </view>
+  </view>
+
+  <!-- 分类栏 -->
+  <scroll-view class="category-scroll" scroll-x>
+    <view class="category-list">
       <view
-        class="sort-btn {{selectedSort !== 'createdAt_desc' ? 'active' : ''}}"
-        data-value="{{selectedSort}}"
-        bindtap="onSortChange"
+        class="category-item {{item.id === categoryId ? 'active' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onCategoryChange"
       >
-        <text>{{currentSortLabel}}</text>
-      </view>
-      <view class="filter-icon" bindtap="onFilterToggle">
-        <text>⚙</text>
+        <text>{{item.name}}</text>
       </view>
     </view>
-  </view>
+  </scroll-view>
 
-  <view class="filter-panel" wx:if="{{showFilter}}">
-    <view class="filter-section">
-      <view class="filter-label">价格区间</view>
-      <scroll-view class="price-range-scroll" scroll-x>
-        <view class="price-range-list">
-          <block wx:for="{{priceRanges}}" wx:key="index">
-            <view
-              class="price-range-item {{selectedPriceIndex === index ? 'active' : ''}}"
-              data-min="{{item.min}}"
-              data-max="{{item.max}}"
-              data-index="{{index}}"
-              bindtap="onPriceRangeChange"
-            >
-              <text>{{item.label}}</text>
-            </view>
-          </block>
-        </view>
-      </scroll-view>
-    </view>
-    <view class="filter-summary">
-      <text wx:if="{{hasActiveFilter}}">当前筛选：{{filterSummary}}</text>
-      <text wx:else>暂无筛选条件</text>
-    </view>
-  </view>
+  <!-- 初始加载骨架屏 -->
+  <loading-state wx:if="{{loading && products.length === 0}}" count="4" />
 
-  <view class="product-list">
+  <!-- 商品列表 -->
+  <view class="product-list" wx:if="{{products.length > 0}}">
     <block wx:for="{{products}}" wx:key="id">
       <item-card item="{{item}}" bind:tap="onCardTap" />
     </block>
   </view>
 
-  <view class="bottom-tip">
-    <text wx:if="{{loading}}">正在加载...</text>
-    <text wx:elif="{{!hasMore && products.length > 0}}">没有更多了</text>
+  <!-- 空状态 -->
+  <empty-state wx:if="{{!loading && products.length === 0}}" message="暂无商品" />
+
+  <!-- 底部加载提示 -->
+  <view class="bottom-tip" wx:if="{{products.length > 0}}">
+    <text wx:if="{{loading}}">正在加载更多...</text>
+    <text wx:elif="{{!hasMore}}">没有更多了</text>
   </view>
 
-  <empty-state wx:if="{{!loading && products.length === 0}}" message="暂无商品" />
+  <view
+    class="floating-backdrop {{showSortPanel || showFilter ? 'active' : ''}}"
+    catchtap="onCloseFloatingPanels"
+  ></view>
+
+  <!-- 筛选悬浮窗 -->
+  <view class="filter-panel {{showFilter ? 'active' : ''}}" catchtap="noop">
+    <view class="filter-section">
+      <view class="filter-label">价格区间</view>
+      <view class="price-tags">
+        <view
+          class="price-tag {{selectedPriceIndex === index ? 'active' : ''}}"
+          wx:for="{{priceRanges}}"
+          wx:key="index"
+          data-min="{{item.min}}"
+          data-max="{{item.max}}"
+          data-index="{{index}}"
+          bindtap="onPriceRangeChange"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+      <view class="custom-price-row">
+        <input
+          class="custom-price-input"
+          type="digit"
+          placeholder="最低价"
+          value="{{customPriceMin}}"
+          bindinput="onCustomPriceMinInput"
+        />
+        <text class="custom-price-divider">—</text>
+        <input
+          class="custom-price-input"
+          type="digit"
+          placeholder="最高价"
+          value="{{customPriceMax}}"
+          bindinput="onCustomPriceMaxInput"
+        />
+        <view class="custom-price-confirm" bindtap="onCustomPriceConfirm">
+          <text>确定</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="floating-action-bar" catchtap="noop">
+    <view class="sort-float-stack {{showSortPanel ? 'active' : ''}} {{hasSortSelection ? 'selected' : ''}}">
+      <view class="sort-expanding-panel">
+        <view
+          class="sort-option {{sort === item.value ? 'active' : ''}}"
+          wx:for="{{sortOptions}}"
+          wx:key="value"
+          data-sort="{{item.value}}"
+          data-label="{{item.label}}"
+          bindtap="onSortTap"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+      <view class="floating-action sort-trigger {{showSortPanel ? 'active' : ''}}" bindtap="onSortToggle">
+        <view class="sort-action-icon">
+          <view class="sort-action-line long"></view>
+          <view class="sort-action-line medium"></view>
+          <view class="sort-action-line short"></view>
+        </view>
+        <text>{{currentSortLabel}}</text>
+      </view>
+    </view>
+    <view class="floating-action {{showFilter || hasFilters ? 'active' : ''}}" bindtap="onFilterToggle">
+      <view class="filter-action-icon">
+        <view class="filter-action-row top"></view>
+        <view class="filter-action-row bottom"></view>
+      </view>
+      <text>筛选</text>
+    </view>
+  </view>
 </view>

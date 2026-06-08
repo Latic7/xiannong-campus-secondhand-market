@@ -2,7 +2,8 @@
   "usingComponents": {
     "item-card": "/components/item-card/item-card",
     "empty-state": "/components/empty-state/empty-state",
-    "loading-state": "/components/loading-state/loading-state"
+    "loading-state": "/components/loading-state/loading-state",
+    "custom-tab-bar": "/custom-tab-bar/index"
   },
   "navigationStyle": "custom"
 }

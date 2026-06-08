@@ -1,5 +1,10 @@
 from pydantic import BaseModel, Field
 
+from app.schemas.orders import OrderCreateRequest, OrderReviewRequest
+from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
+
+from app.core.status import ProductStatus, ReportTargetType, UserStatus
+
 
 class WxLoginRequest(BaseModel):
     code: str
@@ -30,7 +35,7 @@ class ProductUpdateRequest(BaseModel):
     price: float | None = None
     categoryId: int | None = None
     description: str | None = None
-    status: str | None = None
+    status: ProductStatus | None = None
 
 
 class OrderCreateRequest(BaseModel):
@@ -44,7 +49,7 @@ class OrderReviewRequest(BaseModel):
 
 
 class ReportCreateRequest(BaseModel):
-    targetType: str
+    targetType: ReportTargetType
     targetId: int
     reason: str
 
@@ -56,7 +61,7 @@ class AppealCreateRequest(BaseModel):
 
 
 class UserStatusPatchRequest(BaseModel):
-    status: str
+    status: UserStatus
     reason: str | None = None
 
 

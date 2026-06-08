@@ -8,20 +8,21 @@ load_dotenv(ENV_FILE)
 
 
 class Settings:
-    # 微信配置
-    WECHAT_APP_ID: str = os.getenv("WECHAT_APP_ID", "")
-    WECHAT_APP_SECRET: str = os.getenv("WECHAT_APP_SECRET", "")
-    
-    # JWT配置（改为大写）
-    JWT_SECRET: str = os.getenv("JWT_SECRET", "dev-jwt-secret")
-    JWT_EXPIRES_SECONDS: int = int(os.getenv("JWT_EXPIRES_SECONDS", "3600"))
-    JWT_REFRESH_EXPIRES_SECONDS: int = int(os.getenv("JWT_REFRESH_EXPIRES_SECONDS", "604800"))
-    
-    # 数据库配置
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "mysql+pymysql://root:password@localhost:3306/campus_market")
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    wechat_app_id: str = os.getenv("WECHAT_APP_ID", "")
+    wechat_app_secret: str = os.getenv("WECHAT_APP_SECRET", "")
+    jwt_secret: str = os.getenv("JWT_SECRET", "dev-jwt-secret")
+    jwt_expires_seconds: int = int(os.getenv("JWT_EXPIRES_SECONDS", "3600"))
+    jwt_refresh_expires_seconds: int = int(
+        os.getenv("JWT_REFRESH_EXPIRES_SECONDS", "604800")
+    )
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./campus_market.db")
+
+    # 兼容旧代码中使用的大写配置名
+    WECHAT_APP_ID: str = wechat_app_id
+    WECHAT_APP_SECRET: str = wechat_app_secret
+    JWT_SECRET: str = jwt_secret
+    JWT_EXPIRES_SECONDS: int = jwt_expires_seconds
+    JWT_REFRESH_EXPIRES_SECONDS: int = jwt_refresh_expires_seconds
+    DATABASE_URL: str = database_url
 
 settings = Settings()

@@ -1,1 +1,16 @@
-<view>loading-state placeholder</view>
+<view class="loading-container">
+  <view class="skeleton-list">
+    <view class="skeleton-item" wx:for="{{skeletons}}" wx:key="index">
+      <view class="skeleton-image"></view>
+      <view class="skeleton-content">
+        <view class="skeleton-title"></view>
+        <view class="skeleton-desc"></view>
+        <view class="skeleton-footer">
+          <view class="skeleton-price"></view>
+          <view class="skeleton-tag"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+  <text wx:if="{{message}}" class="loading-message">{{message}}</text>
+</view>

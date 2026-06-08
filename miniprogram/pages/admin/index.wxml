@@ -1,1 +1,5 @@
-<view class="page">管理后台占位页</view>
+<view class="page">
+  <!-- 背景图 -->
+  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+  管理后台占位页
+</view>

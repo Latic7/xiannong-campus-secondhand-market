@@ -1,7 +1,7 @@
-# 后端D - 契约测试清单（第一阶段最小链路，按 OpenAPI 字段逐项对齐）
+# 契约测试清单（第一阶段最小链路，按 OpenAPI 字段逐项对齐）
 
 对照依据：
-- docs/api/openapi-draft.yaml（字段、必填、枚举、参数范围）
+- docs/api/openapi.yaml（字段、必填、枚举、参数范围）
 - 统一返回结构：code/message/data/requestId/timestamp（ApiResponse）
 
 通用检查（每个接口都要看一眼）：

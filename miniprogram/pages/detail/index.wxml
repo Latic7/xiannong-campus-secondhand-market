@@ -6,13 +6,15 @@
 
 <!-- 错误状态 -->
 <view wx:elif="{{errorMsg}}" class="page-status">
-  <text class="status-icon">😵</text>
+  <image class="status-icon-img" src="/assets/icons/warning.svg" mode="aspectFit" />
   <text class="status-text">{{errorMsg}}</text>
   <button class="btn-retry" bindtap="onRetry">重新加载</button>
 </view>
 
 <!-- 商品详情 -->
 <view wx:elif="{{product}}" class="page-body">
+  <!-- 背景图 -->
+  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
 
   <!-- 图片轮播 -->
   <view class="image-section">
@@ -56,16 +58,16 @@
 
     <!-- 元信息 -->
     <view class="meta-row">
-      <text class="meta-item">📦 {{product.category}}</text>
-      <text class="meta-item">✨ {{product.conditionText}}</text>
-      <text class="meta-item">📍 {{product.campus}}</text>
+      <view class="meta-item"><image class="meta-icon-img" src="/assets/icons/package.svg" mode="aspectFit" /><text>{{product.category}}</text></view>
+      <view class="meta-item"><image class="meta-icon-img" src="/assets/icons/star.svg" mode="aspectFit" /><text>{{product.conditionText}}</text></view>
+      <view class="meta-item"><image class="meta-icon-img" src="/assets/icons/pin.svg" mode="aspectFit" /><text>{{product.campus}}</text></view>
     </view>
 
     <!-- 浏览/收藏统计 -->
     <view class="stats-row">
-      <text class="stat-item">👁 {{product.viewCount}} 次浏览</text>
-      <text class="stat-item">❤ {{product.favoriteCount}} 人收藏</text>
-      <text class="stat-item">🕐 {{product.createdAtText}}</text>
+      <view class="stat-item"><image class="stat-icon-img" src="/assets/icons/eye.svg" mode="aspectFit" /><text>{{product.viewCount}} 次浏览</text></view>
+      <view class="stat-item"><image class="stat-icon-img" src="/assets/icons/heart.svg" mode="aspectFit" /><text>{{product.favoriteCount}} 人收藏</text></view>
+      <view class="stat-item"><image class="stat-icon-img" src="/assets/icons/clock.svg" mode="aspectFit" /><text>{{product.createdAtText}}</text></view>
     </view>
   </view>
 
@@ -90,7 +92,7 @@
         <view class="seller-name-row">
           <text class="seller-nickname">{{product.seller.nickname}}</text>
           <view class="reputation-badge">
-            <text class="reputation-star">⭐</text>
+            <image class="reputation-star-img" src="/assets/icons/star.svg" mode="aspectFit" />
             <text class="reputation-score">{{product.seller.reputation}}分</text>
           </view>
         </view>
@@ -114,13 +116,13 @@
 <view wx:if="{{!loading && !errorMsg && product}}" class="action-bar">
   <!-- 收藏 -->
   <view class="action-btn action-fav" bindtap="onToggleFavorite">
-    <text class="action-icon">{{isFavorited ? '❤️' : '🤍'}}</text>
+    <image class="action-icon-img" src="{{isFavorited ? '/assets/icons/heart-filled.svg' : '/assets/icons/heart.svg'}}" mode="aspectFit" />
     <text class="action-label">{{isFavorited ? '已收藏' : '收藏'}}</text>
   </view>
 
   <!-- 举报 -->
   <view class="action-btn action-report" bindtap="onReport">
-    <text class="action-icon">⚠️</text>
+    <image class="action-icon-img" src="/assets/icons/warning.svg" mode="aspectFit" />
     <text class="action-label">举报</text>
   </view>
 
