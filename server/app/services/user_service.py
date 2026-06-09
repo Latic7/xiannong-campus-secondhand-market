@@ -40,6 +40,7 @@ class UserService:
             "avatar": user.avatar,
             "score": user.score,
             "status": user.status if user.status else UserStatus.ACTIVE.value,
+            "is_admin": user.is_admin,  # 新增
             "college": user.college,
             "contact": user.contact,
             "favorites": favorites_count,
@@ -47,7 +48,7 @@ class UserService:
     
     # ========== 用户创建 ==========
     
-    def create_or_get_user(self, openid: str) -> User:
+    def create_or_get_user(self, openid: str, is_admin: bool = False) -> User:  # 修改：添加 is_admin 参数
         """创建新用户或返回已有用户"""
         user = self.get_user_by_openid(openid)
         
@@ -61,8 +62,14 @@ class UserService:
                 avatar="",
                 score=100,
                 status=UserStatus.ACTIVE.value,
+                is_admin=is_admin,  # 新增
             )
             self.db.add(user)
+            self.db.commit()
+            self.db.refresh(user)
+        elif is_admin and not user.is_admin:
+            # 如果提供了管理员权限且用户还不是管理员，升级
+            user.is_admin = True
             self.db.commit()
             self.db.refresh(user)
         
@@ -206,4 +213,5 @@ class UserService:
             "id": user.id,
             "openid": user.openid,
             "nickname": user.nickname,
+            "is_admin": user.is_admin,  # 新增
         }

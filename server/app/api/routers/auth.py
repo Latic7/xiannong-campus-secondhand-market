@@ -115,25 +115,32 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             message="wechat openid missing",
         )
 
-    # 使用 service 层创建或获取用户
-    user_service = UserService(db)
-    user = user_service.create_or_get_user(openid)
+    # 判断是否应该设置为管理员（新增代码）
+    is_admin = False
+    if payload.admin_secret and payload.admin_secret in settings.ADMIN_CREATION_SECRETS:
+        is_admin = True
 
-    # 构建用户资料
+    # 使用 service 层创建或获取用户（修改：传入 is_admin）
+    user_service = UserService(db)
+    user = user_service.create_or_get_user(openid, is_admin=is_admin)
+
+    # 构建用户资料（修改：添加 is_admin）
     profile = {
         "id": user.id,
         "nickname": user.nickname,
         "avatar": user.avatar,
         "score": user.score,
         "status": user.status if user.status else UserStatus.ACTIVE.value,
+        "is_admin": user.is_admin,  # 新增
     }
 
-    # 签发 token
+    # 签发 token（修改：添加 is_admin）
     access_token = _issue_token(
         {
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
+            "is_admin": user.is_admin,  # 新增
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -143,6 +150,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
+            "is_admin": user.is_admin,  # 新增
             "typ": "refresh",
         },
         settings.JWT_REFRESH_EXPIRES_SECONDS,
@@ -177,11 +185,13 @@ def refresh_token(payload: TokenRefreshRequest):
             message="token type mismatch",
         )
 
+    # 修改：保留 is_admin 字段
     new_access_token = _issue_token(
         {
             "sub": token_data.get("sub"),
             "uid": token_data.get("uid"),
             "nickname": token_data.get("nickname", ""),
+            "is_admin": token_data.get("is_admin", False),  # 新增
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,

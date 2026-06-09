@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, Index, String, text
+from sqlalchemy import DateTime, Enum, Index, String, Boolean, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -24,6 +24,7 @@ class User(Base):
 		nullable=False,
 		server_default="active",
 	)
+	is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))  # 新增
 	college: Mapped[str | None] = mapped_column(String(128))
 	contact: Mapped[str | None] = mapped_column(String(64))
 	created_at: Mapped[datetime] = mapped_column(
