@@ -1,4 +1,4 @@
-# 契约测试清单（第一阶段最小链路，按 OpenAPI 字段逐项对齐）
+# 契约测试清单（第二阶段增量覆盖，按 OpenAPI 字段逐项对齐）
 
 对照依据：
 - docs/api/openapi.yaml（字段、必填、枚举、参数范围）
@@ -8,6 +8,11 @@
 - 响应外层必须包含：code（int）、message（string）、data（object/nullable）、requestId（string）、timestamp（date-time）
 - 成功时 code=0，message=ok（OpenAPI 示例）
 - 列表接口分页参数：page>=1（默认 1），size 1~100（默认 20）
+
+第二阶段增量目标（只定义“应测点”，可在联调时逐项勾掉）：
+- 覆盖第二阶段新增接口：admin/users、admin/products/pending、admin/products/{id}/review、admin/reports、admin/reports/{id}/handle、admin/stats/*、admin/logs、appeals
+- 覆盖状态分支：Product.status / Order.status / Report.status / User.status（枚举值与大小写完全一致）
+- 覆盖权限分支：未登录(401)、非管理员(403)、资源不存在(404)、参数越界(4xx)
 
 ---
 
@@ -251,3 +256,151 @@
 
 ### 5.6 GET /api/admin/stats/overview（失败路径）
 - 非管理员访问：应返回错误结构（ApiResponse），通常 403（若未实现则记录问题）
+
+---
+
+## 6. 第二阶段新增接口覆盖（Appeals / Admin）
+
+### 6.1 POST /api/appeals（成功路径）
+- 请求头：
+  - Content-Type: application/json
+- 请求体（AppealCreateRequest）：
+  - 对照 OpenAPI：字段/必填/枚举
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI 定义（字段与类型一致）
+
+### 6.2 POST /api/appeals（失败路径）
+- 未登录：应返回错误结构（ApiResponse），通常 401
+- 必填字段缺失：应返回错误结构（ApiResponse）；若返回默认 422，需要记录“返回结构不一致”
+
+---
+
+### 6.3 GET /api/admin/users（成功路径）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（分页结构、列表元素字段完整性）
+- 重点检查：
+  - User.status 枚举：active | banned
+
+### 6.4 GET /api/admin/users（失败路径）
+- 未登录：401 + ApiResponse
+- 非管理员：403 + ApiResponse
+
+---
+
+### 6.5 PATCH /api/admin/users/{userId}/status（成功路径）
+- Path 参数：
+  - userId（integer）
+- 请求体：
+  - 对照 OpenAPI：status/原因字段（如有）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（是否回传 updated/user 等）
+- 重点检查：
+  - 用户状态从 active <-> banned 的幂等与可回滚（重复封禁/重复解封）
+
+### 6.6 PATCH /api/admin/users/{userId}/status（失败路径）
+- 未登录：401 + ApiResponse
+- 非管理员：403 + ApiResponse
+- userId 不存在：404 + ApiResponse
+
+---
+
+### 6.7 GET /api/admin/products/pending（成功路径）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（列表/分页/字段完整性）
+- 重点检查：
+  - 返回的 Product.status 是否均为 pending（或至少不包含不应出现的状态）
+
+### 6.8 GET /api/admin/products/pending（失败路径）
+- 未登录：401 + ApiResponse
+- 非管理员：403 + ApiResponse
+
+---
+
+### 6.9 POST /api/admin/products/{productId}/review（成功路径）
+- 请求体：
+  - result（通过/驳回等枚举，按 OpenAPI）
+  - reason（可选/必填按 OpenAPI）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（被审核商品的最新状态/审核信息）
+- 重点检查（状态分支）：
+  - pending -> published（通过）
+  - pending -> removed（驳回/下架，按约定）
+
+### 6.10 POST /api/admin/products/{productId}/review（失败路径）
+- 未登录：401 + ApiResponse
+- 非管理员：403 + ApiResponse
+- productId 不存在：404 + ApiResponse
+- 非 pending 状态审核：应返回 4xx + ApiResponse（记录实际语义）
+
+---
+
+### 6.11 GET /api/admin/reports（成功路径）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（分页/筛选字段、列表元素字段完整性）
+- 重点检查：
+  - Report.status 枚举：open | rejected | handled
+  - 可筛选/过滤字段（若 OpenAPI 定义）
+
+### 6.12 GET /api/admin/reports（失败路径）
+- 未登录：401 + ApiResponse
+- 非管理员：403 + ApiResponse
+
+---
+
+### 6.13 POST /api/admin/reports/{reportId}/handle（成功路径）
+- 请求体：
+  - handleAction（枚举，按 OpenAPI）
+  - handleReason（可选/必填按 OpenAPI）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（举报最新状态、处理人、处理时间、动作/原因）
+- 重点检查（状态分支）：
+  - open -> handled
+  - open -> rejected
+
+### 6.14 POST /api/admin/reports/{reportId}/handle（失败路径）
+- 未登录：401 + ApiResponse
+- 非管理员：403 + ApiResponse
+- reportId 不存在：404 + ApiResponse
+- 非 open 状态重复处理：应返回 4xx + ApiResponse（记录幂等策略）
+
+---
+
+### 6.15 GET /api/admin/stats/products（成功路径）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（字段齐全，类型正确）
+
+### 6.16 GET /api/admin/stats/trades（成功路径）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（字段齐全，类型正确）
+
+### 6.17 GET /api/admin/stats/users（成功路径）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（字段齐全，类型正确）
+
+### 6.18 GET /api/admin/stats/*（失败路径）
+- 未登录：401 + ApiResponse
+- 非管理员：403 + ApiResponse
+
+---
+
+### 6.19 GET /api/admin/logs（成功路径）
+- Query 参数：
+  - page/size（同通用分页约束）
+  - 过滤字段（若 OpenAPI 定义）
+- 期望响应（200）：
+  - 外层：ApiResponse
+  - data：对照 OpenAPI（分页结构、日志字段完整性）
+
+### 6.20 GET /api/admin/logs（失败路径）
+- 未登录：401 + ApiResponse
+- 非管理员：403 + ApiResponse
