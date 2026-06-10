@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, Index, String, text
+from sqlalchemy import Boolean, DateTime, Enum, Index, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -23,6 +23,11 @@ class User(Base):
 		Enum("active", "banned", name="user_status_enum"),
 		nullable=False,
 		server_default="active",
+	)
+	is_admin: Mapped[bool] = mapped_column(
+		Boolean,
+		nullable=False,
+		server_default=text("0"),
 	)
 	college: Mapped[str | None] = mapped_column(String(128))
 	contact: Mapped[str | None] = mapped_column(String(64))

@@ -49,7 +49,7 @@ def _json_error(status_code: int, code: int, message: str, data=None) -> JSONRes
 
 
 def _get_current_user_from_token(
-    authorization: Optional[str] = None, 
+    authorization: Optional[str] = None,
     db: Session = None
 ) -> tuple[Optional[dict], Optional[JSONResponse]]:
     """
@@ -70,7 +70,7 @@ def _get_current_user_from_token(
 
     user_service = UserService(db)
     user_info = user_service.get_simple_user_info(token_data.get("uid", 0))
-    
+
     if not user_info:
         return None, _json_error(404, 10033, "user not found")
 
@@ -80,7 +80,6 @@ def _get_current_user_from_token(
 @router.post("/wx-login")
 def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
     """微信授权登录"""
-    # 检查微信配置
     if not settings.WECHAT_APP_ID or not settings.WECHAT_APP_SECRET:
         return _json_error(
             status_code=500,
@@ -88,7 +87,6 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             message="server wechat config missing",
         )
 
-    # 调用微信接口
     try:
         wx_result = _wechat_code_to_session(payload.code)
     except httpx.HTTPError:
@@ -98,7 +96,6 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             message="wechat service unavailable",
         )
 
-    # 检查微信返回结果
     if wx_result.get("errcode"):
         return _json_error(
             status_code=401,
@@ -115,25 +112,24 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             message="wechat openid missing",
         )
 
-    # 使用 service 层创建或获取用户
     user_service = UserService(db)
     user = user_service.create_or_get_user(openid)
 
-    # 构建用户资料
     profile = {
         "id": user.id,
         "nickname": user.nickname,
         "avatar": user.avatar,
         "score": user.score,
         "status": user.status if user.status else UserStatus.ACTIVE.value,
+        "isAdmin": bool(user.is_admin),
     }
 
-    # 签发 token
     access_token = _issue_token(
         {
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
+            "isAdmin": bool(user.is_admin),
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -143,6 +139,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
+            "isAdmin": bool(user.is_admin),
             "typ": "refresh",
         },
         settings.JWT_REFRESH_EXPIRES_SECONDS,
@@ -182,6 +179,7 @@ def refresh_token(payload: TokenRefreshRequest):
             "sub": token_data.get("sub"),
             "uid": token_data.get("uid"),
             "nickname": token_data.get("nickname", ""),
+            "isAdmin": token_data.get("isAdmin", False),
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -214,7 +212,7 @@ def get_current_user(
 
     user_service = UserService(db)
     profile = user_service.get_user_profile(user_info["id"])
-    
+
     if not profile:
         return _json_error(404, 10033, "user not found")
 
