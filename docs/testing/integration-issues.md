@@ -1,11 +1,31 @@
-# 后端D - 联调问题记录表（第一阶段最小范围）
+# 联调问题记录表（第一阶段最小范围）
 
 只记录三类：
 - 字段不一致
 - 状态不一致
 - 返回结构不一致（包含：鉴权语义不一致、参数校验缺失导致的“该报错却成功返回”）
 
-对照依据：docs/api/openapi-draft.yaml
+对照依据：docs/api/openapi.yaml
+
+---
+
+## 0. 第二阶段联调期台账（按天维护 + 优先级）
+
+优先级定义：
+- P0：阻塞主链路联调/影响大面积功能
+- P1：不阻塞主链路但会导致明显功能缺失/状态错误
+- P2：体验/边角/低频问题
+
+台账（每天只追加新行，不覆盖旧行）：
+
+| 日期 | ISSUE | 接口/模块 | 现象摘要 | 责任人 | 优先级 | 状态 |
+|------|-------|-----------|----------|--------|--------|------|
+| 2026-06-09 | ISSUE-001 | Auth | refresh 响应 data 缺 user | 后端A | P0 | Open |
+| 2026-06-09 | ISSUE-004 | 全局 | 422 不走统一 ApiResponse | 后端A | P0 | Open |
+| 2026-06-09 | ISSUE-006 | 全局 | 大多数接口未鉴权仍返回200 | 后端A | P0 | Open |
+| 2026-06-09 | ISSUE-002 | Orders | 订单详情 data 缺 productId | 后端B | P1 | Open |
+| 2026-06-09 | ISSUE-008 | Orders | 状态机/幂等约束缺失 | 后端B | P1 | Open |
+| 2026-06-09 | ISSUE-003 | Reports | 举报详情 data 缺关键字段 | 后端C | P1 | Open |
 
 ---
 
@@ -14,6 +34,9 @@
 ### ISSUE-001（POST /api/auth/refresh：data 缺少 user）
 - 类型：字段不一致
 - 接口：POST /api/auth/refresh
+- 优先级：P0
+- 责任人：后端A
+- 状态：Open
 - 复现步骤：
   1) 准备一个合法 refreshToken（typ=refresh，使用同一 JWT_SECRET）
   2) 请求体：{"refreshToken":"..."}
@@ -31,6 +54,9 @@
 ### ISSUE-002（GET /api/orders/{orderId}：data 不是完整 Order）
 - 类型：字段不一致
 - 接口：GET /api/orders/{orderId}
+- 优先级：P1
+- 责任人：后端B
+- 状态：Open
 - 复现步骤：
   1) GET /api/orders/5001
 - OpenAPI 期望：
@@ -47,6 +73,9 @@
 ### ISSUE-003（GET /api/reports/{reportId}：data 不是完整 Report）
 - 类型：字段不一致
 - 接口：GET /api/reports/{reportId}
+- 优先级：P1
+- 责任人：后端C
+- 状态：Open
 - 复现步骤：
   1) GET /api/reports/7001
 - OpenAPI 期望：
@@ -65,6 +94,9 @@
 ### ISSUE-004（请求体缺必填字段时：返回 FastAPI 默认 422，不是 ApiResponse 外层）
 - 类型：返回结构不一致
 - 接口：示例 POST /api/products（同类：POST /api/orders、POST /api/reports 等）
+- 优先级：P0
+- 责任人：后端A
+- 状态：Open
 - 复现步骤：
   1) POST /api/products
   2) 请求体缺 title/price/categoryId 任意一个
@@ -82,6 +114,9 @@
 ### ISSUE-005（GET /api/products：page/size 越界不报错）
 - 类型：返回结构不一致
 - 接口：GET /api/products
+- 优先级：P1
+- 责任人：后端B
+- 状态：Open
 - 复现步骤：
   1) GET /api/products?page=0&size=999
 - OpenAPI 期望：
@@ -98,6 +133,9 @@
 ### ISSUE-006（OpenAPI 顶层 bearerAuth：多数接口未带 token 仍返回 200）
 - 类型：返回结构不一致
 - 接口：示例 GET /api/users/me、POST /api/products、POST /api/orders、POST /api/reports 等
+- 优先级：P0
+- 责任人：后端A
+- 状态：Open
 - 复现步骤：
   1) 不带 Authorization 调用上述接口
 - OpenAPI 期望：
@@ -117,6 +155,9 @@
   - GET /api/products/{productId}
   - GET /api/orders/{orderId}
   - GET /api/reports/{reportId}
+- 优先级：P1
+- 责任人：后端B（products/orders）、后端C（reports）
+- 状态：Open
 - 复现步骤：
   1) 用任意不存在的 id 调用
 - OpenAPI 期望：
@@ -138,6 +179,9 @@
   - POST /api/orders/{orderId}/seller-confirm
   - POST /api/orders/{orderId}/cancel
   - POST /api/orders/{orderId}/complete
+- 优先级：P1
+- 责任人：后端B
+- 状态：Open
 - 复现步骤：
   1) 对同一 orderId 重复调用 complete/cancel/confirm 任意组合
 - 约定/期望（开工前约定清单）：
@@ -149,3 +193,13 @@
   - 联调无法验证状态机；后续落库易产生脏状态
 - 备注：
   - 需要状态机与幂等策略（后端实现工作；你这里只记录）
+
+---
+
+## 四、数据库迁移脚本执行记录（第二阶段交付物）
+
+记录原则：每次 schema.sql 或建库脚本有变化，都补一条记录，并在群里通知大家同步更新。
+
+| 日期 | 变更摘要 | 影响表/字段 | 执行方式 | 执行人 | 结果 |
+|------|----------|-------------|----------|--------|------|
+| 2026-06-09 | users.id 自增主键 + openid 唯一索引；枚举小写口径统一 | users / products / orders / reports | MySQL SOURCE server/app/db/schema.sql | 后端D | OK |

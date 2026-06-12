@@ -1,86 +1,209 @@
-/* ── 页面容器 ──────────────────────────────── */
-page { background: #f5f5f5; }
-.page-body { min-height: 100vh; background: transparent; }
+page {
+  background: var(--color-bg);
+}
 
-/* ── 头部区域 ──────────────────────────────── */
-.user-header { position: relative; overflow: hidden; }
+.page-body {
+  min-height: 100vh;
+  padding-bottom: 150rpx;
+  background: var(--color-bg);
+}
+
+.user-header {
+  padding: 28rpx 24rpx 0;
+}
+
 .header-bg {
-  position: absolute; top: 0; left: 0; right: 0; height: 280rpx;
-  background: linear-gradient(135deg, #4F46E5 0%, #7c3aed 50%, #a78bfa 100%);
-  border-radius: 0 0 40rpx 40rpx;
+  display: none;
 }
 
 .user-card {
-  position: relative; z-index: 1;
-  display: flex; align-items: center; gap: 24rpx;
-  margin: 60rpx 28rpx 0; padding: 32rpx 28rpx;
-  background: #fff; border-radius: 20rpx;
-  box-shadow: 0 4rpx 24rpx rgba(79,70,229,0.15);
+  display: flex;
+  align-items: center;
+  gap: 22rpx;
+  padding: 28rpx;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-border);
+  border-radius: 30rpx;
+  box-sizing: border-box;
+  border-top: 6rpx solid rgba(11, 107, 67, 0.18);
 }
 
-/* 头像 */
 .avatar-section {
-  position: relative; width: 120rpx; height: 120rpx;
+  position: relative;
+  width: 116rpx;
+  height: 116rpx;
   flex-shrink: 0;
 }
-.user-avatar {
-  width: 100%; height: 100%; border-radius: 50%;
-  border: 4rpx solid #fff; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.1);
-}
+
+.user-avatar,
 .avatar-placeholder {
-  width: 100%; height: 100%; border-radius: 50%;
-  background: #eef2ff; display: flex; align-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.user-avatar {
+  background: #ededf2;
+}
+
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
   justify-content: center;
+  background: #f2f2f7;
 }
-.avatar-icon { font-size: 56rpx; }
 
-/* 用户信息 */
-.user-info { flex: 1; min-width: 0; }
-.info-logged-in { display: flex; flex-direction: column; gap: 8rpx; }
-.user-nickname { font-size: 34rpx; font-weight: 700; color: #1a1a1a; }
-.reputation-row { display: flex; align-items: center; gap: 6rpx; }
-.reputation-star { font-size: 24rpx; }
-.reputation-score { font-size: 26rpx; font-weight: 600; }
-.reputation-label { font-size: 24rpx; }
+.avatar-icon-img {
+  width: 54rpx;
+  height: 54rpx;
+  opacity: 0.42;
+}
 
-.info-logged-out { display: flex; flex-direction: column; gap: 6rpx; }
-.login-prompt { font-size: 34rpx; font-weight: 600; color: #1a1a1a; }
-.login-hint { font-size: 24rpx; color: #999; }
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
 
-/* 退出按钮 */
+.info-logged-in,
+.info-logged-out {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.user-nickname,
+.login-prompt {
+  color: var(--color-text);
+  font-size: 34rpx;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.login-hint {
+  color: var(--color-text-secondary);
+  font-size: 24rpx;
+}
+
+.reputation-row {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  height: 32rpx;
+  line-height: 32rpx;
+}
+
+.reputation-star-img {
+  width: 26rpx;
+  height: 26rpx;
+  flex-shrink: 0;
+  display: block;
+}
+
+.reputation-score {
+  font-size: 25rpx;
+  font-weight: 700;
+  line-height: 32rpx;
+}
+
+.reputation-label {
+  font-size: 24rpx;
+  line-height: 32rpx;
+}
+
 .logout-btn {
-  flex-shrink: 0; padding: 8rpx 24rpx;
-  font-size: 24rpx; color: #999; border: 1rpx solid #e5e5e5;
-  border-radius: 24rpx;
+  flex-shrink: 0;
+  padding: 10rpx 20rpx;
+  color: var(--color-text-secondary);
+  font-size: 24rpx;
+  background: #f2f2f7;
+  border-radius: 999rpx;
 }
 
-/* ── 数据统计 ──────────────────────────────── */
 .stats-section {
-  display: flex; align-items: center; justify-content: space-around;
-  margin: 24rpx 28rpx; padding: 28rpx 0;
-  background: #fff; border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  margin: 20rpx 24rpx;
+  padding: 24rpx 0;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-border);
+  border-radius: 26rpx;
 }
+
+.stat-num {
+  color: var(--color-primary);
+  font-size: 38rpx;
+  font-weight: 800;
+}
+
 .stat-item {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 8rpx; flex: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6rpx;
 }
-.stat-num { font-size: 40rpx; font-weight: 700; color: #1a1a1a; }
-.stat-label { font-size: 24rpx; color: #999; }
+
+.stat-label {
+  color: var(--color-text-secondary);
+  font-size: 24rpx;
+}
+
 .stat-divider {
-  width: 1rpx; height: 48rpx; background: #eee;
+  width: 1rpx;
+  height: 44rpx;
+  background: var(--color-border);
 }
 
-/* ── 菜单区 ────────────────────────────────── */
-.menu-section { margin: 0 28rpx 24rpx; background: #fff; border-radius: 16rpx; overflow: hidden; }
+.menu-section {
+  margin: 0 24rpx 20rpx;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-border);
+  border-radius: 26rpx;
+}
+
 .menu-item {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 32rpx 28rpx; border-bottom: 1rpx solid #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 96rpx;
+  padding: 0 24rpx;
+  border-bottom: 1rpx solid var(--color-border);
+  box-sizing: border-box;
 }
-.menu-item:last-child { border-bottom: none; }
-.menu-left { display: flex; align-items: center; gap: 20rpx; }
-.menu-icon { font-size: 36rpx; }
-.menu-text { font-size: 28rpx; color: #1a1a1a; }
-.menu-arrow { font-size: 32rpx; color: #ccc; }
 
-/* ── 底部留白 ──────────────────────────────── */
-.bottom-spacer { height: 60rpx; }
+.menu-item:last-child {
+  border-bottom: 0;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  min-width: 0;
+}
+
+.menu-icon-img {
+  width: 38rpx;
+  height: 38rpx;
+  flex-shrink: 0;
+  opacity: 0.54;
+}
+
+.menu-text {
+  color: var(--color-text);
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.menu-arrow {
+  color: var(--color-text-tertiary);
+  font-size: 34rpx;
+}
+
+.bottom-spacer {
+  height: 40rpx;
+}

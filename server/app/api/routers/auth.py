@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
-import hashlib
+from typing import Optional
+
 from fastapi import APIRouter, Header, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -7,23 +8,24 @@ import httpx
 import jwt
 
 from app.core.response import api_error, api_ok
-from app.core.status import UserStatus
 from app.core.settings import settings
 from app.core.database import get_db
-from app.models.user import User
+from app.core.status import UserStatus
+from app.services.user_service import UserService
 from app.schemas.common import TokenRefreshRequest, WxLoginRequest
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 
 def _issue_token(payload: dict, expires_seconds: int) -> str:
+    """签发 JWT token"""
     expire_at = datetime.now(timezone.utc) + timedelta(seconds=expires_seconds)
     token_payload = {**payload, "exp": expire_at}
     return jwt.encode(token_payload, settings.JWT_SECRET, algorithm="HS256")
 
 
 def _wechat_code_to_session(code: str) -> dict:
-    """调用微信接口获取 openid"""
+    """调用微信接口，用 code 换取 openid"""
     response = httpx.get(
         "https://api.weixin.qq.com/sns/jscode2session",
         params={
@@ -39,17 +41,44 @@ def _wechat_code_to_session(code: str) -> dict:
 
 
 def _json_error(status_code: int, code: int, message: str, data=None) -> JSONResponse:
+    """统一错误响应"""
     return JSONResponse(
         status_code=status_code,
         content=api_error(message=message, code=code, data=data),
     )
 
 
+def _get_current_user_from_token(
+    authorization: Optional[str] = None,
+    db: Session = None
+) -> tuple[Optional[dict], Optional[JSONResponse]]:
+    """
+    从 Authorization header 解析当前用户
+    返回: (用户信息, 错误响应)
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        return None, _json_error(401, 10030, "missing bearer token")
+
+    token = authorization.split(" ", 1)[1]
+    try:
+        token_data = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+    except jwt.PyJWTError:
+        return None, _json_error(401, 10031, "access token invalid")
+
+    if token_data.get("typ") != "access":
+        return None, _json_error(401, 10032, "token type mismatch")
+
+    user_service = UserService(db)
+    user_info = user_service.get_simple_user_info(token_data.get("uid", 0))
+
+    if not user_info:
+        return None, _json_error(404, 10033, "user not found")
+
+    return user_info, None
+
+
 @router.post("/wx-login")
-def wx_login(
-    payload: WxLoginRequest,
-    db: Session = Depends(get_db)
-):
+def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
     """微信授权登录"""
     if not settings.WECHAT_APP_ID or not settings.WECHAT_APP_SECRET:
         return _json_error(
@@ -83,40 +112,24 @@ def wx_login(
             message="wechat openid missing",
         )
 
-    # 生成用户ID（8位十六进制哈希）
-    user_id = int(hashlib.sha256(openid.encode("utf-8")).hexdigest()[:8], 16)
-    
-    # 查询或创建用户
-    user = db.query(User).filter(User.openid == openid).first()
-    
-    if not user:
-        user = User(
-            id=user_id,
-            openid=openid,
-            nickname=f"WX_{openid[-6:]}",
-            avatar="",
-            score=100,
-            status=UserStatus.ACTIVE,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user_service = UserService(db)
+    user = user_service.create_or_get_user(openid)
 
-    # 构建用户资料返回
     profile = {
         "id": user.id,
         "nickname": user.nickname,
         "avatar": user.avatar,
         "score": user.score,
-        "status": user.status.value,
+        "status": user.status if user.status else UserStatus.ACTIVE.value,
+        "isAdmin": bool(user.is_admin),
     }
 
-    # 签发 token
     access_token = _issue_token(
         {
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
+            "isAdmin": bool(user.is_admin),
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -126,6 +139,7 @@ def wx_login(
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
+            "isAdmin": bool(user.is_admin),
             "typ": "refresh",
         },
         settings.JWT_REFRESH_EXPIRES_SECONDS,
@@ -165,6 +179,7 @@ def refresh_token(payload: TokenRefreshRequest):
             "sub": token_data.get("sub"),
             "uid": token_data.get("uid"),
             "nickname": token_data.get("nickname", ""),
+            "isAdmin": token_data.get("isAdmin", False),
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -181,39 +196,24 @@ def refresh_token(payload: TokenRefreshRequest):
 
 @router.post("/logout")
 def logout() -> dict:
-    """注销（客户端清除 token 即可）"""
+    """登出（客户端删除 token 即可，服务端无需操作）"""
     return api_ok()
 
 
 @router.get("/me")
 def get_current_user(
-    authorization: str | None = Header(default=None),
-    db: Session = Depends(get_db)
+    authorization: Optional[str] = Header(default=None),
+    db: Session = Depends(get_db),
 ):
-    """获取当前登录用户信息（通过 token）"""
-    if not authorization or not authorization.startswith("Bearer "):
-        return _json_error(status_code=401, code=10030, message="missing bearer token")
+    """获取当前登录用户信息（auth 模块版本）"""
+    user_info, error_response = _get_current_user_from_token(authorization, db)
+    if error_response:
+        return error_response
 
-    token = authorization.split(" ", 1)[1]
-    try:
-        token_data = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-    except jwt.PyJWTError:
-        return _json_error(status_code=401, code=10031, message="access token invalid")
+    user_service = UserService(db)
+    profile = user_service.get_user_profile(user_info["id"])
 
-    if token_data.get("typ") != "access":
-        return _json_error(status_code=401, code=10032, message="token type mismatch")
+    if not profile:
+        return _json_error(404, 10033, "user not found")
 
-    # 从数据库获取最新用户信息
-    user = db.query(User).filter(User.id == token_data.get("uid")).first()
-    if not user:
-        return _json_error(status_code=404, code=10033, message="user not found")
-
-    return api_ok(
-        {
-            "id": user.id,
-            "nickname": user.nickname,
-            "avatar": user.avatar,
-            "score": user.score,
-            "status": user.status.value,
-        }
-    )
+    return api_ok(profile)

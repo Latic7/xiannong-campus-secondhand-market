@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "发布商品",
-  "usingComponents": {}
+  "usingComponents": {
+    "custom-tab-bar": "/custom-tab-bar/index"
+  }
 }

@@ -4,15 +4,24 @@
 // ──────────────────────────────────────────────
 const { isLoggedIn } = require('../../utils/storage')
 const { IMAGE_MAX_COUNT, IMAGE_MAX_SIZE } = require('../../utils/constants')
+const productService = require('../../services/product')
 
 // ── 常量 ──────────────────────────────────────
 const TITLE_MAX = 50
 const DESC_MAX = 500
 
 const CATEGORIES = [
-  '数码电子', '书籍教材', '生活用品', '服饰鞋包',
-  '运动户外', '美妆护肤', '食品饮料', '其他',
+  { id: 1, name: '数码电子' },
+  { id: 2, name: '书籍教材' },
+  { id: 3, name: '生活用品' },
+  { id: 4, name: '服饰鞋包' },
+  { id: 5, name: '运动户外' },
+  { id: 6, name: '美妆护肤' },
+  { id: 7, name: '食品饮料' },
+  { id: 8, name: '其他' },
 ]
+
+const CATEGORY_NAMES = CATEGORIES.map(c => c.name)
 
 const CONDITIONS = [
   { value: 'brand_new', label: '全新未拆封' },
@@ -23,7 +32,6 @@ const CONDITIONS = [
 
 Page({
   data: {
-    // 表单字段
     title: '',
     description: '',
     price: '',
@@ -33,27 +41,31 @@ Page({
     conditionText: '请选择成色',
     campus: '',
 
-    // 图片列表 [{path, tempPath}]
     images: [],
 
-    // 输入计数
     titleCount: 0,
     descCount: 0,
 
-    // UI 状态
     submitting: false,
     categoryPickerVisible: false,
     conditionPickerVisible: false,
     errors: {},
 
-    // 选择器数据
-    categories: CATEGORIES,
+    categories: CATEGORY_NAMES,
     conditions: CONDITIONS,
   },
 
   onLoad() {
     if (!isLoggedIn()) {
       wx.showToast({ title: '请先登录后再发布', icon: 'none' })
+    }
+  },
+
+  onShow() {
+    // 同步底部导航栏选中状态（避免 getCurrentPages 时序问题）
+    const tabBar = this.getTabBar();
+    if (tabBar) {
+      tabBar.setData({ selected: 1 });
     }
   },
 
@@ -95,7 +107,7 @@ Page({
     const idx = Number(e.detail.value)
     this.setData({
       categoryIndex: idx,
-      categoryText: CATEGORIES[idx],
+      categoryText: CATEGORIES[idx].name,
       categoryPickerVisible: false,
     })
     this.clearError('category')
@@ -228,39 +240,49 @@ Page({
     return true
   },
 
-  // ── 发布提交 ──────────────────────────────
+  // ── 发布提交（真实 API）───────────────────
   async onSubmit() {
     if (this.data.submitting) return
     if (!this.validate()) return
 
     this.setData({ submitting: true })
+    wx.showLoading({ title: '发布中...' })
 
     try {
-      // TODO: 先上传图片获取 URL，再提交表单
-      // const imageUrls = await this.uploadImages()
-      // await require('../../services/product').create({ ...formData, images: imageUrls })
+      const { title, description, price, categoryIndex, campus } = this.data
+      const categoryId = CATEGORIES[categoryIndex].id
 
+      // 1. 先创建商品（不含图片）
+      const created = await productService.create({
+        title: title.trim(),
+        price: parseFloat(price),
+        categoryId,
+        description: description.trim() + (campus ? '\n\n所在校区：' + campus : ''),
+      })
+
+      const productId = created.id
+      if (!productId) throw new Error('创建商品失败')
+
+      // 2. 上传图片
+      const filePaths = this.data.images.map(img => img.tempPath || img.path)
+      const urls = await productService.uploadImages(productId, filePaths)
+
+      // 3. 更新商品，填入图片 URL
+      if (urls.length > 0) {
+        await productService.update(productId, { images: urls })
+      }
+
+      wx.hideLoading()
       wx.showToast({ title: '发布成功', icon: 'success', duration: 2000 })
       setTimeout(() => {
         wx.navigateBack()
       }, 2000)
     } catch (err) {
+      wx.hideLoading()
       wx.showToast({ title: err.message || '发布失败', icon: 'none' })
     } finally {
       this.setData({ submitting: false })
     }
-  },
-
-  // TODO: 图片上传逻辑（后续接入）
-  async uploadImages() {
-    const uploads = this.data.images.map((img) => {
-      return new Promise((resolve, reject) => {
-        // TODO: 调用上传 API
-        // wx.uploadFile({ filePath: img.path, ... })
-        resolve(img.path)
-      })
-    })
-    return Promise.all(uploads)
   },
 })
 
