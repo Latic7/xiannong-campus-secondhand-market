@@ -1,4 +1,5 @@
 from __future__ import annotations
+from sqlalchemy.orm import Session
 
 from app.crud.admin import (
 	create_admin_log,
@@ -13,7 +14,9 @@ from app.services.report_service import handle_report as report_handle_report
 from app.services.report_service import list_report_queue
 
 
-def list_users(page: int = 1, size: int = 20, keyword: str | None = None) -> dict:
+def list_users(db: Session, page: int = 1, size: int = 20, keyword: str | None = None) -> dict:
+	"""获取用户列表"""
+	# TODO: 后续实现真实的数据库查询
 	return {
 		"list": [],
 		"page": {"page": page, "size": size, "total": 0},
@@ -21,23 +24,33 @@ def list_users(page: int = 1, size: int = 20, keyword: str | None = None) -> dic
 	}
 
 
-def patch_user_status(user_id: int, payload) -> dict:
+def patch_user_status(db: Session, user_id: int, payload) -> dict:
+	"""修改用户状态"""
 	return {"userId": user_id, **payload.model_dump()}
 
 
-def pending_products(page: int = 1, size: int = 20) -> dict:
+def pending_products(db: Session, page: int = 1, size: int = 20) -> dict:
+	"""获取待审核商品列表"""
 	return {"list": [], "page": {"page": page, "size": size, "total": 0}}
 
 
-def review_product(product_id: int, payload) -> dict:
+def review_product(db: Session, product_id: int, payload) -> dict:
+	"""审核商品"""
 	return {"productId": product_id, **payload.model_dump()}
 
 
-def admin_reports(page: int = 1, size: int = 20, status: str | None = None, target_type: str | None = None) -> dict:
+def admin_reports(
+    db: Session, 
+    page: int = 1, 
+    size: int = 20, 
+    status: str | None = None, 
+    target_type: str | None = None
+) -> dict:
+    """获取举报列表"""
     return list_report_queue(page=page, size=size, status=status, target_type=target_type)
 
 
-def handle_report(report_id: int, payload) -> dict:
+def handle_report(db: Session, report_id: int, payload) -> dict:
 	"""管理员处理举报，记录完整审计信息。
 
 	审计链路：
@@ -64,21 +77,26 @@ def handle_report(report_id: int, payload) -> dict:
 	return result
 
 
-def stats_overview() -> dict:
+def stats_overview(db: Session) -> dict:
+    """获取统计概览"""
     return crud_stats_overview()
 
 
-def stats_products() -> dict:
+def stats_products(db: Session) -> dict:
+    """获取商品统计"""
     return crud_stats_products()
 
 
-def stats_trades() -> dict:
+def stats_trades(db: Session) -> dict:
+    """获取交易统计"""
     return crud_stats_trades()
 
 
-def stats_users() -> dict:
+def stats_users(db: Session) -> dict:
+    """获取用户统计"""
     return crud_stats_users()
 
 
-def admin_logs(page: int = 1, size: int = 20) -> dict:
+def admin_logs(db: Session, page: int = 1, size: int = 20) -> dict:
+    """获取管理员操作日志"""
     return list_admin_logs(page=page, size=size)
