@@ -937,34 +937,35 @@ components:
                 requestId: req-demo-1
                 timestamp: '2026-05-14T08:00:00Z'
     TokenResponse:
-      description: Token payload response.
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/ApiResponse'
-              - type: object
-                required: [data]
-                properties:
-                  data:
-                    $ref: '#/components/schemas/AuthTokens'
-          examples:
-            loginSuccess:
-              value:
-                code: 0
-                message: ok
-                data:
-                  accessToken: draft-access-token
-                  refreshToken: draft-refresh-token
-                  expiresIn: 3600
-                  user:
-                    id: 1
-                    nickname: Demo User
-                    avatar: ''
-                    score: 100
-                    status: ACTIVE
-                requestId: req-demo-1
-                timestamp: '2026-05-14T08:00:00Z'
+  description: Token payload response.
+  content:
+    application/json:
+      schema:
+        allOf:
+          - $ref: '#/components/schemas/ApiResponse'
+          - type: object
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/AuthTokens'
+      examples:
+        loginSuccess:
+          value:
+            code: 0
+            message: ok
+            data:
+              accessToken: draft-access-token
+              refreshToken: draft-refresh-token
+              expiresIn: 3600
+              user:
+                id: 1
+                nickname: Demo User
+                avatar: ''
+                score: 100
+                status: ACTIVE
+                isAdmin: false
+            requestId: req-demo-1
+            timestamp: '2026-05-14T08:00:00Z'
     ErrorResponse:
       description: Generic error response.
       content:
@@ -1066,47 +1067,51 @@ components:
           nullable: true
 
     UserProfile:
-      type: object
-      description: Public user profile shown in the mini program.
-      required: [id, nickname, avatar, score, status]
-      properties:
-        id:
-          type: integer
-          description: User identifier.
-          example: 1
-        nickname:
-          type: string
-          description: Display name.
-          example: Demo User
-        avatar:
-          type: string
-          format: uri
-          description: Avatar URL.
-          example: ''
-        score:
-          type: integer
-          description: User credit score.
-          example: 100
-        status:
-          type: string
-          description: Account status.
-          enum: [ACTIVE, BANNED]
-          example: ACTIVE
-        favorites:
-          type: integer
-          description: Number of favorite products.
-          nullable: true
-          example: 0
-        college:
-          type: string
-          description: User's college name.
-          nullable: true
-          example: 中国农业大学
-        contact:
-          type: string
-          description: Contact information shown to authorized users.
-          nullable: true
-          example: 13800000000
+  type: object
+  description: Public user profile shown in the mini program.
+  required: [id, nickname, avatar, score, status, isAdmin]
+  properties:
+    id:
+      type: integer
+      description: User identifier.
+      example: 1
+    nickname:
+      type: string
+      description: Display name.
+      example: Demo User
+    avatar:
+      type: string
+      format: uri
+      description: Avatar URL.
+      example: ''
+    score:
+      type: integer
+      description: User credit score.
+      example: 100
+    status:
+      type: string
+      description: Account status.
+      enum: [ACTIVE, BANNED]
+      example: ACTIVE
+    isAdmin:
+      type: boolean
+      description: Whether the user has admin privilege.
+      example: false
+    favorites:
+      type: integer
+      description: Number of favorite products.
+      nullable: true
+      example: 0
+    college:
+      type: string
+      description: User's college name.
+      nullable: true
+      example: 中国农业大学
+    contact:
+      type: string
+      description: Contact information shown to authorized users.
+      nullable: true
+      example: 13800000000
 
     UserProfileUpdateRequest:
       type: object

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar VARCHAR(255) NOT NULL DEFAULT '',
   score INT NOT NULL DEFAULT 100,
   status ENUM('active','banned') NOT NULL DEFAULT 'active',
+  is_admin TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否为管理员: 0-否, 1-是',
   college VARCHAR(128) NULL,
   contact VARCHAR(64) NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -148,11 +149,11 @@ CREATE TABLE IF NOT EXISTS stats_daily (
   UNIQUE KEY uq_stats_daily_date (stat_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO users (id, openid, nickname, avatar, score, status, college, contact)
+INSERT INTO users (id, openid, nickname, avatar, score, status, is_admin, college, contact)
 VALUES
-  (1, 'wx_openid_demo_1', 'DemoUser1', '', 100, 'active', '中国农业大学', '13800000001'),
-  (2, 'wx_openid_demo_2', 'DemoUser2', '', 95, 'active', '中国农业大学', '13800000002'),
-  (10, 'wx_openid_admin_10', 'AdminDemo', '', 100, 'active', '中国农业大学', '13800000010')
+  (1, 'wx_openid_demo_1', 'DemoUser1', '', 100, 'active', 0, '中国农业大学', '13800000001'),
+  (2, 'wx_openid_demo_2', 'DemoUser2', '', 95, 'active', 0, '中国农业大学', '13800000002'),
+  (10, 'wx_openid_admin_10', 'AdminDemo', '', 100, 'active', 1, '中国农业大学', '13800000010')
 AS src
 ON DUPLICATE KEY UPDATE
   openid = src.openid,
@@ -160,6 +161,7 @@ ON DUPLICATE KEY UPDATE
   avatar = src.avatar,
   score = src.score,
   status = src.status,
+  is_admin = src.is_admin,
   college = src.college,
   contact = src.contact;
 
