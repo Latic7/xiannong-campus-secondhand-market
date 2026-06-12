@@ -40,8 +40,8 @@ def review_product(product_id: int, payload: ProductReviewRequest) -> dict:
 
 
 @router.get("/reports")
-def admin_reports(page: int = 1, size: int = 20) -> dict:
-    return api_ok(admin_reports_service(page=page, size=size))
+def admin_reports(page: int = 1, size: int = 20, status: str | None = None, target_type: str | None = None) -> dict:
+    return api_ok(admin_reports_service(page=page, size=size, status=status, target_type=target_type))
 
 
 @router.post("/reports/{report_id}/handle")

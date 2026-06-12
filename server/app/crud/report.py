@@ -9,6 +9,7 @@ from app.models.report import Report
 
 
 def _to_schema_dict(report: Report) -> dict:
+	"""将 ORM Report 对象转为 API 响应字典，对齐 OpenAPI Report schema。"""
 	return {
 		"id": report.id,
 		"reporterId": report.reporter_id,
@@ -16,7 +17,21 @@ def _to_schema_dict(report: Report) -> dict:
 		"targetId": report.target_id,
 		"reason": report.reason,
 		"status": report.status,
+		"createdAt": report.created_at.isoformat() if report.created_at else None,
+		"handledAt": report.handled_at.isoformat() if report.handled_at else None,
+		"assigneeId": report.assignee_id,
+		"handleAction": report.handle_action,
+		"handleReason": report.handle_reason,
 	}
+
+
+# 分页查询最大 page_size，防止一次拉取过多数据
+_MAX_PAGE_SIZE = 100
+
+
+def _clamp_size(size: int) -> int:
+	"""将 page_size 限制在 [1, _MAX_PAGE_SIZE] 范围内。"""
+	return max(1, min(size, _MAX_PAGE_SIZE))
 
 
 def create_report(record: dict) -> dict:
@@ -42,15 +57,34 @@ def get_report(report_id: int) -> dict | None:
 		return _to_schema_dict(report)
 
 
-def list_reports(page: int = 1, size: int = 20) -> tuple[list[dict], int]:
+def list_reports(
+	page: int = 1,
+	size: int = 20,
+	status: str | None = None,
+	target_type: str | None = None,
+) -> tuple[list[dict], int]:
+	"""分页查询举报列表，支持按 status 和 target_type 筛选。"""
+	size = _clamp_size(size)
 	with SessionLocal() as db:
-		total = db.scalar(select(func.count(Report.id))) or 0
+		filters = []
+		if status:
+			filters.append(Report.status == status)
+		if target_type:
+			filters.append(Report.target_type == target_type)
+
+		total = db.scalar(
+			select(func.count(Report.id)).where(*filters) if filters else select(func.count(Report.id))
+		) or 0
+
 		stmt = (
 			select(Report)
 			.order_by(Report.created_at.desc(), Report.id.desc())
 			.offset((page - 1) * size)
 			.limit(size)
 		)
+		if filters:
+			stmt = stmt.where(*filters)
+
 		rows = db.scalars(stmt).all()
 		return ([_to_schema_dict(row) for row in rows], int(total))
 
