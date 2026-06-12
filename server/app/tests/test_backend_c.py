@@ -41,6 +41,14 @@ class BackendCIntegrationTest(unittest.TestCase):
         self.assertEqual(payload["data"]["id"], report_id)
         self.assertEqual(payload["data"]["reason"], "测试举报")
 
+        # 验证新增字段（createdAt、handleAction 等 OpenAPI 对齐字段）
+        self.assertIn("createdAt", payload["data"])
+        self.assertIn("handleAction", payload["data"])
+        self.assertIn("handleReason", payload["data"])
+        self.assertIn("assigneeId", payload["data"])
+        self.assertIsNone(payload["data"]["handleAction"])  # 刚创建，尚无处理动作
+        self.assertIsNone(payload["data"]["handledAt"])
+
         response = self.client.post(
             "/api/appeals",
             json={"targetType": "report", "targetId": report_id, "reason": "申诉测试"},
@@ -55,7 +63,14 @@ class BackendCIntegrationTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("list", payload["data"])
         self.assertIn("page", payload["data"])
+        # 验证返回字段完整（包含新增的处理动作字段）
+        if payload["data"]["list"]:
+            item = payload["data"]["list"][0]
+            self.assertIn("createdAt", item)
+            self.assertIn("handleAction", item)
+            self.assertIn("handleReason", item)
 
+        # 处理举报
         response = self.client.post(
             "/api/admin/reports/7001/handle",
             json={"action": "warning", "reason": "处理备注"},
@@ -64,6 +79,38 @@ class BackendCIntegrationTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(payload["data"]["reportId"], 7001)
         self.assertEqual(payload["data"]["action"], "warning")
+
+        # 验证处理后的举报记录包含处理动作字段
+        response = self.client.get("/api/reports/7001")
+        payload = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload["data"]["handleAction"], "warning")
+        self.assertEqual(payload["data"]["handleReason"], "处理备注")
+        self.assertIsNotNone(payload["data"]["handledAt"])
+        self.assertIsNotNone(payload["data"]["assigneeId"])
+
+    def test_admin_reports_filter(self) -> None:
+        """测试后台举报队列按 status / target_type 筛选。"""
+        # 筛选 status=open
+        response = self.client.get("/api/admin/reports?status=open")
+        payload = response.json()
+        self.assertEqual(response.status_code, 200)
+        for item in payload["data"]["list"]:
+            self.assertEqual(item["status"], "open")
+
+        # 筛选 target_type=user
+        response = self.client.get("/api/admin/reports?target_type=user")
+        payload = response.json()
+        self.assertEqual(response.status_code, 200)
+        for item in payload["data"]["list"]:
+            self.assertEqual(item["targetType"], "user")
+
+    def test_report_not_found(self) -> None:
+        """查询不存在的举报应返回 404。"""
+        response = self.client.get("/api/reports/99999")
+        self.assertEqual(response.status_code, 404)
+        payload = response.json()
+        self.assertIn("code", payload)
 
     def test_statistics_and_logs(self) -> None:
         response = self.client.get("/api/admin/stats/overview")
