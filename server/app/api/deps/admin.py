@@ -1,5 +1,3 @@
-# app/api/deps/admin.py
-
 from fastapi import Depends, Header, HTTPException
 from sqlalchemy.orm import Session
 import jwt
