@@ -9,6 +9,7 @@ from app.core.status import ProductStatus, ReportTargetType, UserStatus
 class WxLoginRequest(BaseModel):
     code: str
     clientId: str | None = None
+    admin_secret: str | None = Field(None, description="管理员创建密码（可选）")  # 只添加这一行
 
 
 class TokenRefreshRequest(BaseModel):
