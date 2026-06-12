@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.response import api_ok
 from app.core.database import get_db
-from app.core.dependencies import get_current_admin  # 新增
+from app.api.deps import get_current_admin  # 新增
 from app.models.user import User  # 新增
 from app.schemas.admin import ProductReviewRequest, ReportHandleRequest, UserStatusPatchRequest
 from app.services.admin_service import (
