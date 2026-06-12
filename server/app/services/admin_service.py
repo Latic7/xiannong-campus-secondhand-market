@@ -3,12 +3,12 @@ from __future__ import annotations
 from app.crud.admin import (
 	create_admin_log,
 	list_admin_logs,
-	list_reports,
 	stats_overview as crud_stats_overview,
 	stats_products as crud_stats_products,
 	stats_trades as crud_stats_trades,
 	stats_users as crud_stats_users,
 )
+from app.crud.report import get_report as crud_get_report
 from app.services.report_service import handle_report as report_handle_report
 from app.services.report_service import list_report_queue
 
@@ -38,14 +38,29 @@ def admin_reports(page: int = 1, size: int = 20, status: str | None = None, targ
 
 
 def handle_report(report_id: int, payload) -> dict:
+	"""管理员处理举报，记录完整审计信息。
+
+	审计链路：
+	- 操作人（actor_id）
+	- 操作动作（handle_report:<action>）
+	- 目标对象（target_type=report, target_id）
+	- 操作原因（remark=payload.reason）
+	- 操作时间（created_at 自动记录）
+	"""
 	result = report_handle_report(report_id, payload)
+
+	# 获取处理后的举报信息，补充审计上下文
+	report_data = crud_get_report(report_id)
+
+	# 记录审计日志：action 使用 "handle_report:<具体动作>" 提升可读性
 	create_admin_log(
-		actor_id=10,
-		action=payload.action,
+		actor_id=10,  # TODO: 接入登录态后替换为当前管理员 ID
+		action=f"handle_report:{payload.action}",
 		target_type="report",
-		target_id=result["reportId"],
-		remark=payload.reason,
+		target_id=report_id,
+		remark=f"处理举报(#{report_id})：{payload.reason or '无备注'} | 目标类型={report_data.get('targetType') if report_data else '?'}, 目标ID={report_data.get('targetId') if report_data else '?'}",
 	)
+
 	return result
 
 

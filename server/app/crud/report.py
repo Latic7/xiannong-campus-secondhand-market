@@ -25,6 +25,15 @@ def _to_schema_dict(report: Report) -> dict:
 	}
 
 
+# 分页查询最大 page_size，防止一次拉取过多数据
+_MAX_PAGE_SIZE = 100
+
+
+def _clamp_size(size: int) -> int:
+	"""将 page_size 限制在 [1, _MAX_PAGE_SIZE] 范围内。"""
+	return max(1, min(size, _MAX_PAGE_SIZE))
+
+
 def create_report(record: dict) -> dict:
 	with SessionLocal() as db:
 		model = Report(
@@ -55,6 +64,7 @@ def list_reports(
 	target_type: str | None = None,
 ) -> tuple[list[dict], int]:
 	"""分页查询举报列表，支持按 status 和 target_type 筛选。"""
+	size = _clamp_size(size)
 	with SessionLocal() as db:
 		filters = []
 		if status:
