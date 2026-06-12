@@ -21,9 +21,31 @@ def seed_demo_data(db: Session) -> None:
 
 	db.add_all(
 		[
-			User(id=1, openid="wx_openid_demo_1", nickname="DemoUser1", college="中国农业大学", contact="13800000001"),
-			User(id=2, openid="wx_openid_demo_2", nickname="DemoUser2", score=95, college="中国农业大学", contact="13800000002"),
-			User(id=10, openid="wx_openid_admin_10", nickname="AdminDemo", college="中国农业大学", contact="13800000010"),
+			User(
+				id=1,
+				openid="wx_openid_demo_1",
+				nickname="DemoUser1",
+				is_admin=False,
+				college="中国农业大学",
+				contact="13800000001",
+			),
+			User(
+				id=2,
+				openid="wx_openid_demo_2",
+				nickname="DemoUser2",
+				score=95,
+				is_admin=False,
+				college="中国农业大学",
+				contact="13800000002",
+			),
+			User(
+				id=10,
+				openid="wx_openid_admin_10",
+				nickname="AdminDemo",
+				is_admin=True,
+				college="中国农业大学",
+				contact="13800000010",
+			),
 		]
 	)
 
