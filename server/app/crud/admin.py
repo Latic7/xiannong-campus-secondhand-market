@@ -12,27 +12,51 @@ from app.models.report import Report
 from app.models.user import User
 
 
-def list_reports(page: int = 1, size: int = 20) -> dict:
+def _report_to_dict(row: Report) -> dict:
+	"""将 Report ORM 对象转为字典，对齐 OpenAPI Report schema。"""
+	return {
+		"id": row.id,
+		"reporterId": row.reporter_id,
+		"targetType": row.target_type,
+		"targetId": row.target_id,
+		"reason": row.reason,
+		"status": row.status,
+		"createdAt": row.created_at.isoformat() if row.created_at else None,
+		"handledAt": row.handled_at.isoformat() if row.handled_at else None,
+		"assigneeId": row.assignee_id,
+		"handleAction": row.handle_action,
+		"handleReason": row.handle_reason,
+	}
+
+
+def list_reports(
+	page: int = 1,
+	size: int = 20,
+	status: str | None = None,
+	target_type: str | None = None,
+) -> dict:
 	with SessionLocal() as db:
-		total = db.scalar(select(func.count(Report.id))) or 0
+		filters = []
+		if status:
+			filters.append(Report.status == status)
+		if target_type:
+			filters.append(Report.target_type == target_type)
+
+		total = db.scalar(
+			select(func.count(Report.id)).where(*filters) if filters else select(func.count(Report.id))
+		) or 0
+
 		stmt = (
 			select(Report)
 			.order_by(Report.created_at.desc(), Report.id.desc())
 			.offset((page - 1) * size)
 			.limit(size)
 		)
+		if filters:
+			stmt = stmt.where(*filters)
+
 		rows = db.scalars(stmt).all()
-		items = [
-			{
-				"id": row.id,
-				"reporterId": row.reporter_id,
-				"targetType": row.target_type,
-				"targetId": row.target_id,
-				"reason": row.reason,
-				"status": row.status,
-			}
-			for row in rows
-		]
+		items = [_report_to_dict(row) for row in rows]
 		return {"list": items, "page": {"page": page, "size": size, "total": int(total)}}
 
 

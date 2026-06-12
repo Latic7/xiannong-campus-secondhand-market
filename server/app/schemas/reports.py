@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel
@@ -27,3 +28,8 @@ class Report(BaseModel):
 	targetId: int
 	reason: str
 	status: ReportStatus
+	createdAt: datetime | None = None
+	handledAt: datetime | None = None
+	assigneeId: int | None = None
+	handleAction: str | None = None
+	handleReason: str | None = None
