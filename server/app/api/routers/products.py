@@ -1,8 +1,9 @@
 from fastapi import APIRouter, File, UploadFile
 
+from app.core.exceptions import ResourceNotFoundError
 from app.core.response import api_ok
-from app.core.status import ProductStatus
 from app.schemas.common import ProductCreateRequest, ProductUpdateRequest
+from app.services import product_service
 
 router = APIRouter(prefix="/api/products", tags=["Product"])
 
@@ -20,12 +21,15 @@ def list_products(
 
 @router.post("")
 def create_product(payload: ProductCreateRequest) -> dict:
-    return api_ok({"id": 1001, **payload.model_dump(), "status": ProductStatus.PENDING.value})
+    return api_ok(product_service.create_product(payload))
 
 
 @router.get("/{product_id}")
 def get_product(product_id: int) -> dict:
-    return api_ok({"id": product_id, "title": "Draft Product", "price": 0, "status": ProductStatus.PUBLISHED.value})
+    product = product_service.get_product(product_id)
+    if product is None:
+        raise ResourceNotFoundError("product not found", {"productId": product_id})
+    return api_ok(product)
 
 
 @router.put("/{product_id}")

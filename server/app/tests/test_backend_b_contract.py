@@ -33,10 +33,10 @@ class BackendBContractTest(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(created_product["status"], "pending")
+        self.assertEqual(created_product["status"], "PENDING")
         product_id = created_product["id"]
 
-        updated = self.assert_api_ok(self.client.put(f"/api/products/{product_id}", json={"status": "published"}))
+        updated = self.assert_api_ok(self.client.put(f"/api/products/{product_id}", json={"status": "PUBLISHED"}))
         self.assertTrue(updated["updated"])
 
         detail = self.assert_api_ok(self.client.get(f"/api/products/{product_id}"))
@@ -58,17 +58,17 @@ class BackendBContractTest(unittest.TestCase):
         self.assertTrue(deleted_image["deleted"])
 
         order = self.assert_api_ok(self.client.post("/api/orders", json={"productId": 1001, "remark": "meet tonight"}))
-        self.assertEqual(order["status"], "reserved")
+        self.assertEqual(order["status"], "RESERVED")
         order_id = order["id"]
 
         order_detail = self.assert_api_ok(self.client.get(f"/api/orders/{order_id}"))
         self.assertEqual(order_detail["id"], order_id)
 
         confirmed = self.assert_api_ok(self.client.post(f"/api/orders/{order_id}/seller-confirm"))
-        self.assertEqual(confirmed["status"], "confirmed")
+        self.assertEqual(confirmed["status"], "CONFIRMED")
 
         completed = self.assert_api_ok(self.client.post(f"/api/orders/{order_id}/complete"))
-        self.assertEqual(completed["status"], "completed")
+        self.assertEqual(completed["status"], "COMPLETED")
 
         review = self.assert_api_ok(
             self.client.post(f"/api/orders/{order_id}/reviews", json={"score": 5, "content": "smooth trade"})
