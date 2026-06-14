@@ -2,6 +2,7 @@ from app.core.exceptions import ResourceNotFoundError, StateConflictError
 from app.core.status import ProductStatus
 from app.crud import product as product_crud
 from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
+from app.utils.file_handler import delete_file_from_disk
 
 
 def list_products(
@@ -59,9 +60,11 @@ def remove_product(product_id: int) -> dict:
     return {"id": product_id, "deleted": True, "status": product["status"]}
 
 
-def upload_product_image(product_id: int, filename: str) -> dict:
-    image = product_crud.add_product_image(product_id, filename)
+def upload_product_image(product_id: int, url: str, filepath: str = "") -> dict:
+    image = product_crud.add_product_image(product_id, url)
     if image is None:
+        # 保存到 CRUD 失败，清理已写入磁盘的文件
+        delete_file_from_disk(filepath)
         raise ResourceNotFoundError("product not found", {"productId": product_id})
     return image
 
@@ -72,4 +75,20 @@ def delete_product_image(product_id: int, image_id: int) -> dict:
         raise ResourceNotFoundError("product not found", {"productId": product_id})
     if not deleted:
         raise ResourceNotFoundError("product image not found", {"productId": product_id, "imageId": image_id})
+    # 磁盘文件暂不删除（保留占位逻辑）
+    # image = product_crud.get_image(image_id)
+    # if image:
+    #     delete_file_from_disk(image.get("filepath", ""))
     return {"productId": product_id, "imageId": image_id, "deleted": True}
+
+
+def cleanup_product_images(product_id: int) -> None:
+    """
+    删除商品时清理其所有图片的数据库记录。
+    磁盘文件暂不删除（保留占位）。
+    """
+    images = product_crud.list_product_images(product_id)
+    for image in images:
+        product_crud.delete_product_image(product_id, image["id"])
+        # TODO: 后续迁移到 COS 后在此处调用云存储删除接口
+        # delete_file_from_disk(image.get("filepath", ""))

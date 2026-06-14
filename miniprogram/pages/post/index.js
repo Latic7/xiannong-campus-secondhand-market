@@ -275,7 +275,7 @@ Page({
       wx.hideLoading()
       wx.showToast({ title: '发布成功', icon: 'success', duration: 2000 })
       setTimeout(() => {
-        wx.navigateBack()
+        wx.switchTab({ url: '/pages/home/index' })
       }, 2000)
     } catch (err) {
       wx.hideLoading()

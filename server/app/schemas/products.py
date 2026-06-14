@@ -21,6 +21,7 @@ class ProductUpdateRequest(BaseModel):
     categoryId: int | None = None
     description: str | None = None
     status: ProductUpdateStatusValue | None = None
+    images: list[str] | None = None
 
 
 class Product(BaseModel):

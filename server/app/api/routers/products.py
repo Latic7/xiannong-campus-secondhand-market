@@ -1,9 +1,10 @@
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, Request
 
 from app.core.exceptions import ResourceNotFoundError
 from app.core.response import api_ok
 from app.schemas.common import ProductCreateRequest, ProductUpdateRequest
 from app.services import product_service
+from app.utils import file_handler
 
 router = APIRouter(prefix="/api/products", tags=["Product"])
 
@@ -40,13 +41,40 @@ def update_product(product_id: int, payload: ProductUpdateRequest) -> dict:
 
 @router.delete("/{product_id}")
 def delete_product(product_id: int) -> dict:
+    # 先清理图片引用，再移除商品
+    product_service.cleanup_product_images(product_id)
     return api_ok(product_service.remove_product(product_id))
 
 
 @router.post("/{product_id}/images")
-def upload_product_image(product_id: int, file: UploadFile = File(...)) -> dict:
-    image = product_service.upload_product_image(product_id, file.filename or "upload.bin")
-    return api_ok({"productId": product_id, "filename": image["filename"], "imageId": image["id"], "url": image["url"]})
+async def upload_product_image(product_id: int, file: UploadFile = File(...), request: Request = None) -> dict:
+    # 1. 校验文件扩展名
+    ext = file_handler.validate_image(file)
+
+    # 2. 读取文件内容并校验大小
+    content = await file_handler.read_and_check_size(file)
+
+    # 3. 生成 UUID 文件名
+    filename = file_handler.generate_filename(ext)
+
+    # 4. 保存到本地磁盘
+    file_path = file_handler.save_file(content, filename)
+
+    # 5. 生成完整可访问 URL（含 scheme + host）
+    media_url = file_handler.get_media_url(filename)
+    base_url = str(request.base_url).rstrip("/") if request else "http://localhost:8000"
+    full_url = f"{base_url}{media_url}"
+
+    # 6. 记录到数据库
+    image = product_service.upload_product_image(
+        product_id, full_url, str(file_path)
+    )
+
+    return api_ok({
+        "productId": product_id,
+        "imageId": image["id"],
+        "url": image["url"],
+    })
 
 
 @router.delete("/{product_id}/images/{image_id}")
