@@ -18,10 +18,10 @@ app = FastAPI(
 
 init_db()
 
-# 挂载 media 目录为静态文件，供上传的图片访问
-media_dir = Path(settings.media_dir)
-media_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
+# 挂载 static 目录为静态文件，供上传的图片访问
+static_dir = Path(settings.static_dir)
+static_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 @app.exception_handler(BusinessError)
