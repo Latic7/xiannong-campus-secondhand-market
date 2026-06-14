@@ -1,4 +1,4 @@
-const { fetchProductList } = require('../../services/product.js');
+const { list: fetchProductList } = require('../../services/product.js');
 
 Page({
   data: {
