@@ -51,23 +51,23 @@ def seed_demo_data(db: Session) -> None:
 
 	db.add_all(
 		[
-			Product(id=1001, owner_id=1, title="二手高数教材", description="九成新，可小刀", price=Decimal("35.00"), category_id=1, status="published", favorite_count=2, view_count=12),
-			Product(id=1002, owner_id=1, title="二手计算机网络教材", description="有少量笔记", price=Decimal("28.00"), category_id=1, status="published", favorite_count=1, view_count=5),
-			Product(id=1003, owner_id=1, title="二手充电宝", description="容量20000mAh", price=Decimal("45.00"), category_id=2, status="published", favorite_count=0, view_count=3),
+			Product(id=1001, owner_id=1, title="二手高数教材", description="九成新，可小刀", price=Decimal("35.00"), category_id=1, status="PUBLISHED", favorite_count=2, view_count=12),
+			Product(id=1002, owner_id=1, title="二手计算机网络教材", description="有少量笔记", price=Decimal("28.00"), category_id=1, status="PUBLISHED", favorite_count=1, view_count=5),
+			Product(id=1003, owner_id=1, title="二手充电宝", description="容量20000mAh", price=Decimal("45.00"), category_id=2, status="PUBLISHED", favorite_count=0, view_count=3),
 		]
 	)
 
 	db.add_all(
 		[
-			Order(id=5001, product_id=1001, buyer_id=2, seller_id=1, amount=Decimal("35.00"), remark="想今晚当面交付", status="created"),
-			Order(id=5002, product_id=1002, buyer_id=2, seller_id=1, amount=Decimal("28.00"), remark="明天中午可以吗", status="confirmed"),
+			Order(id=5001, product_id=1001, buyer_id=2, seller_id=1, amount=Decimal("35.00"), remark="想今晚当面交付", status="CREATED"),
+			Order(id=5002, product_id=1002, buyer_id=2, seller_id=1, amount=Decimal("28.00"), remark="明天中午可以吗", status="CONFIRMED"),
 		]
 	)
 
 	db.add_all(
 		[
-			Report(id=7001, reporter_id=2, target_type="product", target_id=1001, reason="疑似虚假信息", status="open"),
-			Report(id=7002, reporter_id=1, target_type="user", target_id=2, reason="疑似骚扰", status="handled"),
+			Report(id=7001, reporter_id=2, target_type="PRODUCT", target_id=1001, reason="疑似虚假信息", status="OPEN"),
+			Report(id=7002, reporter_id=1, target_type="USER", target_id=2, reason="疑似骚扰", status="HANDLED"),
 		]
 	)
 

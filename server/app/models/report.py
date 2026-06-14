@@ -18,15 +18,15 @@ class Report(Base):
 	id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 	reporter_id: Mapped[int | None] = mapped_column()
 	target_type: Mapped[str] = mapped_column(
-		Enum("product", "user", "order", name="report_target_type_enum"),
+		Enum("PRODUCT", "USER", "ORDER", name="report_target_type_enum"),
 		nullable=False,
 	)
 	target_id: Mapped[int] = mapped_column(nullable=False)
 	reason: Mapped[str] = mapped_column(String(255), nullable=False)
 	status: Mapped[str] = mapped_column(
-		Enum("open", "rejected", "handled", name="report_status_enum"),
+		Enum("OPEN", "REJECTED", "HANDLED", name="report_status_enum"),
 		nullable=False,
-		server_default="open",
+		server_default="OPEN",
 	)
 	assignee_id: Mapped[int | None] = mapped_column()
 	handle_action: Mapped[str | None] = mapped_column(String(32))

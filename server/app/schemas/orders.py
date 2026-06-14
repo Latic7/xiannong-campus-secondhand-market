@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-OrderStatusValue = Literal["created", "reserved", "confirmed", "completed", "cancelled"]
+OrderStatusValue = Literal["CREATED", "RESERVED", "CONFIRMED", "COMPLETED", "CANCELLED"]
 
 
 class OrderCreateRequest(BaseModel):

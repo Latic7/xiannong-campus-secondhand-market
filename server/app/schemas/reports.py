@@ -4,9 +4,9 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-ReportTargetType = Literal["product", "user", "order"]
+ReportTargetType = Literal["PRODUCT", "USER", "ORDER"]
 AppealTargetType = Literal["report", "user_status"]
-ReportStatus = Literal["open", "rejected", "handled"]
+ReportStatus = Literal["OPEN", "REJECTED", "HANDLED"]
 
 
 class ReportCreateRequest(BaseModel):

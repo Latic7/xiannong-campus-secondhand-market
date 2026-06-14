@@ -72,6 +72,7 @@ async def upload_product_image(product_id: int, file: UploadFile = File(...), re
 
     return api_ok({
         "productId": product_id,
+        "filename": filename,
         "imageId": image["id"],
         "url": image["url"],
     })

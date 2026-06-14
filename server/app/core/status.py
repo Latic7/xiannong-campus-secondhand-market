@@ -8,16 +8,16 @@ class UppercaseStrEnum(str, Enum):
 
 
 class UserStatus(UppercaseStrEnum):
-	ACTIVE = "active"
-	BANNED = "banned"
+	ACTIVE = "ACTIVE"
+	BANNED = "BANNED"
 
 
 class ProductStatus(UppercaseStrEnum):
-	DRAFT = "draft"
-	PENDING = "pending"
-	PUBLISHED = "published"
-	REMOVED = "removed"
-	SOLD = "sold"
+	DRAFT = "DRAFT"
+	PENDING = "PENDING"
+	PUBLISHED = "PUBLISHED"
+	REMOVED = "REMOVED"
+	SOLD = "SOLD"
 
 
 class OrderStatus(UppercaseStrEnum):

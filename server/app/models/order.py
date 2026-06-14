@@ -25,9 +25,9 @@ class Order(Base):
 	amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
 	remark: Mapped[str | None] = mapped_column(String(255))
 	status: Mapped[str] = mapped_column(
-		Enum("created", "reserved", "confirmed", "completed", "cancelled", name="order_status_enum"),
+		Enum("CREATED", "RESERVED", "CONFIRMED", "COMPLETED", "CANCELLED", name="order_status_enum"),
 		nullable=False,
-		server_default="created",
+		server_default="CREATED",
 	)
 	created_at: Mapped[datetime] = mapped_column(
 		DateTime,
