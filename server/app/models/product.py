@@ -15,6 +15,7 @@ class Product(Base):
 		Index("idx_products_status_created", "status", "created_at"),
 		Index("idx_products_owner", "owner_id"),
 		Index("idx_products_category", "category_id"),
+		Index("idx_products_category_status_created", "category_id", "status", "created_at"),
 	)
 
 	id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
