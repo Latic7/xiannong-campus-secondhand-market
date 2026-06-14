@@ -20,9 +20,9 @@ class User(Base):
 	avatar: Mapped[str] = mapped_column(String(255), nullable=False, server_default="")
 	score: Mapped[int] = mapped_column(nullable=False, server_default=text("100"))
 	status: Mapped[str] = mapped_column(
-		Enum("active", "banned", name="user_status_enum"),
+		Enum("ACTIVE", "BANNED", name="user_status_enum"),
 		nullable=False,
-		server_default="active",
+		server_default="ACTIVE",
 	)
 	is_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("0"))  # 新增
 	college: Mapped[str | None] = mapped_column(String(128))

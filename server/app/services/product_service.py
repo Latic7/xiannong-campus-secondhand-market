@@ -18,6 +18,7 @@ from app.core.status import ProductStatus
 from app.crud import order as order_crud
 from app.crud import product as product_crud
 from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
+from app.utils.file_handler import delete_file_from_disk
 
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}

@@ -95,22 +95,21 @@ CREATE TABLE IF NOT EXISTS `orders` (
   `seller_id` bigint DEFAULT NULL,
   `amount` decimal(10,2) DEFAULT NULL,
   `remark` varchar(255) DEFAULT NULL,
-  `status` enum('created','reserved','confirmed','completed','cancelled') NOT NULL DEFAULT 'created',
+  `status` enum('CREATED','RESERVED','CONFIRMED','COMPLETED','CANCELLED') NOT NULL DEFAULT 'CREATED',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `expire_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_orders_status_created` (`status`,`created_at`),
   KEY `idx_orders_buyer` (`buyer_id`),
   KEY `idx_orders_seller` (`seller_id`),
-  KEY `idx_orders_product` (`product_id`),
-  KEY `idx_orders_product_status` (`product_id`,`status`)
+  KEY `idx_orders_product` (`product_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5003 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 正在导出表  campus_market.orders 的数据：~2 rows (大约)
 DELETE FROM `orders`;
 INSERT INTO `orders` (`id`, `product_id`, `buyer_id`, `seller_id`, `amount`, `remark`, `status`, `created_at`, `expire_at`) VALUES
-	(5001, 1001, 2, 1, 35.00, '想今晚当面交付', 'created', '2026-06-12 11:30:55', NULL),
-	(5002, 1002, 2, 1, 28.00, '明天中午可以吗', 'confirmed', '2026-06-12 11:30:55', NULL);
+	(5001, 1001, 2, 1, 35.00, '想今晚当面交付', 'CREATED', '2026-06-12 11:30:55', NULL),
+	(5002, 1002, 2, 1, 28.00, '明天中午可以吗', 'CONFIRMED', '2026-06-12 11:30:55', NULL);
 
 -- 导出  表 campus_market.products 结构
 DROP TABLE IF EXISTS `products`;
@@ -121,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `description` text,
   `price` decimal(10,2) NOT NULL,
   `category_id` bigint DEFAULT NULL,
-  `status` enum('draft','pending','published','removed','sold') NOT NULL DEFAULT 'pending',
+  `status` enum('DRAFT','PENDING','PUBLISHED','REMOVED','SOLD') NOT NULL DEFAULT 'PENDING',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `favorite_count` int DEFAULT '0',
@@ -129,17 +128,16 @@ CREATE TABLE IF NOT EXISTS `products` (
   PRIMARY KEY (`id`),
   KEY `idx_products_status_created` (`status`,`created_at`),
   KEY `idx_products_owner` (`owner_id`),
-  KEY `idx_products_category` (`category_id`),
-  KEY `idx_products_category_status_created` (`category_id`,`status`,`created_at`)
+  KEY `idx_products_category` (`category_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 正在导出表  campus_market.products 的数据：~4 rows (大约)
 DELETE FROM `products`;
 INSERT INTO `products` (`id`, `owner_id`, `title`, `description`, `price`, `category_id`, `status`, `created_at`, `updated_at`, `favorite_count`, `view_count`) VALUES
-	(1001, 1, '二手高数教材', '九成新，可小刀', 35.00, 1, 'published', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 2, 12),
-	(1002, 1, '二手计算机网络教材', '有少量笔记', 28.00, 1, 'published', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 1, 5),
-	(1003, 1, '二手充电宝', '容量20000mAh', 45.00, 2, 'published', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 3),
-	(1004, 2, '小台灯', '宿舍用，正常亮', 12.00, 3, 'published', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 1);
+	(1001, 1, '二手高数教材', '九成新，可小刀', 35.00, 1, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 2, 12),
+	(1002, 1, '二手计算机网络教材', '有少量笔记', 28.00, 1, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 1, 5),
+	(1003, 1, '二手充电宝', '容量20000mAh', 45.00, 2, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 3),
+	(1004, 2, '小台灯', '宿舍用，正常亮', 12.00, 3, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 1);
 
 -- 导出  表 campus_market.product_images 结构
 DROP TABLE IF EXISTS `product_images`;
@@ -149,7 +147,6 @@ CREATE TABLE IF NOT EXISTS `product_images` (
   `url` varchar(255) NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_product_images_product_url` (`product_id`,`url`),
   KEY `idx_product_images_product` (`product_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -187,10 +184,10 @@ DROP TABLE IF EXISTS `reports`;
 CREATE TABLE IF NOT EXISTS `reports` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `reporter_id` bigint DEFAULT NULL,
-  `target_type` enum('product','user','order') NOT NULL,
+  `target_type` enum('PRODUCT','USER','ORDER') NOT NULL,
   `target_id` bigint NOT NULL,
   `reason` varchar(255) NOT NULL,
-  `status` enum('open','rejected','handled') NOT NULL DEFAULT 'open',
+  `status` enum('OPEN','REJECTED','HANDLED') NOT NULL DEFAULT 'OPEN',
   `assignee_id` bigint DEFAULT NULL,
   `handle_action` varchar(32) DEFAULT NULL,
   `handle_reason` varchar(255) DEFAULT NULL,
@@ -204,8 +201,8 @@ CREATE TABLE IF NOT EXISTS `reports` (
 -- 正在导出表  campus_market.reports 的数据：~2 rows (大约)
 DELETE FROM `reports`;
 INSERT INTO `reports` (`id`, `reporter_id`, `target_type`, `target_id`, `reason`, `status`, `assignee_id`, `handle_action`, `handle_reason`, `created_at`, `handled_at`) VALUES
-	(7001, 2, 'product', 1001, '疑似虚假信息', 'open', NULL, NULL, NULL, '2026-06-12 11:30:55', NULL),
-	(7002, 1, 'user', 2, '疑似骚扰', 'handled', NULL, NULL, NULL, '2026-06-12 11:30:55', NULL);
+	(7001, 2, 'PRODUCT', 1001, '疑似虚假信息', 'OPEN', NULL, NULL, NULL, '2026-06-12 11:30:55', NULL),
+	(7002, 1, 'USER', 2, '疑似骚扰', 'HANDLED', NULL, NULL, NULL, '2026-06-12 11:30:55', NULL);
 
 -- 导出  表 campus_market.reviews 结构
 DROP TABLE IF EXISTS `reviews`;
@@ -260,7 +257,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `nickname` varchar(64) NOT NULL,
   `avatar` varchar(255) NOT NULL DEFAULT '',
   `score` int NOT NULL DEFAULT '100',
-  `status` enum('active','banned') NOT NULL DEFAULT 'active',
+  `status` enum('ACTIVE','BANNED') NOT NULL DEFAULT 'ACTIVE',
   `is_admin` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否为管理员: 0-否, 1-是',
   `college` varchar(128) DEFAULT NULL,
   `contact` varchar(64) DEFAULT NULL,
@@ -274,10 +271,10 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- 正在导出表  campus_market.users 的数据：~3 rows (大约)
 DELETE FROM `users`;
 INSERT INTO `users` (`id`, `openid`, `nickname`, `avatar`, `score`, `status`, `is_admin`, `college`, `contact`, `created_at`, `updated_at`) VALUES
-	(1, 'wx_openid_demo_1', 'DemoUser1', '', 100, 'active', 0, '中国农业大学', '13800000001', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
-	(2, 'wx_openid_demo_2', 'DemoUser2', '', 95, 'active', 0, '中国农业大学', '13800000002', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
-	(10, 'wx_openid_admin_10', 'AdminDemo', '', 100, 'active', 1, '中国农业大学', '13800000010', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
-	(11, 'orK423WwnIFshGd54OkS-nY5-gNM', 'WX_Y5-gNM', '', 100, 'active', 0, NULL, NULL, '2026-06-12 11:31:42', '2026-06-12 11:31:42');
+	(1, 'wx_openid_demo_1', 'DemoUser1', '', 100, 'ACTIVE', 0, '中国农业大学', '13800000001', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
+	(2, 'wx_openid_demo_2', 'DemoUser2', '', 95, 'ACTIVE', 0, '中国农业大学', '13800000002', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
+	(10, 'wx_openid_admin_10', 'AdminDemo', '', 100, 'ACTIVE', 1, '中国农业大学', '13800000010', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
+	(11, 'orK423WwnIFshGd54OkS-nY5-gNM', 'WX_Y5-gNM', '', 100, 'ACTIVE', 0, NULL, NULL, '2026-06-12 11:31:42', '2026-06-12 11:31:42');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

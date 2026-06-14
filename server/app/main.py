@@ -1,9 +1,13 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routers import ROUTERS
 from app.core.exceptions import BusinessError
 from app.core.response import api_error, api_ok
+from app.core.settings import settings
 from app.db.init_db import init_db
 
 app = FastAPI(
@@ -13,6 +17,11 @@ app = FastAPI(
 )
 
 init_db()
+
+# 挂载 media 目录为静态文件，供上传的图片访问
+media_dir = Path(settings.media_dir)
+media_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=str(media_dir)), name="media")
 
 
 @app.exception_handler(BusinessError)

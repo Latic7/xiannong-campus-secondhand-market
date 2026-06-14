@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 
-UserStatus = Literal["active", "banned"]
+UserStatus = Literal["ACTIVE", "BANNED"]
 ReportAction = Literal["reject", "warning", "unlist_product", "ban_user"]
 
 
