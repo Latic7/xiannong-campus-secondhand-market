@@ -138,7 +138,14 @@ def upload_product_image(
     url = f"{base_url}/static/products/{product_id}/{generated_name}"
 
     # 保存文件到磁盘：static/products/{product_id}/{generated_name}
-    file_dir = Path(settings.static_dir) / "products" / str(product_id)
+    static_root = Path(settings.static_dir).resolve()
+    products_root = (static_root / "products").resolve()
+    file_dir = (products_root / str(product_id)).resolve()
+    try:
+        file_dir.relative_to(products_root)
+    except ValueError as exc:
+        raise InvalidRequestError("invalid image path") from exc
+
     file_dir.mkdir(parents=True, exist_ok=True)
     (file_dir / generated_name).write_bytes(content)
 
