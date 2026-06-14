@@ -125,6 +125,11 @@ def upload_product_image(
     actor: CurrentActor,
     base_url: str = "http://localhost:8000",
 ) -> dict:
+    # 校验 product_id 为合法正整数，防止路径遍历
+    if not isinstance(product_id, int) or product_id <= 0:
+        raise InvalidRequestError("invalid product id")
+    product_dir_name = str(product_id)
+
     product = _require_product(db, product_id)
     _require_owner(product, actor)
     suffix = Path(filename).suffix.lower()
@@ -135,12 +140,12 @@ def upload_product_image(
     if len(content) > MAX_IMAGE_SIZE:
         raise InvalidRequestError("image file exceeds 5 MiB limit")
     generated_name = f"{uuid4().hex}{ALLOWED_IMAGE_TYPES[content_type]}"
-    url = f"{base_url}/static/products/{product_id}/{generated_name}"
+    url = f"{base_url}/static/products/{product_dir_name}/{generated_name}"
 
-    # 保存文件到磁盘：static/products/{product_id}/{generated_name}
+    # 保存文件到磁盘：static/products/{product_dir_name}/{generated_name}
     static_root = Path(settings.static_dir).resolve()
     products_root = (static_root / "products").resolve()
-    file_dir = (products_root / str(product_id)).resolve()
+    file_dir = (products_root / product_dir_name).resolve()
     try:
         file_dir.relative_to(products_root)
     except ValueError as exc:
