@@ -53,11 +53,13 @@ def _image_to_dict(image: ProductImage) -> dict:
 
 
 def list_products(
+    db: Session,
     page: int,
     size: int,
     keyword: str | None = None,
     sort: str | None = None,
     category_id: int | None = None,
+    status: str | None = None,
 ) -> tuple[list[dict], int]:
     with SessionLocal() as db:
         stmt = select(Product)

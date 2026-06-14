@@ -13,7 +13,7 @@ class UserStatusPatchRequest(BaseModel):
 
 
 class ProductReviewRequest(BaseModel):
-	result: str
+	result: Literal["approved", "rejected"]
 	reason: str | None = None
 
 
