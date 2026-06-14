@@ -1,8 +1,8 @@
 -- --------------------------------------------------------
 -- 主机:                           127.0.0.1
--- 服务器版本:                        8.0.41 - MySQL Community Server - GPL
+-- 服务器版本:                        8.0.46 - MySQL Community Server - GPL
 -- 服务器操作系统:                      Win64
--- HeidiSQL 版本:                  12.10.0.7036
+-- HeidiSQL 版本:                  12.18.0.7304
 -- --------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -111,6 +111,26 @@ INSERT INTO `orders` (`id`, `product_id`, `buyer_id`, `seller_id`, `amount`, `re
 	(5001, 1001, 2, 1, 35.00, '想今晚当面交付', 'CREATED', '2026-06-12 11:30:55', NULL),
 	(5002, 1002, 2, 1, 28.00, '明天中午可以吗', 'CONFIRMED', '2026-06-12 11:30:55', NULL);
 
+-- 导出  表 campus_market.product_images 结构
+DROP TABLE IF EXISTS `product_images`;
+CREATE TABLE IF NOT EXISTS `product_images` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `product_id` bigint NOT NULL,
+  `url` varchar(255) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_product_images_product` (`product_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6006 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 正在导出表  campus_market.product_images 的数据：~5 rows (大约)
+DELETE FROM `product_images`;
+INSERT INTO `product_images` (`id`, `product_id`, `url`, `created_at`) VALUES
+	(6001, 1001, 'https://cdn.example.com/p/demo-1001-1.jpg', '2026-06-12 11:30:55'),
+	(6002, 1002, 'https://cdn.example.com/p/demo-1002-1.jpg', '2026-06-12 11:30:55'),
+	(6003, 1003, 'https://cdn.example.com/p/demo-1003-1.jpg', '2026-06-12 11:30:55'),
+	(6004, 1004, 'https://cdn.example.com/p/demo-1004-1.jpg', '2026-06-12 11:30:55'),
+	(6005, 1005, 'http://localhost:8000/static/products/1005/f3c614e5070c460e804a6270a29d5544.jpg', '2026-06-15 02:00:13');
+
 -- 导出  表 campus_market.products 结构
 DROP TABLE IF EXISTS `products`;
 CREATE TABLE IF NOT EXISTS `products` (
@@ -129,34 +149,16 @@ CREATE TABLE IF NOT EXISTS `products` (
   KEY `idx_products_status_created` (`status`,`created_at`),
   KEY `idx_products_owner` (`owner_id`),
   KEY `idx_products_category` (`category_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1006 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.products 的数据：~4 rows (大约)
+-- 正在导出表  campus_market.products 的数据：~5 rows (大约)
 DELETE FROM `products`;
 INSERT INTO `products` (`id`, `owner_id`, `title`, `description`, `price`, `category_id`, `status`, `created_at`, `updated_at`, `favorite_count`, `view_count`) VALUES
 	(1001, 1, '二手高数教材', '九成新，可小刀', 35.00, 1, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 2, 12),
 	(1002, 1, '二手计算机网络教材', '有少量笔记', 28.00, 1, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 1, 5),
 	(1003, 1, '二手充电宝', '容量20000mAh', 45.00, 2, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 3),
-	(1004, 2, '小台灯', '宿舍用，正常亮', 12.00, 3, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 1);
-
--- 导出  表 campus_market.product_images 结构
-DROP TABLE IF EXISTS `product_images`;
-CREATE TABLE IF NOT EXISTS `product_images` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `product_id` bigint NOT NULL,
-  `url` varchar(255) NOT NULL,
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_product_images_product` (`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- 正在导出表  campus_market.product_images 的数据：~4 rows (大约)
-DELETE FROM `product_images`;
-INSERT INTO `product_images` (`id`, `product_id`, `url`, `created_at`) VALUES
-	(6001, 1001, 'https://cdn.example.com/p/demo-1001-1.jpg', '2026-06-12 11:30:55'),
-	(6002, 1002, 'https://cdn.example.com/p/demo-1002-1.jpg', '2026-06-12 11:30:55'),
-	(6003, 1003, 'https://cdn.example.com/p/demo-1003-1.jpg', '2026-06-12 11:30:55'),
-	(6004, 1004, 'https://cdn.example.com/p/demo-1004-1.jpg', '2026-06-12 11:30:55');
+	(1004, 2, '小台灯', '宿舍用，正常亮', 12.00, 3, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 1),
+	(1005, 12, '【4K】Minecraft壁纸', '4K Minecraft壁纸，3D渲染，正版发售，未经原作者同意请勿转载！\n\n所在校区：东校区', 10.00, 1, 'PENDING', '2026-06-15 02:00:13', '2026-06-14 18:00:23', 0, 1);
 
 -- 导出  表 campus_market.refresh_tokens 结构
 DROP TABLE IF EXISTS `refresh_tokens`;
@@ -268,7 +270,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `idx_users_status` (`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.users 的数据：~3 rows (大约)
+-- 正在导出表  campus_market.users 的数据：~5 rows (大约)
 DELETE FROM `users`;
 INSERT INTO `users` (`id`, `openid`, `nickname`, `avatar`, `score`, `status`, `is_admin`, `college`, `contact`, `created_at`, `updated_at`) VALUES
 	(1, 'wx_openid_demo_1', 'DemoUser1', '', 100, 'ACTIVE', 0, '中国农业大学', '13800000001', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
