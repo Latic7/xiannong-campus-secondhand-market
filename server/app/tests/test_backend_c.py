@@ -13,6 +13,7 @@ if str(SERVER_ROOT) not in sys.path:
 
 from app.db.init_db import reset_db  # noqa: E402
 from app.main import app  # noqa: E402
+from app.tests.backend_b_test_support import auth_header  # noqa: E402
 
 
 class BackendCIntegrationTest(unittest.TestCase):
@@ -22,6 +23,7 @@ class BackendCIntegrationTest(unittest.TestCase):
 
     def setUp(self) -> None:
         reset_db()
+        self.admin_headers = auth_header(10)
 
     def test_report_flow(self) -> None:
         response = self.client.post(
@@ -58,7 +60,7 @@ class BackendCIntegrationTest(unittest.TestCase):
         self.assertTrue(payload["data"]["submitted"])
 
     def test_admin_report_queue_and_handle(self) -> None:
-        response = self.client.get("/api/admin/reports")
+        response = self.client.get("/api/admin/reports", headers=self.admin_headers)
         payload = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertIn("list", payload["data"])
@@ -73,6 +75,7 @@ class BackendCIntegrationTest(unittest.TestCase):
         # 处理举报
         response = self.client.post(
             "/api/admin/reports/7001/handle",
+            headers=self.admin_headers,
             json={"action": "warning", "reason": "处理备注"},
         )
         payload = response.json()
@@ -92,14 +95,14 @@ class BackendCIntegrationTest(unittest.TestCase):
     def test_admin_reports_filter(self) -> None:
         """测试后台举报队列按 status / target_type 筛选。"""
         # 筛选 status=open
-        response = self.client.get("/api/admin/reports?status=open")
+        response = self.client.get("/api/admin/reports?status=open", headers=self.admin_headers)
         payload = response.json()
         self.assertEqual(response.status_code, 200)
         for item in payload["data"]["list"]:
             self.assertEqual(item["status"], "open")
 
         # 筛选 target_type=user
-        response = self.client.get("/api/admin/reports?target_type=user")
+        response = self.client.get("/api/admin/reports?target_type=user", headers=self.admin_headers)
         payload = response.json()
         self.assertEqual(response.status_code, 200)
         for item in payload["data"]["list"]:
@@ -113,28 +116,28 @@ class BackendCIntegrationTest(unittest.TestCase):
         self.assertIn("code", payload)
 
     def test_statistics_and_logs(self) -> None:
-        response = self.client.get("/api/admin/stats/overview")
+        response = self.client.get("/api/admin/stats/overview", headers=self.admin_headers)
         payload = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(payload["data"]["reports"], 2)
 
-        response = self.client.get("/api/admin/stats/products")
+        response = self.client.get("/api/admin/stats/products", headers=self.admin_headers)
         payload = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertIn("series", payload["data"])
         self.assertIn("total", payload["data"])
 
-        response = self.client.get("/api/admin/stats/trades")
+        response = self.client.get("/api/admin/stats/trades", headers=self.admin_headers)
         payload = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertIn("series", payload["data"])
 
-        response = self.client.get("/api/admin/stats/users")
+        response = self.client.get("/api/admin/stats/users", headers=self.admin_headers)
         payload = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertIn("series", payload["data"])
 
-        response = self.client.get("/api/admin/logs")
+        response = self.client.get("/api/admin/logs", headers=self.admin_headers)
         payload = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(payload["data"]["page"]["total"], 3)

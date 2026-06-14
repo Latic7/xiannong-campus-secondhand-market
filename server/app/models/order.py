@@ -16,6 +16,7 @@ class Order(Base):
 		Index("idx_orders_buyer", "buyer_id"),
 		Index("idx_orders_seller", "seller_id"),
 		Index("idx_orders_product", "product_id"),
+		Index("idx_orders_product_status", "product_id", "status"),
 	)
 
 	id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)

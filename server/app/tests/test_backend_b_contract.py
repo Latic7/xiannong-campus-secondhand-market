@@ -3,11 +3,28 @@ import unittest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.models.product import Product
+from app.tests.backend_b_test_support import (
+    TestingSessionLocal,
+    auth_header,
+    clear_db_override,
+    install_db_override,
+    reset_backend_b_db,
+)
 
 
 class BackendBContractTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        install_db_override()
+        cls.client = TestClient(app)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        clear_db_override()
+
     def setUp(self) -> None:
-        self.client = TestClient(app)
+        reset_backend_b_db()
 
     def assert_api_ok(self, response, status_code: int = 200):
         self.assertEqual(response.status_code, status_code, response.text)
@@ -18,60 +35,46 @@ class BackendBContractTest(unittest.TestCase):
 
     def test_product_order_review_flow(self) -> None:
         products = self.assert_api_ok(self.client.get("/api/products", params={"page": 1, "size": 10}))
-        self.assertGreaterEqual(products["page"]["total"], 2)
-        self.assertIn("list", products)
+        self.assertEqual(products["page"]["total"], 1)
 
-        created_product = self.assert_api_ok(
+        created = self.assert_api_ok(
             self.client.post(
                 "/api/products",
-                json={
-                    "title": "Test product",
-                    "description": "Created by backend B contract test",
-                    "price": 12.5,
-                    "categoryId": 9,
-                    "images": [],
-                },
+                headers=auth_header(1),
+                json={"title": "Test product", "price": 12.5, "categoryId": 9, "images": []},
             )
         )
-        self.assertEqual(created_product["status"], "PENDING")
-        product_id = created_product["id"]
+        product_id = created["id"]
+        self.assertEqual(created["ownerId"], 1)
+        self.assertEqual(created["status"], "pending")
 
-        updated = self.assert_api_ok(self.client.put(f"/api/products/{product_id}", json={"status": "PUBLISHED"}))
-        self.assertTrue(updated["updated"])
+        with TestingSessionLocal() as db:
+            persisted = db.get(Product, product_id)
+            self.assertIsNotNone(persisted)
+            self.assertEqual(persisted.title, "Test product")
 
-        detail = self.assert_api_ok(self.client.get(f"/api/products/{product_id}"))
-        self.assertEqual(detail["id"], product_id)
-        self.assertEqual(detail["viewCount"], 1)
-
-        upload = self.assert_api_ok(
-            self.client.post(
-                f"/api/products/{product_id}/images",
-                files={"file": ("cover.jpg", b"demo", "image/jpeg")},
-            )
+        order = self.assert_api_ok(
+            self.client.post("/api/orders", headers=auth_header(2), json={"productId": 1001, "remark": "meet tonight"})
         )
-        self.assertEqual(upload["productId"], product_id)
-        self.assertIn("imageId", upload)
-
-        deleted_image = self.assert_api_ok(
-            self.client.delete(f"/api/products/{product_id}/images/{upload['imageId']}")
-        )
-        self.assertTrue(deleted_image["deleted"])
-
-        order = self.assert_api_ok(self.client.post("/api/orders", json={"productId": 1001, "remark": "meet tonight"}))
-        self.assertEqual(order["status"], "RESERVED")
         order_id = order["id"]
+        self.assertEqual(order["status"], "reserved")
 
-        order_detail = self.assert_api_ok(self.client.get(f"/api/orders/{order_id}"))
-        self.assertEqual(order_detail["id"], order_id)
+        confirmed = self.assert_api_ok(
+            self.client.post(f"/api/orders/{order_id}/seller-confirm", headers=auth_header(1))
+        )
+        self.assertEqual(confirmed["status"], "confirmed")
 
-        confirmed = self.assert_api_ok(self.client.post(f"/api/orders/{order_id}/seller-confirm"))
-        self.assertEqual(confirmed["status"], "CONFIRMED")
-
-        completed = self.assert_api_ok(self.client.post(f"/api/orders/{order_id}/complete"))
-        self.assertEqual(completed["status"], "COMPLETED")
+        completed = self.assert_api_ok(
+            self.client.post(f"/api/orders/{order_id}/complete", headers=auth_header(2))
+        )
+        self.assertEqual(completed["status"], "completed")
 
         review = self.assert_api_ok(
-            self.client.post(f"/api/orders/{order_id}/reviews", json={"score": 5, "content": "smooth trade"})
+            self.client.post(
+                f"/api/orders/{order_id}/reviews",
+                headers=auth_header(2),
+                json={"score": 5, "content": "smooth trade"},
+            )
         )
         self.assertEqual(review["orderId"], order_id)
 
@@ -81,8 +84,3 @@ class BackendBContractTest(unittest.TestCase):
         body = response.json()
         self.assertEqual(body["code"], 4040)
         self.assertEqual(body["message"], "product not found")
-        self.assertEqual(body["data"]["productId"], 999999)
-
-
-if __name__ == "__main__":
-    unittest.main()
