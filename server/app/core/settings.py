@@ -25,7 +25,8 @@ class Settings:
     
     # 文件上传配置
     media_dir: str = str(BASE_DIR / "media")
-    max_upload_size: int = 3 * 1024 * 1024  # 3 MB
+    static_dir: str = str(BASE_DIR / "static")
+    max_upload_size: int = 5 * 1024 * 1024  # 5 MB
     allowed_extensions: tuple = (".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp")
 
     # 调试模式

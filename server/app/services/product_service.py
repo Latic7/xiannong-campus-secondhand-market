@@ -15,10 +15,10 @@ from app.core.exceptions import (
     StateConflictError,
 )
 from app.core.status import ProductStatus
+from app.core.settings import settings
 from app.crud import order as order_crud
 from app.crud import product as product_crud
 from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
-from app.utils.file_handler import delete_file_from_disk
 
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
@@ -123,6 +123,7 @@ def upload_product_image(
     content_type: str | None,
     content: bytes,
     actor: CurrentActor,
+    base_url: str = "http://localhost:8000",
 ) -> dict:
     product = _require_product(db, product_id)
     _require_owner(product, actor)
@@ -134,13 +135,27 @@ def upload_product_image(
     if len(content) > MAX_IMAGE_SIZE:
         raise InvalidRequestError("image file exceeds 5 MiB limit")
     generated_name = f"{uuid4().hex}{ALLOWED_IMAGE_TYPES[content_type]}"
-    url = f"/static/products/{product_id}/{generated_name}"
+    url = f"{base_url}/static/products/{product_id}/{generated_name}"
+
+    # 保存文件到磁盘：static/products/{product_id}/{generated_name}
+    static_root = Path(settings.static_dir).resolve()
+    products_root = (static_root / "products").resolve()
+    file_dir = (products_root / str(product_id)).resolve()
+    try:
+        file_dir.relative_to(products_root)
+    except ValueError as exc:
+        raise InvalidRequestError("invalid image path") from exc
+
+    file_dir.mkdir(parents=True, exist_ok=True)
+    (file_dir / generated_name).write_bytes(content)
+
     try:
         image = product_crud.add_product_image(db, product_id, url)
         db.commit()
         db.refresh(image)
     except IntegrityError as exc:
         db.rollback()
+        (file_dir / generated_name).unlink(missing_ok=True)
         raise DuplicateConflictError("product image already exists", {"productId": product_id}) from exc
     return {"id": image.id, "productId": product_id, "filename": generated_name, "url": image.url}
 

@@ -7,7 +7,6 @@ from sqlalchemy import func, select, delete
 from sqlalchemy.orm import Session
 
 from app.core.status import ProductStatus
-from app.db.session import SessionLocal
 from app.models.product import Product
 from app.models.product_image import ProductImage
 
@@ -52,6 +51,17 @@ def _image_to_dict(image: ProductImage) -> dict:
 # ── 公开 CRUD 方法 ────────────────────────────
 
 
+def get_product(db: Session, product_id: int, *, for_update: bool = False) -> Product | None:
+    """返回 ORM Product 对象（非 dict），供 service 层使用。"""
+    return db.get(Product, product_id)
+
+
+def serialize_product(db: Session, product: Product) -> dict:
+    """将 ORM Product 转为前端期望的 camelCase 字典（含 images）。"""
+    images = _get_images_for_product(db, product.id)
+    return _product_to_dict(product, images)
+
+
 def list_products(
     db: Session,
     page: int,
@@ -61,174 +71,77 @@ def list_products(
     category_id: int | None = None,
     status: str | None = None,
 ) -> tuple[list[dict], int]:
-    with SessionLocal() as db:
-        stmt = select(Product)
+    stmt = select(Product)
 
-        if keyword:
-            kw = f"%{keyword}%"
-            stmt = stmt.where(
-                Product.title.ilike(kw) | Product.description.ilike(kw)
-            )
-        if category_id is not None:
-            stmt = stmt.where(Product.category_id == category_id)
-
-        total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
-
-        if sort == "price_asc":
-            stmt = stmt.order_by(Product.price.asc())
-        elif sort == "price_desc":
-            stmt = stmt.order_by(Product.price.desc())
-        else:
-            stmt = stmt.order_by(Product.created_at.desc())
-
-        stmt = stmt.offset((page - 1) * size).limit(size)
-        rows = db.execute(stmt).scalars().all()
-
-        items = []
-        for product in rows:
-            images = _get_images_for_product(db, product.id)
-            items.append(_product_to_dict(product, images))
-
-        return items, total
-
-
-def create_product(payload: dict, owner_id: int | None = 1) -> dict:
-    with SessionLocal() as db:
-        product = Product(
-            owner_id=owner_id,
-            title=payload["title"],
-            description=payload.get("description"),
-            price=Decimal(str(payload["price"])),
-            category_id=payload.get("categoryId"),
-            status=ProductStatus.PENDING.value,
+    if keyword:
+        kw = f"%{keyword}%"
+        stmt = stmt.where(
+            Product.title.ilike(kw) | Product.description.ilike(kw)
         )
-        db.add(product)
-        db.commit()
-        db.refresh(product)
+    if category_id is not None:
+        stmt = stmt.where(Product.category_id == category_id)
+    if status is not None:
+        stmt = stmt.where(Product.status == status)
 
-        # 如果创建时传入 images URL，也一并写入
-        initial_images = payload.get("images") or []
-        for url in initial_images:
-            db.add(ProductImage(
-                product_id=product.id,
-                url=url,
-            ))
-        if initial_images:
-            db.commit()
+    total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
 
-        images = _get_images_for_product(db, product.id)
-        return _product_to_dict(product, images)
+    if sort == "price_asc":
+        stmt = stmt.order_by(Product.price.asc())
+    elif sort == "price_desc":
+        stmt = stmt.order_by(Product.price.desc())
+    else:
+        stmt = stmt.order_by(Product.created_at.desc())
 
+    stmt = stmt.offset((page - 1) * size).limit(size)
+    rows = db.execute(stmt).scalars().all()
 
-def get_product(product_id: int) -> dict | None:
-    with SessionLocal() as db:
-        product = db.get(Product, product_id)
-        if product is None:
-            return None
-        images = _get_images_for_product(db, product_id)
-        return _product_to_dict(product, images)
+    return [serialize_product(db, p) for p in rows], total
 
 
-def increment_view_count(product_id: int) -> dict | None:
-    with SessionLocal() as db:
-        product = db.get(Product, product_id)
-        if product is None:
-            return None
-        product.view_count = (product.view_count or 0) + 1
-        product.updated_at = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(product)
-        images = _get_images_for_product(db, product_id)
-        return _product_to_dict(product, images)
+def create_product(db: Session, payload: dict, owner_id: int | None = 1) -> Product:
+    """返回 ORM Product 对象，由调用方负责 commit + refresh。"""
+    product = Product(
+        owner_id=owner_id,
+        title=payload["title"],
+        description=payload.get("description"),
+        price=Decimal(str(payload["price"])),
+        category_id=payload.get("categoryId"),
+        status=ProductStatus.PENDING.value,
+    )
+    db.add(product)
+    return product
 
 
-def update_product(product_id: int, changes: dict) -> dict | None:
-    """更新商品字段。changes 的 key 为 camelCase。"""
-    with SessionLocal() as db:
-        product = db.get(Product, product_id)
-        if product is None:
-            return None
-
-        # camelCase → snake_case 映射
-        field_map = {
-            "title": "title",
-            "price": "price",
-            "categoryId": "category_id",
-            "description": "description",
-            "status": "status",
-            "images": "_images",  # 单独处理
-        }
-
-        for camel_key, value in changes.items():
-            if camel_key == "images" and value is not None:
-                # 先删除旧图片记录，再插入新 URL
-                db.execute(
-                    delete(ProductImage).where(ProductImage.product_id == product_id)
-                )
-                for url in value:
-                    db.add(ProductImage(
-                        product_id=product_id,
-                        url=url,
-                    ))
-            elif camel_key == "price" and value is not None:
-                product.price = Decimal(str(value))
-            elif camel_key in field_map and value is not None:
-                setattr(product, field_map[camel_key], value)
-
-        product.updated_at = datetime.now(timezone.utc)
-        db.commit()
-        db.refresh(product)
-        images = _get_images_for_product(db, product_id)
-        return _product_to_dict(product, images)
+def increment_view_count(db: Session, product: Product) -> None:
+    product.view_count = (product.view_count or 0) + 1
+    product.updated_at = datetime.now(timezone.utc)
 
 
-def add_product_image(product_id: int, url: str) -> dict | None:
-    with SessionLocal() as db:
-        product = db.get(Product, product_id)
-        if product is None:
-            return None
+def update_product(db: Session, product: Product, changes: dict) -> None:
+    """用 changes dict（snake_case key）直接更新 ORM 对象。"""
+    for key, value in changes.items():
+        if key == "price" and value is not None:
+            setattr(product, "price", Decimal(str(value)))
+        elif value is not None:
+            setattr(product, key, value)
+    product.updated_at = datetime.now(timezone.utc)
 
-        image = ProductImage(
-            product_id=product_id,
-            url=url,
+
+def add_product_image(db: Session, product_id: int, url: str) -> ProductImage:
+    """返回 ORM ProductImage 对象，由调用方负责 commit + refresh。"""
+    image = ProductImage(product_id=product_id, url=url)
+    db.add(image)
+    return image
+
+
+def get_product_image(db: Session, product_id: int, image_id: int) -> ProductImage | None:
+    return db.execute(
+        select(ProductImage).where(
+            ProductImage.id == image_id,
+            ProductImage.product_id == product_id,
         )
-        db.add(image)
-        db.commit()
-        db.refresh(image)
-
-        product.updated_at = datetime.now(timezone.utc)
-        db.commit()
-
-        return _image_to_dict(image)
+    ).scalar_one_or_none()
 
 
-def get_image(image_id: int) -> dict | None:
-    with SessionLocal() as db:
-        image = db.get(ProductImage, image_id)
-        if image is None:
-            return None
-        return _image_to_dict(image)
-
-
-def list_product_images(product_id: int) -> list[dict]:
-    with SessionLocal() as db:
-        rows = db.execute(
-            select(ProductImage).where(ProductImage.product_id == product_id)
-        ).scalars().all()
-        return [_image_to_dict(img) for img in rows]
-
-
-def delete_product_image(product_id: int, image_id: int) -> bool | None:
-    with SessionLocal() as db:
-        product = db.get(Product, product_id)
-        if product is None:
-            return None
-
-        image = db.get(ProductImage, image_id)
-        if image is None or image.product_id != product_id:
-            return False
-
-        db.delete(image)
-        product.updated_at = datetime.now(timezone.utc)
-        db.commit()
-        return True
+def delete_product_image(db: Session, image: ProductImage) -> None:
+    db.delete(image)
