@@ -73,6 +73,7 @@ Page({
   async fetchUserProfile() {
     try {
       const profile = await userService.getProfile()
+      console.log('[fetchUserProfile] raw profile:', JSON.stringify(profile))
       // 合并更新本地缓存和页面数据
       const updated = {
         id: profile.id,
@@ -88,6 +89,11 @@ Page({
           sold: profile.soldCount || 0,
           favorites: profile.favorites || 0,
         },
+      })
+      console.log('[fetchUserProfile] stats set:', {
+        published: profile.publishedCount,
+        sold: profile.soldCount,
+        favorites: profile.favorites,
       })
     } catch (err) {
       // 静默失败，使用本地缓存数据
