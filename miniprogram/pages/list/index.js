@@ -137,7 +137,7 @@ Page({
       let data;
 
       if (listType === 'my_favorites') {
-        data = await userService.getFavorites(this.data.page, this.data.size);
+        data = await userService.getFavorites(this.data.page, this.data.size, this.buildParams());
       } else {
         const params = this.buildParams();
         if (listType === 'my_published') {
@@ -170,9 +170,7 @@ Page({
 
   reload() {
     this.setData({ page: 1, products: [], hasMore: true });
-    if (!this.data.listType) {
-      this.computeActiveTags();
-    }
+    this.computeActiveTags();
     this.loadData();
   },
 
@@ -188,7 +186,7 @@ Page({
     this.setData({ loading: true });
 
     const doLoad = listType === 'my_favorites'
-      ? userService.getFavorites(page, size)
+      ? userService.getFavorites(page, size, this.buildParams())
       : (() => {
           const params = this.buildParams();
           params.page = page;

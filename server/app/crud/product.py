@@ -9,12 +9,30 @@ from sqlalchemy.orm import Session
 from app.core.status import ProductStatus
 from app.models.product import Product
 from app.models.product_image import ProductImage
+from app.models.user import User
 
 
 # ── 辅助函数 ──────────────────────────────────
 
 
-def _product_to_dict(product: Product, images: list[str] | None = None) -> dict:
+def _owner_to_seller_dict(owner: User | None) -> dict:
+    """将 User ORM 对象转为前端期望的 seller 字典。"""
+    if owner is None:
+        return {
+            "id": 0,
+            "nickname": "未知用户",
+            "avatar": "",
+            "reputation": 0,
+        }
+    return {
+        "id": owner.id,
+        "nickname": owner.nickname or "未知用户",
+        "avatar": owner.avatar or "",
+        "reputation": owner.score if owner.score is not None else 100,
+    }
+
+
+def _product_to_dict(product: Product, images: list[str] | None = None, seller: dict | None = None) -> dict:
     """将 ORM Product 对象转为前端期望的 camelCase 字典。"""
     return {
         "id": product.id,
@@ -29,6 +47,7 @@ def _product_to_dict(product: Product, images: list[str] | None = None) -> dict:
         "updatedAt": product.updated_at.isoformat() if product.updated_at else "",
         "favoriteCount": product.favorite_count or 0,
         "viewCount": product.view_count or 0,
+        "seller": seller or _owner_to_seller_dict(None),
     }
 
 
@@ -60,9 +79,13 @@ def get_product(db: Session, product_id: int, *, for_update: bool = False) -> Pr
 
 
 def serialize_product(db: Session, product: Product) -> dict:
-    """将 ORM Product 转为前端期望的 camelCase 字典（含 images）。"""
+    """将 ORM Product 转为前端期望的 camelCase 字典（含 images 和 seller）。"""
     images = _get_images_for_product(db, product.id)
-    return _product_to_dict(product, images)
+    seller = None
+    if product.owner_id:
+        owner = db.get(User, product.owner_id)
+        seller = _owner_to_seller_dict(owner)
+    return _product_to_dict(product, images, seller)
 
 
 def list_products(
