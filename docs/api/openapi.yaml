@@ -207,6 +207,26 @@ paths:
                           favorited:
                             type: boolean
 
+  /api/categories:
+    get:
+      tags: [Product]
+      summary: List all product categories
+      security: []
+      responses:
+        '200':
+          description: Category list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+
   /api/products:
     get:
       tags: [Product]
@@ -1158,6 +1178,29 @@ components:
           type: string
           description: Contact information.
           example: 13800000000
+
+    Category:
+      type: object
+      description: Product category entity.
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          description: Category identifier.
+          example: 1
+        name:
+          type: string
+          description: Category display name.
+          example: 数码电子
+        parentId:
+          type: integer
+          description: Parent category identifier, null for top-level.
+          nullable: true
+          example: null
+        sortOrder:
+          type: integer
+          description: Display sort order.
+          example: 10
 
     Product:
       type: object

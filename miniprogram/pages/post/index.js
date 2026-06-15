@@ -5,23 +5,11 @@
 const { isLoggedIn } = require('../../utils/storage')
 const { IMAGE_MAX_COUNT, IMAGE_MAX_SIZE } = require('../../utils/constants')
 const productService = require('../../services/product')
+const categoryService = require('../../services/category')
 
 // ── 常量 ──────────────────────────────────────
 const TITLE_MAX = 50
 const DESC_MAX = 500
-
-const CATEGORIES = [
-  { id: 1, name: '数码电子' },
-  { id: 2, name: '书籍教材' },
-  { id: 3, name: '生活用品' },
-  { id: 4, name: '服饰鞋包' },
-  { id: 5, name: '运动户外' },
-  { id: 6, name: '美妆护肤' },
-  { id: 7, name: '食品饮料' },
-  { id: 8, name: '其他' },
-]
-
-const CATEGORY_NAMES = CATEGORIES.map(c => c.name)
 
 const CONDITIONS = [
   { value: 'brand_new', label: '全新未拆封' },
@@ -58,7 +46,7 @@ Page({
     campusPickerVisible: false,
     errors: {},
 
-    categories: CATEGORY_NAMES,
+    categories: [],
     conditions: CONDITIONS,
     campuses: CAMPUSES,
   },
@@ -67,6 +55,14 @@ Page({
     if (!isLoggedIn()) {
       wx.showToast({ title: '请先登录后再发布', icon: 'none' })
     }
+
+    // 动态加载分类（异步，不阻塞页面渲染）
+    categoryService.clearCache()
+    categoryService.getCategories().then(raw => {
+      this.setData({ categories: raw })
+    }).catch(() => {
+      // 静默失败，分类为空将阻止提交
+    })
   },
 
   onShow() {
@@ -108,9 +104,11 @@ Page({
   },
   onCategoryChange(e) {
     const idx = Number(e.detail.value)
+    const cat = this.data.categories[idx]
+    if (!cat) return
     this.setData({
       categoryIndex: idx,
-      categoryText: CATEGORIES[idx].name,
+      categoryText: cat.name,
       categoryPickerVisible: false,
     })
     this.clearError('category')
@@ -269,8 +267,8 @@ Page({
     wx.showLoading({ title: '发布中...', mask: true })
 
     try {
-      const { title, description, price, categoryIndex, campusIndex } = this.data
-      const categoryId = CATEGORIES[categoryIndex].id
+      const { title, description, price, categoryIndex, campusIndex, categories } = this.data
+      const categoryId = categories[categoryIndex]?.id
       const campus = CAMPUSES[campusIndex].label
 
       // 1. 先创建商品（不含图片）

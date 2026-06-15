@@ -48,7 +48,7 @@ def reset_backend_b_db() -> None:
                 title="二手高数教材",
                 description="九成新",
                 price=Decimal("35.00"),
-                category_id=1,
+                category_id=2,
                 status="PUBLISHED",
                 favorite_count=0,
                 view_count=0,

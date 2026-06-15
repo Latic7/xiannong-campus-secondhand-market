@@ -1,5 +1,6 @@
 const { list: fetchProductList } = require('../../services/product.js');
 const userService = require('../../services/user.js');
+const categoryService = require('../../services/category.js');
 const { getUserInfo } = require('../../utils/storage.js');
 
 const PAGE_TITLES = {
@@ -35,14 +36,7 @@ Page({
     customPriceMax: '',
     activeTags: [],
 
-    categories: [
-      { id: null, name: '全部' },
-      { id: 1, name: '书籍' },
-      { id: 2, name: '数码' },
-      { id: 3, name: '生活' },
-      { id: 4, name: '服饰' },
-      { id: 5, name: '其他' }
-    ],
+    categories: [],
 
     priceRanges: [
       { label: '全部', min: null, max: null },
@@ -71,6 +65,9 @@ Page({
 
     this.setData({ listType, pageTitle });
 
+    // 从后端动态加载分类（异步，不阻塞页面渲染）
+    this.loadCategories();
+
     // 分类页入口
     if (options.keyword) {
       this.setData({ keyword: options.keyword });
@@ -80,6 +77,16 @@ Page({
     }
 
     this.loadData();
+  },
+
+  // ── 异步加载分类（从后端）───────────────
+  loadCategories() {
+    categoryService.getCategories().then(raw => {
+      const categories = [{ id: null, name: '全部' }, ...raw.map(c => ({ id: c.id, name: c.name }))];
+      this.setData({ categories });
+    }).catch(() => {
+      // 静默失败
+    });
   },
 
   // ---- 筛选状态管理 ----
