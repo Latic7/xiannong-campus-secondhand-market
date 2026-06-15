@@ -73,6 +73,7 @@ def list_products(
     sort: str | None = None,
     category_id: int | None = None,
     status: str | None = None,
+    owner_id: int | None = None,
 ) -> tuple[list[dict], int]:
     stmt = select(Product)
 
@@ -85,6 +86,8 @@ def list_products(
         stmt = stmt.where(Product.category_id == category_id)
     if status is not None:
         stmt = stmt.where(Product.status == status)
+    if owner_id is not None:
+        stmt = stmt.where(Product.owner_id == owner_id)
 
     total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
 

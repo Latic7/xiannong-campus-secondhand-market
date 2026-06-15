@@ -1,4 +1,12 @@
 const { list: fetchProductList } = require('../../services/product.js');
+const userService = require('../../services/user.js');
+const { getUserInfo } = require('../../utils/storage.js');
+
+const PAGE_TITLES = {
+  my_published: '我的发布',
+  my_favorites: '我的收藏',
+  default: '全部商品',
+};
 
 Page({
   data: {
@@ -8,6 +16,9 @@ Page({
     total: 0,
     loading: false,
     hasMore: true,
+
+    listType: '',        // '' | 'my_published' | 'my_favorites'
+    pageTitle: '全部商品',
 
     keyword: '',
     categoryId: null,
@@ -52,13 +63,22 @@ Page({
   },
 
   onLoad(options) {
+    const listType = options.type || '';
+
+    // 根据入口设置页面标题
+    const pageTitle = PAGE_TITLES[listType] || PAGE_TITLES.default;
+    wx.setNavigationBarTitle({ title: pageTitle });
+
+    this.setData({ listType, pageTitle });
+
+    // 分类页入口
     if (options.keyword) {
       this.setData({ keyword: options.keyword });
     }
     if (options.categoryId) {
       this.setData({ categoryId: parseInt(options.categoryId) });
     }
-    this.computeActiveTags();
+
     this.loadData();
   },
 
@@ -106,7 +126,7 @@ Page({
   // ---- 数据加载 ----
 
   async loadData() {
-    const { loading } = this.data;
+    const { loading, listType } = this.data;
     if (loading) return;
 
     const MIN_LOADING_TIME = 600;
@@ -114,7 +134,18 @@ Page({
 
     this.setData({ loading: true });
     try {
-      const data = await fetchProductList(this.buildParams());
+      let data;
+
+      if (listType === 'my_favorites') {
+        data = await userService.getFavorites(this.data.page, this.data.size);
+      } else {
+        const params = this.buildParams();
+        if (listType === 'my_published') {
+          const user = getUserInfo();
+          if (user && user.id) params.ownerId = user.id;
+        }
+        data = await fetchProductList(params);
+      }
 
       const elapsed = Date.now() - startTime;
       if (elapsed < MIN_LOADING_TIME) {
@@ -139,7 +170,9 @@ Page({
 
   reload() {
     this.setData({ page: 1, products: [], hasMore: true });
-    this.computeActiveTags();
+    if (!this.data.listType) {
+      this.computeActiveTags();
+    }
     this.loadData();
   },
 
@@ -149,14 +182,24 @@ Page({
   },
 
   onReachBottom() {
-    const { loading, hasMore, page, size } = this.data;
+    const { loading, hasMore, page, size, listType } = this.data;
     if (loading || !hasMore) return;
 
     this.setData({ loading: true });
-    const params = this.buildParams();
-    params.page = page;
 
-    fetchProductList(params).then(data => {
+    const doLoad = listType === 'my_favorites'
+      ? userService.getFavorites(page, size)
+      : (() => {
+          const params = this.buildParams();
+          params.page = page;
+          if (listType === 'my_published') {
+            const user = getUserInfo();
+            if (user && user.id) params.ownerId = user.id;
+          }
+          return fetchProductList(params);
+        })();
+
+    doLoad.then(data => {
       const list = data.list || [];
       this.setData({
         products: this.data.products.concat(list),

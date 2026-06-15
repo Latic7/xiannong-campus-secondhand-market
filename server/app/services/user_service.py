@@ -163,29 +163,55 @@ class UserService:
         size: int = 20
     ) -> Tuple[list, int]:
         """
-        获取收藏列表（分页）
-        返回: (收藏列表, 总数)
+        获取收藏列表（分页），返回完整商品信息，对齐 OpenAPI ProductListPayload。
         """
+        from app.models.product import Product
+        from app.models.product_image import ProductImage
+        from decimal import Decimal
+
         offset = max(0, (page - 1) * size)
-        size = max(1, size)  # 确保 size 至少为 1
-        
-        # 查询收藏记录
-        favorites = self.db.query(Favorite).filter(
-            Favorite.user_id == user_id
-        ).order_by(Favorite.created_at.desc()).offset(offset).limit(size).all()
-        
+        size = max(1, size)
+
+        # 统计收藏总数
         total = self.db.query(Favorite).filter(Favorite.user_id == user_id).count()
-        
-        # 转换返回格式
-        favorite_list = [
-            {
-                "id": fav.id,
-                "productId": fav.product_id,
-                "createdAt": fav.created_at.isoformat() if fav.created_at else None,
-            }
-            for fav in favorites
-        ]
-        
+
+        # JOIN products 查完整商品信息，按收藏时间倒序
+        rows = (
+            self.db.query(Favorite, Product)
+            .join(Product, Favorite.product_id == Product.id, isouter=True)
+            .filter(Favorite.user_id == user_id)
+            .order_by(Favorite.created_at.desc())
+            .offset(offset)
+            .limit(size)
+            .all()
+        )
+
+        favorite_list = []
+        for fav, prod in rows:
+            if prod is None:
+                continue
+            # 查图片
+            images = [
+                row[0] for row in
+                self.db.query(ProductImage.url)
+                .filter(ProductImage.product_id == prod.id)
+                .all()
+            ]
+            favorite_list.append({
+                "id": prod.id,
+                "ownerId": prod.owner_id,
+                "title": prod.title,
+                "description": prod.description or "",
+                "price": float(prod.price) if isinstance(prod.price, Decimal) else float(prod.price or 0),
+                "categoryId": prod.category_id,
+                "status": prod.status,
+                "images": images,
+                "createdAt": prod.created_at.isoformat() if prod.created_at else "",
+                "updatedAt": prod.updated_at.isoformat() if prod.updated_at else "",
+                "favoriteCount": prod.favorite_count or 0,
+                "viewCount": prod.view_count or 0,
+            })
+
         return favorite_list, total
     
     # ========== 用户状态 ==========
