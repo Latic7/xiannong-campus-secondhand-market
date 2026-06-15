@@ -1,4 +1,5 @@
 from fastapi import Depends, Header, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 import jwt
 
@@ -27,7 +28,7 @@ def get_current_admin(
     if token_data.get("typ") != "access":
         raise HTTPException(status_code=401, detail="token type mismatch")
     
-    user = db.query(User).filter(User.id == token_data.get("uid")).first()
+    user = db.scalar(select(User).where(User.id == token_data.get("uid")))
     if not user:
         raise HTTPException(status_code=404, detail="user not found")
     

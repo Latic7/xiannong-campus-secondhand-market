@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.models.admin_log import AdminLog
@@ -12,41 +13,59 @@ from app.models.report import Report
 from app.models.user import User
 
 
-def create_admin_log(*, actor_id: int, action: str, target_type: str, target_id: int, remark: str | None = None) -> None:
-	with SessionLocal() as db:
-		db.add(
-			AdminLog(
-				actor_id=actor_id,
-				action=action,
-				target_type=target_type,
-				target_id=target_id,
-				remark=remark,
-				created_at=datetime.now(timezone.utc),
-			)
-		)
-		db.commit()
+def create_admin_log(
+    *,
+    actor_id: int,
+    action: str,
+    target_type: str,
+    target_id: int,
+    remark: str | None = None,
+    db: Session | None = None,
+) -> None:
+    if db is not None:
+        db.add(
+            AdminLog(
+                actor_id=actor_id,
+                action=action,
+                target_type=target_type,
+                target_id=target_id,
+                remark=remark,
+                created_at=datetime.now(timezone.utc),
+            )
+        )
+    else:
+        with SessionLocal() as db:
+            db.add(
+                AdminLog(
+                    actor_id=actor_id,
+                    action=action,
+                    target_type=target_type,
+                    target_id=target_id,
+                    remark=remark,
+                    created_at=datetime.now(timezone.utc),
+                )
+            )
+            db.commit()
 
 
-def stats_overview() -> dict:
-	"""平台运营总览。
+def stats_overview(db: Session | None = None) -> dict:
+    """平台运营总览。"""
+    def _query(session: Session) -> dict:
+        users = session.scalar(select(func.count(User.id))) or 0
+        products = session.scalar(select(func.count(Product.id))) or 0
+        orders = session.scalar(select(func.count(Order.id))) or 0
+        reports = session.scalar(select(func.count(Report.id))) or 0
+        return {
+            "users": int(users),
+            "products": int(products),
+            "orders": int(orders),
+            "reports": int(reports),
+        }
 
-	口径说明：
-	- users:    当前系统中注册用户总数（正常+封禁）
-	- products: 当前系统中商品总数（所有状态）
-	- orders:   当前系统中订单总数（所有状态）
-	- reports:  当前系统中举报总数（所有状态）
-	"""
-	with SessionLocal() as db:
-		users = db.scalar(select(func.count(User.id))) or 0
-		products = db.scalar(select(func.count(Product.id))) or 0
-		orders = db.scalar(select(func.count(Order.id))) or 0
-		reports = db.scalar(select(func.count(Report.id))) or 0
-		return {
-			"users": int(users),
-			"products": int(products),
-			"orders": int(orders),
-			"reports": int(reports),
-		}
+    if db is not None:
+        return _query(db)
+    with SessionLocal() as db:
+        return _query(db)
 
 
 def _series_with_pct(rows: list, total: int) -> list[dict]:

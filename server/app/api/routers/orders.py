@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps.auth import CurrentActor, get_current_actor
 from app.core.response import api_ok
-from app.db.session import get_db
+from app.core.database import get_db
 from app.schemas.orders import OrderCreateRequest, OrderReviewRequest
 from app.services import order_service
 

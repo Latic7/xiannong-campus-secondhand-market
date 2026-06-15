@@ -10,7 +10,7 @@ from app.models.order import Order
 from app.models.review import Review
 
 
-ACTIVE_ORDER_STATUSES = ("reserved", "confirmed")
+ACTIVE_ORDER_STATUSES = ("RESERVED", "CONFIRMED")
 
 
 def serialize_order(order: Order) -> dict:
@@ -41,7 +41,7 @@ def create_order(
         seller_id=seller_id,
         amount=amount,
         remark=remark,
-        status="reserved",
+        status="RESERVED",
         expire_at=datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=48),
     )
     db.add(order)

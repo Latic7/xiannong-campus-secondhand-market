@@ -41,7 +41,7 @@ def create_report(record: dict) -> dict:
 			target_type=record["targetType"],
 			target_id=record["targetId"],
 			reason=record["reason"],
-			status=record.get("status", "open"),
+			status=record.get("status", "OPEN"),
 		)
 		db.add(model)
 		db.commit()

@@ -46,7 +46,7 @@ class BackendBContractTest(unittest.TestCase):
         )
         product_id = created["id"]
         self.assertEqual(created["ownerId"], 1)
-        self.assertEqual(created["status"], "pending")
+        self.assertEqual(created["status"], "PENDING")
 
         with TestingSessionLocal() as db:
             persisted = db.get(Product, product_id)
@@ -57,17 +57,17 @@ class BackendBContractTest(unittest.TestCase):
             self.client.post("/api/orders", headers=auth_header(2), json={"productId": 1001, "remark": "meet tonight"})
         )
         order_id = order["id"]
-        self.assertEqual(order["status"], "reserved")
+        self.assertEqual(order["status"], "RESERVED")
 
         confirmed = self.assert_api_ok(
             self.client.post(f"/api/orders/{order_id}/seller-confirm", headers=auth_header(1))
         )
-        self.assertEqual(confirmed["status"], "confirmed")
+        self.assertEqual(confirmed["status"], "CONFIRMED")
 
         completed = self.assert_api_ok(
             self.client.post(f"/api/orders/{order_id}/complete", headers=auth_header(2))
         )
-        self.assertEqual(completed["status"], "completed")
+        self.assertEqual(completed["status"], "COMPLETED")
 
         review = self.assert_api_ok(
             self.client.post(

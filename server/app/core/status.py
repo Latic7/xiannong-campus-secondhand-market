@@ -2,33 +2,33 @@ from enum import StrEnum
 
 
 class UserStatus(StrEnum):
-    ACTIVE = "active"
-    BANNED = "banned"
+    ACTIVE = "ACTIVE"
+    BANNED = "BANNED"
 
 
 class ProductStatus(StrEnum):
-    DRAFT = "draft"
-    PENDING = "pending"
-    PUBLISHED = "published"
-    REMOVED = "removed"
-    SOLD = "sold"
+    DRAFT = "DRAFT"
+    PENDING = "PENDING"
+    PUBLISHED = "PUBLISHED"
+    REMOVED = "REMOVED"
+    SOLD = "SOLD"
 
 
 class OrderStatus(StrEnum):
-    CREATED = "created"
-    RESERVED = "reserved"
-    CONFIRMED = "confirmed"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
+    CREATED = "CREATED"
+    RESERVED = "RESERVED"
+    CONFIRMED = "CONFIRMED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 
 class ReportStatus(StrEnum):
-    OPEN = "open"
-    REJECTED = "rejected"
-    HANDLED = "handled"
+    OPEN = "OPEN"
+    REJECTED = "REJECTED"
+    HANDLED = "HANDLED"
 
 
 class ReportTargetType(StrEnum):
-    PRODUCT = "product"
-    USER = "user"
-    ORDER = "order"
+    PRODUCT = "PRODUCT"
+    USER = "USER"
+    ORDER = "ORDER"

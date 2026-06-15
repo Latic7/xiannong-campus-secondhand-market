@@ -102,7 +102,8 @@ CREATE TABLE IF NOT EXISTS `orders` (
   KEY `idx_orders_status_created` (`status`,`created_at`),
   KEY `idx_orders_buyer` (`buyer_id`),
   KEY `idx_orders_seller` (`seller_id`),
-  KEY `idx_orders_product` (`product_id`)
+  KEY `idx_orders_product` (`product_id`),
+  KEY `idx_orders_product_status` (`product_id`,`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5003 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 正在导出表  campus_market.orders 的数据：~2 rows (大约)
@@ -119,7 +120,8 @@ CREATE TABLE IF NOT EXISTS `product_images` (
   `url` varchar(255) NOT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `idx_product_images_product` (`product_id`)
+  KEY `idx_product_images_product` (`product_id`),
+  UNIQUE KEY `uq_product_images_product_url` (`product_id`,`url`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6006 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 正在导出表  campus_market.product_images 的数据：~5 rows (大约)
@@ -148,7 +150,8 @@ CREATE TABLE IF NOT EXISTS `products` (
   PRIMARY KEY (`id`),
   KEY `idx_products_status_created` (`status`,`created_at`),
   KEY `idx_products_owner` (`owner_id`),
-  KEY `idx_products_category` (`category_id`)
+  KEY `idx_products_category` (`category_id`),
+  KEY `idx_products_category_status_created` (`category_id`,`status`,`created_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1006 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- 正在导出表  campus_market.products 的数据：~5 rows (大约)

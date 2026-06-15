@@ -68,12 +68,12 @@ class BackendBRulesTest(unittest.TestCase):
         forbidden = self.client.put("/api/products/1001", headers=auth_header(2), json={"title": "x"})
         self.assert_error(forbidden, 403, 4030)
 
-        direct_publish = self.client.put("/api/products/1001", headers=auth_header(1), json={"status": "published"})
+        direct_publish = self.client.put("/api/products/1001", headers=auth_header(1), json={"status": "PUBLISHED"})
         self.assert_error(direct_publish, 403, 4030)
 
         with TestingSessionLocal() as db:
             product = db.get(Product, 1001)
-            product.status = "sold"
+            product.status = "SOLD"
             db.commit()
         sold = self.client.put("/api/products/1001", headers=auth_header(1), json={"price": 1})
         self.assert_error(sold, 409, 4090)
@@ -93,9 +93,9 @@ class BackendBRulesTest(unittest.TestCase):
             json={"result": "approved", "reason": "ok"},
         )
         self.assertEqual(reviewed.status_code, 200, reviewed.text)
-        self.assertEqual(reviewed.json()["data"]["status"], "published")
+        self.assertEqual(reviewed.json()["data"]["status"], "PUBLISHED")
         detail = self.client.get(f"/api/products/{created['id']}").json()["data"]
-        self.assertEqual(detail["status"], "published")
+        self.assertEqual(detail["status"], "PUBLISHED")
 
     def test_active_order_locks_product_and_duplicate_order_conflicts(self) -> None:
         self.create_order()
@@ -116,27 +116,27 @@ class BackendBRulesTest(unittest.TestCase):
         wrong_seller = self.client.post(f"/api/orders/{order_id}/seller-confirm", headers=auth_header(3))
         self.assert_error(wrong_seller, 403, 4030)
 
-        self.assertEqual(self.confirm_order(order_id)["status"], "confirmed")
-        self.assertEqual(self.confirm_order(order_id)["status"], "confirmed")
+        self.assertEqual(self.confirm_order(order_id)["status"], "CONFIRMED")
+        self.assertEqual(self.confirm_order(order_id)["status"], "CONFIRMED")
 
         wrong_buyer = self.client.post(f"/api/orders/{order_id}/complete", headers=auth_header(1))
         self.assert_error(wrong_buyer, 403, 4030)
 
         complete = self.client.post(f"/api/orders/{order_id}/complete", headers=auth_header(2))
-        self.assertEqual(complete.json()["data"]["status"], "completed")
+        self.assertEqual(complete.json()["data"]["status"], "COMPLETED")
         complete_again = self.client.post(f"/api/orders/{order_id}/complete", headers=auth_header(2))
-        self.assertEqual(complete_again.json()["data"]["status"], "completed")
+        self.assertEqual(complete_again.json()["data"]["status"], "COMPLETED")
 
         with TestingSessionLocal() as db:
-            self.assertEqual(db.get(Product, 1001).status, "sold")
+            self.assertEqual(db.get(Product, 1001).status, "SOLD")
             self.assertEqual(db.get(Order, order_id).amount, db.get(Product, 1001).price)
 
     def test_cancel_is_idempotent_and_terminal(self) -> None:
         order_id = self.create_order()["id"]
         cancelled = self.client.post(f"/api/orders/{order_id}/cancel", headers=auth_header(2))
-        self.assertEqual(cancelled.json()["data"]["status"], "cancelled")
+        self.assertEqual(cancelled.json()["data"]["status"], "CANCELLED")
         cancelled_again = self.client.post(f"/api/orders/{order_id}/cancel", headers=auth_header(1))
-        self.assertEqual(cancelled_again.json()["data"]["status"], "cancelled")
+        self.assertEqual(cancelled_again.json()["data"]["status"], "CANCELLED")
         confirm = self.client.post(f"/api/orders/{order_id}/seller-confirm", headers=auth_header(1))
         self.assert_error(confirm, 409, 4090)
 
