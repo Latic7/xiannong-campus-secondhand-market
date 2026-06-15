@@ -9,12 +9,10 @@ const orderService = require('../../services/order')
 const reportService = require('../../services/report')
 const userService = require('../../services/user')
 
-// ── 分类 ID → 名称映射（与后端 categoryId 对齐）──
-const CATEGORY_MAP = {
-  1: '数码电子', 2: '书籍教材', 3: '生活用品',
-  4: '服饰鞋包', 5: '运动户外', 6: '美妆护肤',
-  7: '食品饮料', 8: '其他',
-}
+const categoryService = require('../../services/category')
+
+// ── 分类 ID → 名称映射（启动时从后端加载，见 onLoad）──
+let CATEGORY_MAP = {}
 
 Page({
   data: {
@@ -33,6 +31,14 @@ Page({
   onLoad(options) {
     const productId = options.id || ''
     this.setData({ productId })
+
+    // 加载分类映射（异步，不阻塞页面渲染）
+    categoryService.getCategoryMap().then(map => {
+      CATEGORY_MAP = map
+    }).catch(() => {
+      // 静默失败，mapBackendProduct 会用 '其他' 兜底
+    })
+
     if (!productId) {
       this.setData({ loading: false, errorMsg: '商品 ID 缺失' })
       return

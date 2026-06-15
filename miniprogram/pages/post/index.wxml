@@ -173,7 +173,7 @@
         class="picker-option"
       >
         <radio value="{{index}}" checked="{{categoryIndex === index}}" color="#0B6B43" />
-        <text>{{item}}</text>
+        <text>{{item.name}}</text>
       </label>
     </radio-group>
   </view>
