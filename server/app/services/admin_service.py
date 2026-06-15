@@ -35,6 +35,7 @@ def pending_products(db: Session, page: int = 1, size: int = 20) -> dict:
 def review_product(db: Session, product_id: int, payload) -> dict:
     result = product_service.review_product(db, product_id, payload.result, payload.reason)
     create_admin_log(
+        db=db,
         actor_id=10,
         action=f"review_product_{payload.result}",
         target_type="product",
@@ -58,6 +59,7 @@ def handle_report(db: Session, report_id: int, payload) -> dict:
     result = report_handle_report(report_id, payload)
     report_data = crud_get_report(report_id)
     create_admin_log(
+        db=db,
         actor_id=10,
         action=f"handle_report:{payload.action}",
         target_type="report",

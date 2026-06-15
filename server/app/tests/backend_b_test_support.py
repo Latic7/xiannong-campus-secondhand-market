@@ -49,7 +49,7 @@ def reset_backend_b_db() -> None:
                 description="九成新",
                 price=Decimal("35.00"),
                 category_id=1,
-                status="published",
+                status="PUBLISHED",
                 favorite_count=0,
                 view_count=0,
             )

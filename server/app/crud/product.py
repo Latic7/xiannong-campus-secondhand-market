@@ -53,7 +53,10 @@ def _image_to_dict(image: ProductImage) -> dict:
 
 def get_product(db: Session, product_id: int, *, for_update: bool = False) -> Product | None:
     """返回 ORM Product 对象（非 dict），供 service 层使用。"""
-    return db.get(Product, product_id)
+    statement = select(Product).where(Product.id == product_id)
+    if for_update:
+        statement = statement.with_for_update()
+    return db.scalar(statement)
 
 
 def serialize_product(db: Session, product: Product) -> dict:
