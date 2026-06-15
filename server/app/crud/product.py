@@ -95,7 +95,7 @@ def list_products(
     keyword: str | None = None,
     sort: str | None = None,
     category_id: int | None = None,
-    status: str | None = None,
+    status: str | list[str] | None = None,
     owner_id: int | None = None,
 ) -> tuple[list[dict], int]:
     stmt = select(Product)
@@ -108,7 +108,10 @@ def list_products(
     if category_id is not None:
         stmt = stmt.where(Product.category_id == category_id)
     if status is not None:
-        stmt = stmt.where(Product.status == status)
+        if isinstance(status, list):
+            stmt = stmt.where(Product.status.in_(status))
+        else:
+            stmt = stmt.where(Product.status == status)
     if owner_id is not None:
         stmt = stmt.where(Product.owner_id == owner_id)
 

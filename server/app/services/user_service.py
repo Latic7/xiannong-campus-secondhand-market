@@ -37,9 +37,10 @@ class UserService:
         ).count()
 
         # 统计已发布和已售出商品数量
+        # 注：published_count 统计用户所有商品（含 PENDING/PUBLISHED/REMOVED/SOLD），
+        #     与"我的发布"列表的口径一致。sold_count 仅统计 SOLD 终态。
         published_count = self.db.query(Product).filter(
             Product.owner_id == user.id,
-            Product.status == ProductStatus.PUBLISHED.value,
         ).count()
         sold_count = self.db.query(Product).filter(
             Product.owner_id == user.id,

@@ -49,7 +49,9 @@ def list_products(
 ) -> dict:
     page = max(page, 1)
     size = min(max(size, 1), 100)
-    items, total = product_crud.list_products(db, page, size, keyword, sort, category_id, owner_id=owner_id)
+    # 公开列表只显示已发布或已售出商品；owner 自己的列表显示所有状态
+    statuses = [ProductStatus.PUBLISHED.value, ProductStatus.SOLD.value] if owner_id is None else None
+    items, total = product_crud.list_products(db, page, size, keyword, sort, category_id, status=statuses, owner_id=owner_id)
     return {
         "list": items,
         "page": {"page": page, "size": size, "total": total},

@@ -211,6 +211,9 @@ paths:
     get:
       tags: [Product]
       summary: Search products with paging/filter
+      description: >
+        Public listing returns only PUBLISHED and SOLD products. When ownerId is specified,
+        returns all statuses (for owner's personal product list).
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
@@ -1115,7 +1118,7 @@ components:
       example: 0
     publishedCount:
       type: integer
-      description: Number of products published by this user (status=PUBLISHED).
+      description: Number of products created by this user (all statuses, matches "my published" list).
       nullable: true
       example: 5
     soldCount:
