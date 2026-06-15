@@ -2,8 +2,13 @@
   <!-- 背景图 -->
   <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
 
-  <!-- 搜索栏 -->
-  <view class="search-bar">
+  <!-- 页面标题（我的发布 / 我的收藏） -->
+  <view class="page-title-bar" wx:if="{{listType}}">
+    <text class="page-title-text">{{pageTitle}}</text>
+  </view>
+
+  <!-- 搜索栏（仅全部商品模式显示） -->
+  <view class="search-bar" wx:if="{{!listType}}">
     <input
       class="search-input"
       placeholder="搜索教材、宿舍好物、数码配件"

@@ -25,6 +25,8 @@ class UserService:
     
     def get_user_profile(self, user_id: int) -> Optional[Dict[str, Any]]:
         """获取用户资料（包含统计信息）"""
+        from app.models.product import Product
+
         user = self.get_user_by_id(user_id)
         if not user:
             return None
@@ -33,6 +35,16 @@ class UserService:
         favorites_count = self.db.query(Favorite).filter(
             Favorite.user_id == user.id
         ).count()
+
+        # 统计已发布和已售出商品数量
+        published_count = self.db.query(Product).filter(
+            Product.owner_id == user.id,
+            Product.status == ProductStatus.PUBLISHED.value,
+        ).count()
+        sold_count = self.db.query(Product).filter(
+            Product.owner_id == user.id,
+            Product.status == ProductStatus.SOLD.value,
+        ).count()
         
         return {
             "id": user.id,
@@ -40,10 +52,12 @@ class UserService:
             "avatar": user.avatar,
             "score": user.score,
             "status": user.status if user.status else UserStatus.ACTIVE.value,
-            "is_admin": user.is_admin,  # 新增
+            "is_admin": user.is_admin,
             "college": user.college,
             "contact": user.contact,
             "favorites": favorites_count,
+            "publishedCount": published_count,
+            "soldCount": sold_count,
         }
     
     # ========== 用户创建 ==========
@@ -160,32 +174,87 @@ class UserService:
         self, 
         user_id: int, 
         page: int = 1, 
-        size: int = 20
+        size: int = 20,
+        keyword: str | None = None,
+        sort: str | None = None,
+        category_id: int | None = None,
     ) -> Tuple[list, int]:
         """
-        获取收藏列表（分页）
-        返回: (收藏列表, 总数)
+        获取收藏列表（分页 + 筛选），返回完整商品信息，对齐 OpenAPI ProductListPayload。
         """
+        from app.models.product import Product
+        from app.models.product_image import ProductImage
+        from decimal import Decimal
+
         offset = max(0, (page - 1) * size)
-        size = max(1, size)  # 确保 size 至少为 1
-        
-        # 查询收藏记录
-        favorites = self.db.query(Favorite).filter(
-            Favorite.user_id == user_id
-        ).order_by(Favorite.created_at.desc()).offset(offset).limit(size).all()
-        
-        total = self.db.query(Favorite).filter(Favorite.user_id == user_id).count()
-        
-        # 转换返回格式
-        favorite_list = [
-            {
-                "id": fav.id,
-                "productId": fav.product_id,
-                "createdAt": fav.created_at.isoformat() if fav.created_at else None,
-            }
-            for fav in favorites
-        ]
-        
+        size = max(1, size)
+
+        # JOIN products 查完整商品信息
+        query = (
+            self.db.query(Favorite, Product)
+            .join(Product, Favorite.product_id == Product.id, isouter=True)
+            .filter(Favorite.user_id == user_id)
+        )
+
+        # 筛选
+        if keyword:
+            kw = f"%{keyword}%"
+            query = query.filter(
+                Product.title.ilike(kw) | Product.description.ilike(kw)
+            )
+        if category_id is not None:
+            query = query.filter(Product.category_id == category_id)
+
+        # 统计总数
+        total = query.count()
+
+        # 排序
+        if sort == "price_asc":
+            query = query.order_by(Product.price.asc())
+        elif sort == "price_desc":
+            query = query.order_by(Product.price.desc())
+        else:
+            query = query.order_by(Favorite.created_at.desc())
+
+        rows = query.offset(offset).limit(size).all()
+
+        favorite_list = []
+        for fav, prod in rows:
+            if prod is None:
+                continue
+            images = [
+                row[0] for row in
+                self.db.query(ProductImage.url)
+                .filter(ProductImage.product_id == prod.id)
+                .all()
+            ]
+            # 查卖家信息
+            seller = {"id": 0, "nickname": "未知用户", "avatar": "", "reputation": 0}
+            if prod.owner_id:
+                owner = self.db.get(User, prod.owner_id)
+                if owner:
+                    seller = {
+                        "id": owner.id,
+                        "nickname": owner.nickname or "未知用户",
+                        "avatar": owner.avatar or "",
+                        "reputation": owner.score if owner.score is not None else 100,
+                    }
+            favorite_list.append({
+                "id": prod.id,
+                "ownerId": prod.owner_id,
+                "title": prod.title,
+                "description": prod.description or "",
+                "price": float(prod.price) if isinstance(prod.price, Decimal) else float(prod.price or 0),
+                "categoryId": prod.category_id,
+                "status": prod.status,
+                "images": images,
+                "createdAt": prod.created_at.isoformat() if prod.created_at else "",
+                "updatedAt": prod.updated_at.isoformat() if prod.updated_at else "",
+                "favoriteCount": prod.favorite_count or 0,
+                "viewCount": prod.view_count or 0,
+                "seller": seller,
+            })
+
         return favorite_list, total
     
     # ========== 用户状态 ==========

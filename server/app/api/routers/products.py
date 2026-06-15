@@ -18,9 +18,10 @@ def list_products(
     keyword: str | None = None,
     sort: str | None = None,
     categoryId: int | None = None,
+    ownerId: int | None = None,
     db: Session = Depends(get_db),
 ) -> dict:
-    return api_ok(product_service.list_products(db, page, size, keyword, sort, categoryId))
+    return api_ok(product_service.list_products(db, page, size, keyword, sort, categoryId, owner_id=ownerId))
 
 
 @router.post("")

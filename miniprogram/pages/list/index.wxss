@@ -16,6 +16,17 @@
   box-sizing: border-box;
 }
 
+.page-title-bar {
+  margin-bottom: 20rpx;
+  padding: 20rpx 8rpx;
+}
+
+.page-title-text {
+  color: var(--color-text);
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
 .search-bar {
   display: flex;
   align-items: center;

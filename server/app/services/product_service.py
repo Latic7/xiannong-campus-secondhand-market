@@ -45,10 +45,11 @@ def list_products(
     keyword: str | None = None,
     sort: str | None = None,
     category_id: int | None = None,
+    owner_id: int | None = None,
 ) -> dict:
     page = max(page, 1)
     size = min(max(size, 1), 100)
-    items, total = product_crud.list_products(db, page, size, keyword, sort, category_id)
+    items, total = product_crud.list_products(db, page, size, keyword, sort, category_id, owner_id=owner_id)
     return {
         "list": items,
         "page": {"page": page, "size": size, "total": total},
