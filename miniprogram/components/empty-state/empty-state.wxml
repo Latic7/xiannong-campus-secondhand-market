@@ -1,0 +1,7 @@
+<view class="empty-container">
+  <view class="empty-icon-wrap">
+    <text class="empty-icon">{{icon}}</text>
+  </view>
+  <text class="empty-message">{{message}}</text>
+  <text wx:if="{{subMessage}}" class="empty-sub-message">{{subMessage}}</text>
+</view>

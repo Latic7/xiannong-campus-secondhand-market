@@ -1,0 +1,104 @@
+.item-card {
+  display: flex;
+  gap: 20rpx;
+  padding: 16rpx;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1rpx solid rgba(60, 60, 67, 0.16);
+  border-radius: 24rpx;
+  box-sizing: border-box;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.item-card:active {
+  transform: scale(0.985);
+  opacity: 0.84;
+}
+
+.image-wrapper {
+  position: relative;
+  width: 196rpx;
+  height: 196rpx;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #ededf2;
+  border-radius: 18rpx;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+}
+
+.status-tag {
+  position: absolute;
+  left: 10rpx;
+  bottom: 10rpx;
+  max-width: 150rpx;
+  padding: 5rpx 12rpx;
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  background: rgba(29, 29, 31, 0.54);
+  border-radius: 999rpx;
+  backdrop-filter: blur(16rpx);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-available {
+  background: rgba(52, 199, 89, 0.92);
+}
+
+.status-reserved {
+  background: rgba(255, 159, 10, 0.92);
+}
+
+.status-sold {
+  background: rgba(142, 142, 147, 0.92);
+}
+
+.status-default {
+  background: rgba(99, 99, 102, 0.88);
+}
+
+.info {
+  min-width: 0;
+  flex: 1;
+  padding: 6rpx 4rpx 4rpx 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  margin-bottom: 8rpx;
+  color: #1d1d1f;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.34;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.desc {
+  margin-bottom: 14rpx;
+  color: #6e6e73;
+  font-size: 25rpx;
+  line-height: 1.38;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.price {
+  margin-top: auto;
+  color: #ff3b30;
+  font-size: 34rpx;
+  font-weight: 800;
+  line-height: 1.2;
+}

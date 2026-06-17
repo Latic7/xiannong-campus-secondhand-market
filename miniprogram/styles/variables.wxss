@@ -1,0 +1,25 @@
+/* Global design tokens */
+page {
+  --color-bg: #f5f5f7;
+  --color-surface: #ffffff;
+  --color-surface-elevated: rgba(255, 255, 255, 0.92);
+  --color-text: #1d1d1f;
+  --color-text-secondary: #6e6e73;
+  --color-text-tertiary: #86868b;
+  --color-border: rgba(60, 60, 67, 0.16);
+  --color-border-strong: rgba(60, 60, 67, 0.28);
+  --color-primary: #0b6b43;
+  --color-primary-soft: #e6f2ec;
+  --color-brand-gold: #c8a24a;
+  --color-brand-gold-soft: #f6efd8;
+  --color-danger: #ff3b30;
+  --color-success: #34c759;
+  --color-warning: #ff9f0a;
+  --radius-xs: 8rpx;
+  --radius-sm: 12rpx;
+  --radius-md: 18rpx;
+  --radius-lg: 24rpx;
+  --radius-xl: 32rpx;
+  --shadow-soft: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 16rpx 40rpx rgba(0, 0, 0, 0.10);
+}

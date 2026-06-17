@@ -1,0 +1,89 @@
+<view class="container">
+  <!-- 背景图 -->
+  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+
+  <!-- 自定义导航栏 -->
+  <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">
+    <view class="nav-content">
+      <image class="logo" src="/assets/icons/中国农业大学-logo-2048px白.png" mode="aspectFit" />
+      <view class="brand-copy">
+        <text class="app-title">校园二手交易</text>
+        <text class="app-subtitle">中国农业大学</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索栏 -->
+  <view class="search-bar" bindtap="onSearchTap">
+    <image class="search-icon-img" src="/assets/icons/search.svg" mode="aspectFit" />
+    <text class="search-placeholder">搜索教材、宿舍好物、数码配件</text>
+  </view>
+
+  <view class="section">
+    <view class="section-title">分类</view>
+    <scroll-view class="category-scroll" scroll-x>
+      <view class="category-list">
+        <block wx:for="{{categories}}" wx:key="id">
+          <view class="category-item" data-id="{{item.id}}" data-name="{{item.name}}" bindtap="onCategoryTap">
+            <view class="category-icon-wrap" style="background: {{item.bgColor}}">
+              <image class="category-icon-img" src="{{item.iconPath}}" mode="aspectFit" />
+            </view>
+            <text class="category-name">{{item.name}}</text>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="section">
+    <view class="section-title">同学推荐</view>
+
+    <!-- 推荐商品骨架屏 -->
+    <scroll-view class="recommend-scroll" scroll-x wx:if="{{loading}}">
+      <view class="recommend-list">
+        <view class="recommend-skeleton" wx:for="{{[1,2,3]}}" wx:key="*this">
+          <view class="recommend-skeleton-img"></view>
+          <view class="recommend-skeleton-info">
+            <view class="recommend-skeleton-title"></view>
+            <view class="recommend-skeleton-price"></view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 推荐商品真实内容 -->
+    <scroll-view class="recommend-scroll" scroll-x wx:elif="{{recommends.length > 0}}">
+      <view class="recommend-list">
+        <block wx:for="{{recommends}}" wx:key="id">
+          <view class="recommend-item" data-product-id="{{item.id}}" bindtap="onProductTap">
+            <image class="recommend-image" src="{{item.images[0]}}" mode="aspectFill" />
+            <view class="recommend-tags">
+              <text class="recommend-condition">{{item.condition || '全新'}}</text>
+            </view>
+            <view class="recommend-info">
+              <text class="recommend-title">{{item.title}}</text>
+              <text class="recommend-price">¥{{item.price}}</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+
+    <!-- 推荐商品空状态 -->
+    <empty-state wx:elif="{{!loading && recommends.length === 0}}" message="暂无推荐商品" />
+  </view>
+
+  <view class="section">
+    <view class="section-title">新鲜上架</view>
+    <view class="product-list">
+      <block wx:for="{{latestProducts}}" wx:key="id">
+        <item-card item="{{item}}" bind:tap="onProductTap" />
+      </block>
+    </view>
+    <loading-state wx:if="{{loading}}" />
+    <empty-state wx:if="{{!loading && latestProducts.length === 0}}" message="暂无商品" />
+  </view>
+
+  <!-- 自定义 TabBar -->
+  <custom-tab-bar />
+</view>

@@ -1,0 +1,1668 @@
+openapi: 3.0.3
+info:
+  title: Campus Second-hand Market API
+  version: 0.1.0-draft
+  description: |
+    Field-level OpenAPI draft for the campus second-hand market backend.
+    This document aligns with team_docs/概要设计v1.4.html section 5 and the current FastAPI router stubs.
+    It is intended to be the single source of truth for frontend-backend parallel development.
+  contact:
+    name: Campus Second-hand Market Team
+servers:
+  - url: https://api.example.com
+    description: Production placeholder
+  - url: http://localhost:8000
+    description: Local development
+
+tags:
+  - name: Auth
+  - name: User
+  - name: Product
+  - name: Order
+  - name: Report
+  - name: Admin
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/auth/wx-login:
+    post:
+      tags: [Auth]
+      summary: WeChat login and token issue
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WxLoginRequest'
+      responses:
+        '200':
+          description: Login success
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthTokens'
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/TokenResponse'
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout current session
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current authenticated user
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+
+  /api/users/me:
+    get:
+      tags: [User]
+      summary: Get personal profile and score
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserProfile'
+    put:
+      tags: [User]
+      summary: Update personal profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+      responses:
+        '200':
+          description: Update result.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          updated:
+                            type: boolean
+                          profile:
+                            $ref: '#/components/schemas/UserProfileUpdateRequest'
+
+  /api/users/me/favorites:
+    get:
+      tags: [User]
+      summary: List my favorite products
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Keyword'
+        - $ref: '#/components/parameters/Sort'
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Favorite list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProductListPayload'
+
+  /api/users/me/favorites/{productId}:
+    post:
+      tags: [User]
+      summary: Add favorite
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Favorite created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          productId:
+                            type: integer
+                          favorited:
+                            type: boolean
+    delete:
+      tags: [User]
+      summary: Remove favorite
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Favorite removed.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          productId:
+                            type: integer
+                          favorited:
+                            type: boolean
+
+  /api/categories:
+    get:
+      tags: [Product]
+      summary: List all product categories
+      security: []
+      responses:
+        '200':
+          description: Category list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+
+  /api/products:
+    get:
+      tags: [Product]
+      summary: Search products with paging/filter
+      description: >
+        Public listing returns only PUBLISHED and SOLD products. When ownerId is specified,
+        returns all statuses (for owner's personal product list).
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Keyword'
+        - $ref: '#/components/parameters/Sort'
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+        - name: ownerId
+          in: query
+          description: Filter by product owner (for "my published" list).
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProductListPayload'
+    post:
+      tags: [Product]
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreateRequest'
+      responses:
+        '200':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Product'
+
+  /api/products/{productId}:
+    get:
+      tags: [Product]
+      summary: Get product detail
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Product detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Product'
+    put:
+      tags: [Product]
+      summary: Update product
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+    delete:
+      tags: [Product]
+      summary: Delete or unlist product
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/products/{productId}/images:
+    post:
+      tags: [Product]
+      summary: Upload product images
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Uploaded file reference.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          productId:
+                            type: integer
+                          filename:
+                            type: string
+
+  /api/products/{productId}/images/{imageId}:
+    delete:
+      tags: [Product]
+      summary: Delete product image
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Image deletion result.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          productId:
+                            type: integer
+                          imageId:
+                            type: integer
+                          deleted:
+                            type: boolean
+
+  /api/orders:
+    post:
+      tags: [Order]
+      summary: Create order request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+      responses:
+        '200':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+
+  /api/orders/{orderId}:
+    get:
+      tags: [Order]
+      summary: Get order detail
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Order detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Order'
+
+  /api/orders/{orderId}/seller-confirm:
+    post:
+      tags: [Order]
+      summary: Seller confirms order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/orders/{orderId}/cancel:
+    post:
+      tags: [Order]
+      summary: Cancel order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/orders/{orderId}/complete:
+    post:
+      tags: [Order]
+      summary: Complete order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          $ref: '#/components/responses/SimpleOk'
+
+  /api/orders/{orderId}/reviews:
+    post:
+      tags: [Order]
+      summary: Submit review for order
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [score, content]
+              properties:
+                score:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Review submission result.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          orderId:
+                            type: integer
+                          score:
+                            type: integer
+                          content:
+                            type: string
+
+  /api/reports:
+    post:
+      tags: [Report]
+      summary: Create report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCreateRequest'
+      responses:
+        '200':
+          description: Report created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Report'
+
+  /api/reports/{reportId}:
+    get:
+      tags: [Report]
+      summary: Get report processing status
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      responses:
+        '200':
+          description: Report detail
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Report'
+
+  /api/appeals:
+    post:
+      tags: [Report]
+      summary: Submit appeal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetType, targetId, reason]
+              properties:
+                targetType:
+                  type: string
+                  enum: [report, user_status]
+                targetId:
+                  type: integer
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Appeal submission result.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          submitted:
+                            type: boolean
+                          targetType:
+                            type: string
+                          targetId:
+                            type: integer
+                          reason:
+                            type: string
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: Admin list users
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Keyword'
+      responses:
+        '200':
+          description: User list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          list:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/UserProfile'
+                          page:
+                            $ref: '#/components/schemas/PageMeta'
+                          keyword:
+                            type: string
+                            nullable: true
+
+  /api/admin/users/{userId}/status:
+    patch:
+      tags: [Admin]
+      summary: Admin ban/unban user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ACTIVE, BANNED]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: User status update result.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          userId:
+                            type: integer
+                          status:
+                            type: string
+                          reason:
+                            type: string
+                            nullable: true
+
+  /api/admin/products/pending:
+    get:
+      tags: [Admin]
+      summary: Get pending products for review
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Pending products
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProductListPayload'
+
+  /api/admin/products/{productId}/review:
+    post:
+      tags: [Admin]
+      summary: Submit product review result
+      parameters:
+        - $ref: '#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [result]
+              properties:
+                result:
+                  type: string
+                  enum: [approved, rejected]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Product review result.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          productId:
+                            type: integer
+                          result:
+                            type: string
+                          reason:
+                            type: string
+                            nullable: true
+
+  /api/admin/reports:
+    get:
+      tags: [Admin]
+      summary: Get report queue
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Report queue
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          list:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/Report'
+                          page:
+                            $ref: '#/components/schemas/PageMeta'
+
+  /api/admin/reports/{reportId}/handle:
+    post:
+      tags: [Admin]
+      summary: Admin handles report
+      parameters:
+        - $ref: '#/components/parameters/ReportId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [reject, warning, unlist_product, ban_user]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Report handling result.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    required: [data]
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          reportId:
+                            type: integer
+                          action:
+                            type: string
+                          reason:
+                            type: string
+                            nullable: true
+
+  /api/admin/stats/overview:
+    get:
+      tags: [Admin]
+      summary: Get operation overview metrics
+      responses:
+        '200':
+          description: Overview stats
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StatsOverviewPayload'
+
+  /api/admin/stats/products:
+    get:
+      tags: [Admin]
+      summary: Product statistics
+      responses:
+        '200':
+          description: Product statistics.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StatsSeriesPayload'
+
+  /api/admin/stats/trades:
+    get:
+      tags: [Admin]
+      summary: Trade statistics
+      responses:
+        '200':
+          description: Trade statistics.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StatsSeriesPayload'
+
+  /api/admin/stats/users:
+    get:
+      tags: [Admin]
+      summary: User activity and credit statistics
+      responses:
+        '200':
+          description: User statistics.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StatsSeriesPayload'
+
+  /api/admin/logs:
+    get:
+      tags: [Admin]
+      summary: Get admin operation logs
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Admin logs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          list:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/AdminLog'
+                          page:
+                            $ref: '#/components/schemas/PageMeta'
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Page number, starting from 1.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+    Size:
+      name: size
+      in: query
+      description: Page size, capped by backend policy.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+    Keyword:
+      name: keyword
+      in: query
+      description: Fuzzy search keyword.
+      schema:
+        type: string
+      example: 教材
+    Sort:
+      name: sort
+      in: query
+      description: Sort expression, such as createdAt_desc.
+      schema:
+        type: string
+      example: createdAt_desc
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      description: Product identifier.
+      schema:
+        type: integer
+      example: 1001
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      description: Order identifier.
+      schema:
+        type: integer
+      example: 5001
+    ReportId:
+      name: reportId
+      in: path
+      required: true
+      description: Report identifier.
+      schema:
+        type: integer
+      example: 7001
+
+  responses:
+    SimpleOk:
+      description: Generic success response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          examples:
+            success:
+              value:
+                code: 0
+                message: ok
+                data: {}
+                requestId: req-demo-1
+                timestamp: '2026-05-14T08:00:00Z'
+    TokenResponse:
+  description: Token payload response.
+  content:
+    application/json:
+      schema:
+        allOf:
+          - $ref: '#/components/schemas/ApiResponse'
+          - type: object
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/AuthTokens'
+      examples:
+        loginSuccess:
+          value:
+            code: 0
+            message: ok
+            data:
+              accessToken: draft-access-token
+              refreshToken: draft-refresh-token
+              expiresIn: 3600
+              user:
+                id: 1
+                nickname: Demo User
+                avatar: ''
+                score: 100
+                status: ACTIVE
+                isAdmin: false
+            requestId: req-demo-1
+            timestamp: '2026-05-14T08:00:00Z'
+    ErrorResponse:
+      description: Generic error response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+
+  schemas:
+    ApiResponse:
+      type: object
+      description: Standard API envelope used by every endpoint.
+      required: [code, message, requestId, timestamp]
+      properties:
+        code:
+          type: integer
+          description: Business code, 0 means success.
+          example: 0
+        message:
+          type: string
+          description: Human-readable message.
+          example: ok
+        data:
+          description: Response payload, nullable for empty operations.
+          nullable: true
+        requestId:
+          type: string
+          description: Unique request trace identifier.
+          example: req-demo-1
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC timestamp generated by the backend.
+          example: '2026-05-14T08:00:00Z'
+
+    PageMeta:
+      type: object
+      description: Pagination metadata.
+      required: [page, size, total]
+      properties:
+        page:
+          type: integer
+          description: Current page number.
+          example: 1
+        size:
+          type: integer
+          description: Page size.
+          example: 20
+        total:
+          type: integer
+          description: Total number of items.
+          example: 0
+
+    WxLoginRequest:
+      type: object
+      description: Request body for WeChat login.
+      required: [code]
+      properties:
+        code:
+          type: string
+          description: Login code returned by WeChat.
+          example: wx-code-demo
+        clientId:
+          type: string
+          description: Optional mini-program client identifier.
+          example: mini-program
+
+    TokenRefreshRequest:
+      type: object
+      description: Request body for refreshing tokens.
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token issued during login.
+          example: draft-refresh-token
+
+    AuthTokens:
+      type: object
+      description: Token payload returned after login or refresh.
+      required: [accessToken, refreshToken, expiresIn, user]
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token.
+          example: draft-access-token
+        refreshToken:
+          type: string
+          description: Refresh token.
+          example: draft-refresh-token
+        expiresIn:
+          type: integer
+          description: Lifetime of the access token in seconds.
+          example: 3600
+        user:
+          $ref: '#/components/schemas/UserProfile'
+        wxCode:
+          type: string
+          description: Debug echo of the submitted wx code used by the current stub implementation.
+          nullable: true
+
+    UserProfile:
+  type: object
+  description: Public user profile shown in the mini program.
+  required: [id, nickname, avatar, score, status, isAdmin]
+  properties:
+    id:
+      type: integer
+      description: User identifier.
+      example: 1
+    nickname:
+      type: string
+      description: Display name.
+      example: Demo User
+    avatar:
+      type: string
+      format: uri
+      description: Avatar URL.
+      example: ''
+    score:
+      type: integer
+      description: User credit score.
+      example: 100
+    status:
+      type: string
+      description: Account status.
+      enum: [ACTIVE, BANNED]
+      example: ACTIVE
+    isAdmin:
+      type: boolean
+      description: Whether the user has admin privilege.
+      example: false
+    favorites:
+      type: integer
+      description: Number of favorite products.
+      nullable: true
+      example: 0
+    publishedCount:
+      type: integer
+      description: Number of products created by this user (all statuses, matches "my published" list).
+      nullable: true
+      example: 5
+    soldCount:
+      type: integer
+      description: Number of products sold by this user (status=SOLD).
+      nullable: true
+      example: 3
+    college:
+      type: string
+      description: User's college name.
+      nullable: true
+      example: 中国农业大学
+    contact:
+      type: string
+      description: Contact information shown to authorized users.
+      nullable: true
+      example: 13800000000
+
+    UserProfileUpdateRequest:
+      type: object
+      description: Updateable fields for personal profile.
+      properties:
+        nickname:
+          type: string
+          description: New display name.
+          example: Demo User
+        avatar:
+          type: string
+          format: uri
+          description: New avatar URL.
+          example: https://cdn.example.com/avatar.jpg
+        college:
+          type: string
+          description: College name.
+          example: 中国农业大学
+        contact:
+          type: string
+          description: Contact information.
+          example: 13800000000
+
+    Category:
+      type: object
+      description: Product category entity.
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          description: Category identifier.
+          example: 1
+        name:
+          type: string
+          description: Category display name.
+          example: 数码电子
+        parentId:
+          type: integer
+          description: Parent category identifier, null for top-level.
+          nullable: true
+          example: null
+        sortOrder:
+          type: integer
+          description: Display sort order.
+          example: 10
+
+    Product:
+      type: object
+      description: Product entity used in list and detail views.
+      required: [id, title, price, status]
+      properties:
+        id:
+          type: integer
+          description: Product identifier.
+          example: 1001
+        ownerId:
+          type: integer
+          description: Publisher user identifier.
+          nullable: true
+          example: 1
+        title:
+          type: string
+          description: Product title.
+          example: 二手高数教材
+        description:
+          type: string
+          description: Product description.
+          nullable: true
+          example: 九成新，可小刀
+        price:
+          type: number
+          format: float
+          description: Product price in CNY.
+          example: 35.0
+        categoryId:
+          type: integer
+          description: Category identifier.
+          nullable: true
+          example: 3
+        status:
+          type: string
+          description: Lifecycle status of the product.
+          enum: [DRAFT, PENDING, PUBLISHED, REMOVED, SOLD]
+          example: PUBLISHED
+        images:
+          type: array
+          description: Product image URLs.
+          items:
+            type: string
+            format: uri
+          example:
+            - https://cdn.example.com/p/1001-1.jpg
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp.
+          nullable: true
+          example: '2026-05-14T08:10:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp.
+          nullable: true
+          example: '2026-05-14T08:15:00Z'
+        favoriteCount:
+          type: integer
+          description: Number of favorites.
+          nullable: true
+          example: 2
+        viewCount:
+          type: integer
+          description: Number of detail-page views.
+          nullable: true
+          example: 15
+        seller:
+          type: object
+          description: Brief seller profile for display purposes.
+          properties:
+            id:
+              type: integer
+              example: 1
+            nickname:
+              type: string
+              example: Demo User
+            avatar:
+              type: string
+              format: uri
+              example: ''
+            reputation:
+              type: integer
+              example: 100
+
+    ProductCreateRequest:
+      type: object
+      description: Request body for publishing a product.
+      required: [title, price, categoryId]
+      properties:
+        title:
+          type: string
+          description: Product title.
+          example: 二手高数教材
+        description:
+          type: string
+          description: Product description.
+          nullable: true
+          example: 九成新，可小刀
+        price:
+          type: number
+          format: float
+          description: Asking price.
+          example: 35.0
+        categoryId:
+          type: integer
+          description: Category identifier.
+          example: 3
+        images:
+          type: array
+          description: Uploaded image URLs.
+          items:
+            type: string
+            format: uri
+          default: []
+          example:
+            - https://cdn.example.com/p/1001-1.jpg
+
+    ProductUpdateRequest:
+      type: object
+      description: Editable fields for a product.
+      properties:
+        title:
+          type: string
+          description: Product title.
+        description:
+          type: string
+          description: Product description.
+        price:
+          type: number
+          format: float
+          description: Asking price.
+        categoryId:
+          type: integer
+          description: Category identifier.
+        status:
+          type: string
+          description: Target lifecycle status.
+          enum: [PENDING, PUBLISHED, REMOVED]
+
+    ProductListPayload:
+      type: object
+      description: Paged product list response.
+      required: [list, page]
+      properties:
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page:
+          $ref: '#/components/schemas/PageMeta'
+        filters:
+          type: object
+          description: Echo of list filters used by the current stub.
+          properties:
+            keyword:
+              type: string
+              nullable: true
+            sort:
+              type: string
+              nullable: true
+            categoryId:
+              type: integer
+              nullable: true
+
+    Order:
+      type: object
+      description: Trade order entity.
+      required: [id, productId, status]
+      properties:
+        id:
+          type: integer
+          description: Order identifier.
+          example: 5001
+        productId:
+          type: integer
+          description: Related product identifier.
+          example: 1001
+        buyerId:
+          type: integer
+          description: Buyer user identifier.
+          nullable: true
+          example: 2
+        sellerId:
+          type: integer
+          description: Seller user identifier.
+          nullable: true
+          example: 1
+        amount:
+          type: number
+          format: float
+          description: Final transaction amount.
+          nullable: true
+          example: 35.0
+        remark:
+          type: string
+          description: Buyer remark when creating the order.
+          nullable: true
+          example: 想今晚当面交付
+        status:
+          type: string
+          description: Order lifecycle status.
+          enum: [CREATED, RESERVED, CONFIRMED, COMPLETED, CANCELLED]
+          example: CREATED
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Creation timestamp.
+        expireAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Reservation expiry timestamp.
+
+    OrderCreateRequest:
+      type: object
+      description: Request body for creating an order.
+      required: [productId]
+      properties:
+        productId:
+          type: integer
+          description: Target product identifier.
+          example: 1001
+        remark:
+          type: string
+          description: Optional note from buyer.
+          nullable: true
+          example: 想今晚当面交付
+
+    OrderReviewRequest:
+      type: object
+      description: Request body for submitting order reviews.
+      required: [score, content]
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Review score from 1 to 5.
+          example: 5
+        content:
+          type: string
+          description: Review content.
+          example: 卖家回复很快，交易顺利。
+
+    Report:
+      type: object
+      description: Report or complaint entity.
+      required: [id, targetType, targetId, reason, status]
+      properties:
+        id:
+          type: integer
+          description: Report identifier.
+          example: 7001
+        reporterId:
+          type: integer
+          description: Reporter user identifier.
+          nullable: true
+          example: 3
+        targetType:
+          type: string
+          description: Report target type.
+          enum: [PRODUCT, USER, ORDER]
+          example: PRODUCT
+        targetId:
+          type: integer
+          description: Target entity identifier.
+          example: 1001
+        reason:
+          type: string
+          description: Report reason.
+          example: 疑似虚假信息
+        status:
+          type: string
+          description: Report processing status.
+          enum: [OPEN, REJECTED, HANDLED]
+          example: OPEN
+        createdAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Creation timestamp.
+        handledAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Handling timestamp.
+        assigneeId:
+          type: integer
+          nullable: true
+          description: Admin user identifier assigned to this report.
+        handleAction:
+          type: string
+          nullable: true
+          description: Handling action chosen by admin.
+        handleReason:
+          type: string
+          nullable: true
+          description: Handling note or reason.
+
+    ReportCreateRequest:
+      type: object
+      description: Request body for creating a report.
+      required: [targetType, targetId, reason]
+      properties:
+        targetType:
+          type: string
+          description: Report target type.
+          enum: [PRODUCT, USER, ORDER]
+          example: PRODUCT
+        targetId:
+          type: integer
+          description: Target identifier.
+          example: 1001
+        reason:
+          type: string
+          description: Report reason.
+          example: 疑似虚假信息
+
+    AppealCreateRequest:
+      type: object
+      description: Request body for appeals.
+      required: [targetType, targetId, reason]
+      properties:
+        targetType:
+          type: string
+          description: Appeal target type.
+          enum: [report, user_status]
+          example: report
+        targetId:
+          type: integer
+          description: Appeal target identifier.
+          example: 7001
+        reason:
+          type: string
+          description: Appeal reason.
+          example: 我已提供完整证据，请重新审核。
+
+    UserStatusPatchRequest:
+      type: object
+      description: Admin patch body for user status.
+      required: [status]
+      properties:
+        status:
+          type: string
+          description: Target account status.
+          enum: [ACTIVE, BANNED]
+          example: BANNED
+        reason:
+          type: string
+          description: Administrative reason.
+          nullable: true
+          example: 多次发布违规信息
+
+    ProductReviewRequest:
+      type: object
+      description: Admin review payload for products.
+      required: [result]
+      properties:
+        result:
+          type: string
+          description: Review result.
+          enum: [approved, rejected]
+          example: approved
+        reason:
+          type: string
+          description: Review note.
+          nullable: true
+          example: 图片与描述一致，允许上架。
+
+    ReportHandleRequest:
+      type: object
+      description: Admin payload for handling reports.
+      required: [action]
+      properties:
+        action:
+          type: string
+          description: Administrative action.
+          enum: [reject, warning, unlist_product, ban_user]
+          example: warning
+        reason:
+          type: string
+          description: Handling note.
+          nullable: true
+          example: 首次违规，口头警告。
+
+    AdminLog:
+      type: object
+      description: Admin operation log entry.
+      required: [id, actorId, action, targetType, targetId, createdAt]
+      properties:
+        id:
+          type: integer
+          description: Log identifier.
+          example: 9001
+        actorId:
+          type: integer
+          description: Admin user identifier.
+          example: 10
+        action:
+          type: string
+          description: Action name.
+          example: ban_user
+        targetType:
+          type: string
+          description: Target entity type.
+          example: user
+        targetId:
+          type: integer
+          description: Target entity identifier.
+          example: 2
+        remark:
+          type: string
+          description: Optional operation remark.
+          nullable: true
+          example: 多次发布违规信息
+        createdAt:
+          type: string
+          format: date-time
+          description: Operation timestamp.
+          example: '2026-05-14T08:40:00Z'
+
+    StatsSeriesPoint:
+      type: object
+      description: Generic metric point.
+      properties:
+        label:
+          type: string
+          example: 2026-05-14
+        value:
+          type: integer
+          example: 12
+
+    StatsSeriesPayload:
+      type: object
+      description: Response body used by statistics endpoints.
+      properties:
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatsSeriesPoint'
+        total:
+          type: integer
+          nullable: true
+          example: 0
+
+    StatsOverviewPayload:
+      type: object
+      description: Platform overview counters.
+      properties:
+        users:
+          type: integer
+          example: 132
+        products:
+          type: integer
+          example: 67
+        orders:
+          type: integer
+          example: 28
+        reports:
+          type: integer
+          example: 3

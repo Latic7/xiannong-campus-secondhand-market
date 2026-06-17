@@ -1,0 +1,226 @@
+<view class="page-body">
+  <!-- 背景图 -->
+  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+
+  <scroll-view scroll-y class="page-content">
+
+  <!-- 图片上传区 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">商品图片</text>
+      <text class="section-hint">{{images.length}}/{{9}}</text>
+    </view>
+    <view class="image-grid">
+      <!-- 已选图片 -->
+      <view
+        wx:for="{{images}}"
+        wx:key="index"
+        class="image-item"
+        data-index="{{index}}"
+        bindtap="onPreviewImage"
+      >
+        <image class="image-thumb" src="{{item.path}}" mode="aspectFill" />
+        <view
+          class="image-remove"
+          data-index="{{index}}"
+          catchtap="onRemoveImage"
+        >✕</view>
+      </view>
+      <!-- 添加按钮 -->
+      <view
+        wx:if="{{images.length < 9}}"
+        class="image-add"
+        bindtap="onAddImage"
+      >
+        <text class="add-icon">+</text>
+        <text class="add-text">添加图片</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 标题 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">商品标题</text>
+      <text class="input-counter">{{titleCount}}/50</text>
+    </view>
+    <input
+      class="input-field {{errors.title ? 'input-error' : ''}}"
+      placeholder="请输入商品标题（2-50字）"
+      value="{{title}}"
+      maxlength="50"
+      bindinput="onTitleInput"
+    />
+    <text wx:if="{{errors.title}}" class="error-text">{{errors.title}}</text>
+  </view>
+
+  <!-- 描述 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">商品描述</text>
+      <text class="input-counter">{{descCount}}/500</text>
+    </view>
+    <textarea
+      class="textarea-field {{errors.description ? 'input-error' : ''}}"
+      placeholder="请详细描述商品状况、购买时间、配件、校内取货方式等信息..."
+      value="{{description}}"
+      maxlength="500"
+      bindinput="onDescInput"
+      auto-height
+    />
+    <text wx:if="{{errors.description}}" class="error-text">{{errors.description}}</text>
+  </view>
+
+  <!-- 价格 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">价格</text>
+    </view>
+    <view class="price-input-wrap">
+      <text class="price-symbol">¥</text>
+      <input
+        class="input-field price-input {{errors.price ? 'input-error' : ''}}"
+        type="digit"
+        placeholder="0.00"
+        value="{{price}}"
+        bindinput="onPriceInput"
+      />
+    </view>
+    <text wx:if="{{errors.price}}" class="error-text">{{errors.price}}</text>
+  </view>
+
+  <!-- 分类 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">商品分类</text>
+    </view>
+    <view
+      class="picker-row {{errors.category ? 'picker-error' : ''}}"
+      bindtap="onCategoryTap"
+    >
+      <text class="{{categoryIndex < 0 ? 'picker-placeholder' : 'picker-value'}}">
+        {{categoryText}}
+      </text>
+      <text class="picker-arrow">›</text>
+    </view>
+    <text wx:if="{{errors.category}}" class="error-text">{{errors.category}}</text>
+  </view>
+
+  <!-- 成色 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">商品成色</text>
+    </view>
+    <view
+      class="picker-row {{errors.condition ? 'picker-error' : ''}}"
+      bindtap="onConditionTap"
+    >
+      <text class="{{!conditionValue ? 'picker-placeholder' : 'picker-value'}}">
+        {{conditionText}}
+      </text>
+      <text class="picker-arrow">›</text>
+    </view>
+    <text wx:if="{{errors.condition}}" class="error-text">{{errors.condition}}</text>
+  </view>
+
+  <!-- 校区 -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">所在校区</text>
+    </view>
+    <view
+      class="picker-row {{errors.campus ? 'picker-error' : ''}}"
+      bindtap="onCampusTap"
+    >
+      <text class="{{campusIndex < 0 ? 'picker-placeholder' : 'picker-value'}}">
+        {{campusText}}
+      </text>
+      <text class="picker-arrow">›</text>
+    </view>
+    <text wx:if="{{errors.campus}}" class="error-text">{{errors.campus}}</text>
+  </view>
+
+  <!-- 底部留白 -->
+  <view class="bottom-spacer"></view>
+</scroll-view>
+</view>
+
+<!-- 提交按钮 -->
+<view class="submit-bar">
+  <button
+    class="btn-submit {{submitting ? 'btn-submitting' : ''}}"
+    bindtap="onSubmit"
+    loading="{{submitting}}"
+    disabled="{{submitting}}"
+  >
+    发布校园闲置
+  </button>
+</view>
+
+<!-- 分类选择器 -->
+<view hidden="{{!categoryPickerVisible}}">
+  <view class="picker-overlay" bindtap="onCategoryCancel"></view>
+  <view class="picker-panel">
+    <view class="picker-header">
+      <text class="picker-cancel" bindtap="onCategoryCancel">取消</text>
+      <text class="picker-title">选择分类</text>
+      <text class="picker-confirm" bindtap="onCategoryChange" data-value="{{categoryIndex >= 0 ? categoryIndex : 0}}">确定</text>
+    </view>
+    <radio-group bindchange="onCategoryChange">
+      <label
+        wx:for="{{categories}}"
+        wx:key="index"
+        class="picker-option"
+      >
+        <radio value="{{index}}" checked="{{categoryIndex === index}}" color="#0B6B43" />
+        <text>{{item.name}}</text>
+      </label>
+    </radio-group>
+  </view>
+</view>
+
+<!-- 成色选择器 -->
+<view hidden="{{!conditionPickerVisible}}">
+  <view class="picker-overlay" bindtap="onConditionCancel"></view>
+  <view class="picker-panel">
+    <view class="picker-header">
+      <text class="picker-cancel" bindtap="onConditionCancel">取消</text>
+      <text class="picker-title">选择成色</text>
+    </view>
+    <radio-group bindchange="onConditionChange">
+      <label
+        wx:for="{{conditions}}"
+        wx:key="value"
+        class="picker-option"
+      >
+        <radio value="{{index}}" checked="{{conditionValue === item.value}}" color="#0B6B43" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
+  </view>
+</view>
+
+<!-- 校区选择器 -->
+<view hidden="{{!campusPickerVisible}}">
+  <view class="picker-overlay" bindtap="onCampusCancel"></view>
+  <view class="picker-panel">
+    <view class="picker-header">
+      <text class="picker-cancel" bindtap="onCampusCancel">取消</text>
+      <text class="picker-title">选择校区</text>
+      <text class="picker-confirm" bindtap="onCampusChange" data-value="{{campusIndex >= 0 ? campusIndex : 0}}">确定</text>
+    </view>
+    <radio-group bindchange="onCampusChange">
+      <label
+        wx:for="{{campuses}}"
+        wx:key="value"
+        class="picker-option"
+      >
+        <radio value="{{index}}" checked="{{campusIndex === index}}" color="#0B6B43" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
+  </view>
+</view>
+
+<!-- 自定义 TabBar -->
+<custom-tab-bar />

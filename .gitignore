@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+.conda/
+.vscode/
+
+# Local secrets
+server/.env
+
+# Uploaded product images (runtime only)
+server/static/products/
+
+# 文档工作区
+文档工作区/
+
+# miniprogram 本地知识库
+miniprogram/.workbuddy/
+
+
+#备忘录 encoding=utf-8
+cc备忘录/
+

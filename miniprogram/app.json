@@ -1,0 +1,36 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/list/index",
+    "pages/detail/index",
+    "pages/post/index",
+    "pages/user/index",
+    "pages/admin/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "校园二手交易",
+    "navigationBarBackgroundColor": "#F5F5F7",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#86868B",
+    "selectedColor": "#0B6B43",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/post/index",
+        "text": "发布"
+      },
+      {
+        "pagePath": "pages/user/index",
+        "text": "我的"
+      }
+    ]
+  }
+}

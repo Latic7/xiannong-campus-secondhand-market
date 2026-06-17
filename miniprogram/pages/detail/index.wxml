@@ -1,0 +1,136 @@
+<!-- 加载中 -->
+<view wx:if="{{loading}}" class="page-status">
+  <view class="loading-spinner"></view>
+  <text class="status-text">加载中...</text>
+</view>
+
+<!-- 错误状态 -->
+<view wx:elif="{{errorMsg}}" class="page-status">
+  <image class="status-icon-img" src="/assets/icons/warning.svg" mode="aspectFit" />
+  <text class="status-text">{{errorMsg}}</text>
+  <button class="btn-retry" bindtap="onRetry">重新加载</button>
+</view>
+
+<!-- 商品详情 -->
+<view wx:elif="{{product}}" class="page-body">
+  <!-- 背景图 -->
+  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+
+  <!-- 图片轮播 -->
+  <view class="image-section">
+    <swiper
+      class="image-swiper"
+      indicator-dots="{{images.length > 1}}"
+      indicator-color="rgba(255,255,255,0.5)"
+      indicator-active-color="#fff"
+      bindchange="onSwiperChange"
+    >
+      <swiper-item wx:for="{{images}}" wx:key="index">
+        <image
+          class="swiper-image"
+          src="{{item}}"
+          mode="aspectFill"
+          bindtap="onPreviewImage"
+        />
+      </swiper-item>
+    </swiper>
+    <!-- 图片计数 -->
+    <view wx:if="{{images.length > 1}}" class="image-counter">
+      {{currentImageIndex + 1}} / {{images.length}}
+    </view>
+  </view>
+
+  <!-- 基本信息区 -->
+  <view class="info-section">
+    <!-- 价格行 -->
+    <view class="price-row">
+      <text class="price-current">{{product.priceText}}</text>
+      <text wx:if="{{product.originalPriceText}}" class="price-original">{{product.originalPriceText}}</text>
+      <view class="status-tag" style="background:{{product.statusColor}}">
+        {{product.statusText}}
+      </view>
+    </view>
+
+    <!-- 标题 -->
+    <view class="title-row">
+      <text class="product-title">{{product.title}}</text>
+    </view>
+
+    <!-- 元信息 -->
+    <view class="meta-row">
+      <view class="meta-item"><image class="meta-icon-img" src="/assets/icons/package.svg" mode="aspectFit" /><text>{{product.category}}</text></view>
+      <view class="meta-item"><image class="meta-icon-img" src="/assets/icons/star.svg" mode="aspectFit" /><text>{{product.conditionText}}</text></view>
+      <view class="meta-item"><image class="meta-icon-img" src="/assets/icons/pin.svg" mode="aspectFit" /><text>{{product.campus}}</text></view>
+    </view>
+
+    <!-- 浏览/收藏统计 -->
+    <view class="stats-row">
+      <view class="stat-item"><image class="stat-icon-img" src="/assets/icons/eye.svg" mode="aspectFit" /><text>{{product.viewCount}} 次浏览</text></view>
+      <view class="stat-item"><image class="stat-icon-img" src="/assets/icons/heart.svg" mode="aspectFit" /><text>{{product.favoriteCount}} 人收藏</text></view>
+      <view class="stat-item"><image class="stat-icon-img" src="/assets/icons/clock.svg" mode="aspectFit" /><text>{{product.createdAtText}}</text></view>
+    </view>
+  </view>
+
+  <!-- 分隔线 -->
+  <view class="divider"></view>
+
+  <!-- 商品描述 -->
+  <view class="desc-section">
+    <view class="section-title">商品描述</view>
+    <text class="desc-content">{{product.description}}</text>
+  </view>
+
+  <!-- 分隔线 -->
+  <view class="divider"></view>
+
+  <!-- 卖家信息 -->
+  <view class="seller-section">
+    <view class="section-title">卖家信息</view>
+    <view class="seller-card">
+      <image class="seller-avatar" src="{{product.seller.avatar}}" mode="aspectFill" />
+      <view class="seller-info">
+        <view class="seller-name-row">
+          <text class="seller-nickname">{{product.seller.nickname}}</text>
+          <view class="reputation-badge">
+            <image class="reputation-star-img" src="/assets/icons/star.svg" mode="aspectFit" />
+            <text class="reputation-score">{{product.seller.reputation}}分</text>
+          </view>
+        </view>
+        <view class="seller-stats">
+          <text>发布 {{product.seller.publishedCount}}</text>
+          <text class="seller-stat-divider">|</text>
+          <text>售出 {{product.seller.soldCount}}</text>
+        </view>
+      </view>
+      <button class="btn-contact" size="mini" bindtap="onContactSeller">
+        联系卖家
+      </button>
+    </view>
+  </view>
+
+  <!-- 底部占位（给操作栏留空间） -->
+  <view class="bottom-placeholder"></view>
+</view>
+
+<!-- 底部操作栏 -->
+<view wx:if="{{!loading && !errorMsg && product}}" class="action-bar">
+  <!-- 收藏 -->
+  <view class="action-btn action-fav" bindtap="onToggleFavorite">
+    <image class="action-icon-img" src="{{isFavorited ? '/assets/icons/heart-filled.svg' : '/assets/icons/heart.svg'}}" mode="aspectFit" />
+    <text class="action-label">{{isFavorited ? '已收藏' : '收藏'}}</text>
+  </view>
+
+  <!-- 举报 -->
+  <view class="action-btn action-report" bindtap="onReport">
+    <image class="action-icon-img" src="/assets/icons/warning.svg" mode="aspectFit" />
+    <text class="action-label">举报</text>
+  </view>
+
+  <!-- 下单（非自己的商品才显示） -->
+  <button wx:if="{{!isOwner}}" class="action-btn-primary" bindtap="onPlaceOrder">
+    立即购买
+  </button>
+  <button wx:else class="action-btn-disabled" disabled>
+    我的商品
+  </button>
+</view>
