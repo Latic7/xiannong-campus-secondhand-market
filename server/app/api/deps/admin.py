@@ -33,7 +33,7 @@ def get_current_admin(
     if token_data.get("typ") != "access":
         raise TokenInvalidError(message="token type mismatch")
     
-    user = db.scalar(select(User).where(User.id == token_data.get("uid")))
+    user = db.query(User).filter(User.id == token_data.get("uid")).first()
     if not user:
         raise BusinessError(code=10033, message="user not found", status_code=404)
     
@@ -44,5 +44,5 @@ def get_current_admin(
         "id": user.id,
         "openid": user.openid,
         "nickname": user.nickname,
-        "is_admin": user.is_admin,
+        "isAdmin": user.is_admin,
     }
