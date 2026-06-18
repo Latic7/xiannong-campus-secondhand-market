@@ -39,8 +39,8 @@ class UserService:
             "nickname": user.nickname,
             "avatar": user.avatar,
             "score": user.score,
-            "status": user.status if user.status else UserStatus.ACTIVE.value,
-            "is_admin": user.is_admin,  # 新增
+            "status": user.status if user.status else "active",  # 直接返回数据库值（小写）
+            "isAdmin": user.is_admin,  # 改为 isAdmin（驼峰命名，与 OpenAPI 一致）
             "college": user.college,
             "contact": user.contact,
             "favorites": favorites_count,
@@ -48,7 +48,7 @@ class UserService:
     
     # ========== 用户创建 ==========
     
-    def create_or_get_user(self, openid: str, is_admin: bool = False) -> User:  # 修改：添加 is_admin 参数
+    def create_or_get_user(self, openid: str, is_admin: bool = False) -> User:
         """创建新用户或返回已有用户"""
         user = self.get_user_by_openid(openid)
         
@@ -61,8 +61,8 @@ class UserService:
                 nickname=default_nickname,
                 avatar="",
                 score=100,
-                status=UserStatus.ACTIVE.value,
-                is_admin=is_admin,  # 新增
+                status="active",  # 数据库存储小写
+                is_admin=is_admin,
             )
             self.db.add(user)
             self.db.commit()
@@ -213,5 +213,5 @@ class UserService:
             "id": user.id,
             "openid": user.openid,
             "nickname": user.nickname,
-            "is_admin": user.is_admin,  # 新增
+            "isAdmin": user.is_admin,  # 改为 isAdmin
         }
