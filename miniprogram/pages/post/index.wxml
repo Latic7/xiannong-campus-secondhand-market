@@ -128,12 +128,15 @@
     <view class="section-header">
       <text class="section-title">所在校区</text>
     </view>
-    <input
-      class="input-field {{errors.campus ? 'input-error' : ''}}"
-      placeholder="例如：东校区、北校区"
-      value="{{campus}}"
-      bindinput="onCampusInput"
-    />
+    <view
+      class="picker-row {{errors.campus ? 'picker-error' : ''}}"
+      bindtap="onCampusTap"
+    >
+      <text class="{{campusIndex < 0 ? 'picker-placeholder' : 'picker-value'}}">
+        {{campusText}}
+      </text>
+      <text class="picker-arrow">›</text>
+    </view>
     <text wx:if="{{errors.campus}}" class="error-text">{{errors.campus}}</text>
   </view>
 
@@ -170,7 +173,7 @@
         class="picker-option"
       >
         <radio value="{{index}}" checked="{{categoryIndex === index}}" color="#0B6B43" />
-        <text>{{item}}</text>
+        <text>{{item.name}}</text>
       </label>
     </radio-group>
   </view>
@@ -191,6 +194,28 @@
         class="picker-option"
       >
         <radio value="{{index}}" checked="{{conditionValue === item.value}}" color="#0B6B43" />
+        <text>{{item.label}}</text>
+      </label>
+    </radio-group>
+  </view>
+</view>
+
+<!-- 校区选择器 -->
+<view hidden="{{!campusPickerVisible}}">
+  <view class="picker-overlay" bindtap="onCampusCancel"></view>
+  <view class="picker-panel">
+    <view class="picker-header">
+      <text class="picker-cancel" bindtap="onCampusCancel">取消</text>
+      <text class="picker-title">选择校区</text>
+      <text class="picker-confirm" bindtap="onCampusChange" data-value="{{campusIndex >= 0 ? campusIndex : 0}}">确定</text>
+    </view>
+    <radio-group bindchange="onCampusChange">
+      <label
+        wx:for="{{campuses}}"
+        wx:key="value"
+        class="picker-option"
+      >
+        <radio value="{{index}}" checked="{{campusIndex === index}}" color="#0B6B43" />
         <text>{{item.label}}</text>
       </label>
     </radio-group>

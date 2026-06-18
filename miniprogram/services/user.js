@@ -16,9 +16,9 @@ module.exports = {
     return api.put('/api/users/me', data)
   },
 
-  /** 获取收藏列表 */
-  getFavorites(page = 1, size = 20) {
-    return api.get('/api/users/me/favorites', { page, size })
+  /** 获取收藏列表（支持筛选排序） */
+  getFavorites(page = 1, size = 20, params = {}) {
+    return api.get('/api/users/me/favorites', { page, size, ...params })
   },
 
   /** 获取用户发布的商品数、售出数（通过后端列表接口统计） */

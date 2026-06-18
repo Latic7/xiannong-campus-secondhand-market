@@ -140,6 +140,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Keyword'
+        - $ref: '#/components/parameters/Sort'
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
       responses:
         '200':
           description: Favorite list
@@ -201,10 +207,33 @@ paths:
                           favorited:
                             type: boolean
 
+  /api/categories:
+    get:
+      tags: [Product]
+      summary: List all product categories
+      security: []
+      responses:
+        '200':
+          description: Category list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Category'
+
   /api/products:
     get:
       tags: [Product]
       summary: Search products with paging/filter
+      description: >
+        Public listing returns only PUBLISHED and SOLD products. When ownerId is specified,
+        returns all statuses (for owner's personal product list).
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
@@ -212,6 +241,11 @@ paths:
         - $ref: '#/components/parameters/Sort'
         - name: categoryId
           in: query
+          schema:
+            type: integer
+        - name: ownerId
+          in: query
+          description: Filter by product owner (for "my published" list).
           schema:
             type: integer
       responses:
@@ -1102,6 +1136,16 @@ components:
       description: Number of favorite products.
       nullable: true
       example: 0
+    publishedCount:
+      type: integer
+      description: Number of products created by this user (all statuses, matches "my published" list).
+      nullable: true
+      example: 5
+    soldCount:
+      type: integer
+      description: Number of products sold by this user (status=SOLD).
+      nullable: true
+      example: 3
     college:
       type: string
       description: User's college name.
@@ -1134,6 +1178,29 @@ components:
           type: string
           description: Contact information.
           example: 13800000000
+
+    Category:
+      type: object
+      description: Product category entity.
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          description: Category identifier.
+          example: 1
+        name:
+          type: string
+          description: Category display name.
+          example: 数码电子
+        parentId:
+          type: integer
+          description: Parent category identifier, null for top-level.
+          nullable: true
+          example: null
+        sortOrder:
+          type: integer
+          description: Display sort order.
+          example: 10
 
     Product:
       type: object
@@ -1203,6 +1270,23 @@ components:
           description: Number of detail-page views.
           nullable: true
           example: 15
+        seller:
+          type: object
+          description: Brief seller profile for display purposes.
+          properties:
+            id:
+              type: integer
+              example: 1
+            nickname:
+              type: string
+              example: Demo User
+            avatar:
+              type: string
+              format: uri
+              example: ''
+            reputation:
+              type: integer
+              example: 100
 
     ProductCreateRequest:
       type: object

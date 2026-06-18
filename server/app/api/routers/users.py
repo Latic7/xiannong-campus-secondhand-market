@@ -91,6 +91,9 @@ def update_profile(
 def list_favorites(
     page: int = Query(1, ge=1, description="页码，从1开始"),
     size: int = Query(20, ge=1, le=100, description="每页数量，最大100"),
+    keyword: str | None = Query(None, description="模糊搜索关键词"),
+    sort: str | None = Query(None, description="排序表达式"),
+    categoryId: int | None = Query(None, description="分类ID"),
     authorization: Optional[str] = Header(default=None),
     db: Session = Depends(get_db)
 ):
@@ -100,7 +103,10 @@ def list_favorites(
         return error
     
     user_service = UserService(db)
-    favorite_list, total = user_service.get_favorites(user_id, page, size)
+    favorite_list, total = user_service.get_favorites(
+        user_id, page, size,
+        keyword=keyword, sort=sort, category_id=categoryId
+    )
     
     return api_ok({
         "list": favorite_list,
@@ -108,7 +114,8 @@ def list_favorites(
             "page": page,
             "size": size,
             "total": total
-        }
+        },
+        "filters": {"keyword": keyword, "sort": sort, "categoryId": categoryId},
     })
 
 

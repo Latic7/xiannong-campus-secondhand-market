@@ -3,8 +3,8 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-ProductStatusValue = Literal["draft", "pending", "published", "removed", "sold"]
-ProductUpdateStatusValue = Literal["pending", "published", "removed"]
+ProductStatusValue = Literal["DRAFT", "PENDING", "PUBLISHED", "REMOVED", "SOLD"]
+ProductUpdateStatusValue = Literal["PENDING", "PUBLISHED", "REMOVED"]
 
 
 class ProductCreateRequest(BaseModel):
@@ -21,6 +21,7 @@ class ProductUpdateRequest(BaseModel):
     categoryId: int | None = None
     description: str | None = None
     status: ProductUpdateStatusValue | None = None
+    images: list[str] | None = None
 
 
 class Product(BaseModel):

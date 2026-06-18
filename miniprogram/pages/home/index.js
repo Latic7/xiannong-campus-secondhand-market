@@ -1,15 +1,22 @@
-const { fetchProductList } = require('../../services/product.js');
+const { list: fetchProductList } = require('../../services/product.js');
+const categoryService = require('../../services/category.js');
+
+// 分类前端展示图标（不存数据库，按分类 ID 映射）
+const CATEGORY_ICONS = {
+  1: { iconPath: '/assets/icons/book-white.svg', bgColor: '#0B6B43' },
+  2: { iconPath: '/assets/icons/phone-white.svg', bgColor: '#C8A24A' },
+  3: { iconPath: '/assets/icons/lamp-white.svg', bgColor: '#34A853' },
+  4: { iconPath: '/assets/icons/shirt-white.svg', bgColor: '#FF2D55' },
+  5: { iconPath: '/assets/icons/phone-white.svg', bgColor: '#5856D6' },
+  6: { iconPath: '/assets/icons/lamp-white.svg', bgColor: '#FF6482' },
+  7: { iconPath: '/assets/icons/book-white.svg', bgColor: '#FF9500' },
+  8: { iconPath: '/assets/icons/dots-white.svg', bgColor: '#8E8E93' },
+}
 
 Page({
   data: {
     statusBarHeight: 44,
-    categories: [
-      { id: 1, name: '书籍', iconPath: '/assets/icons/book-white.svg', bgColor: '#0B6B43' },
-      { id: 2, name: '数码', iconPath: '/assets/icons/phone-white.svg', bgColor: '#C8A24A' },
-      { id: 3, name: '生活', iconPath: '/assets/icons/lamp-white.svg', bgColor: '#34A853' },
-      { id: 4, name: '服饰', iconPath: '/assets/icons/shirt-white.svg', bgColor: '#FF2D55' },
-      { id: 5, name: '其他', iconPath: '/assets/icons/dots-white.svg', bgColor: '#8E8E93' }
-    ],
+    categories: [],
     recommends: [],
     latestProducts: [],
     loading: true
@@ -17,7 +24,24 @@ Page({
   onLoad() {
     const systemInfo = wx.getSystemInfoSync();
     this.setData({ statusBarHeight: systemInfo.statusBarHeight });
+
+    // 从后端动态加载分类（异步，不阻塞页面渲染）
+    this.loadCategories();
+
     this.loadData();
+  },
+
+  loadCategories() {
+    categoryService.getCategories().then(raw => {
+      const categories = raw.map(c => ({
+        id: c.id,
+        name: c.name,
+        ...(CATEGORY_ICONS[c.id] || { iconPath: '/assets/icons/dots-white.svg', bgColor: '#8E8E93' }),
+      }))
+      this.setData({ categories })
+    }).catch(() => {
+      // 静默失败，分类为空不影响首页加载
+    })
   },
 
   onShow() {

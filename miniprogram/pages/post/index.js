@@ -5,29 +5,22 @@
 const { isLoggedIn } = require('../../utils/storage')
 const { IMAGE_MAX_COUNT, IMAGE_MAX_SIZE } = require('../../utils/constants')
 const productService = require('../../services/product')
+const categoryService = require('../../services/category')
 
 // ── 常量 ──────────────────────────────────────
 const TITLE_MAX = 50
 const DESC_MAX = 500
-
-const CATEGORIES = [
-  { id: 1, name: '数码电子' },
-  { id: 2, name: '书籍教材' },
-  { id: 3, name: '生活用品' },
-  { id: 4, name: '服饰鞋包' },
-  { id: 5, name: '运动户外' },
-  { id: 6, name: '美妆护肤' },
-  { id: 7, name: '食品饮料' },
-  { id: 8, name: '其他' },
-]
-
-const CATEGORY_NAMES = CATEGORIES.map(c => c.name)
 
 const CONDITIONS = [
   { value: 'brand_new', label: '全新未拆封' },
   { value: 'used_like_new', label: '几乎全新' },
   { value: 'used_good', label: '良好,有轻微使用痕迹' },
   { value: 'used_fair', label: '一般,有明显使用痕迹' },
+]
+
+const CAMPUSES = [
+  { value: 'east', label: '东校区' },
+  { value: 'west', label: '西校区' },
 ]
 
 Page({
@@ -39,7 +32,8 @@ Page({
     categoryText: '请选择分类',
     conditionValue: '',
     conditionText: '请选择成色',
-    campus: '',
+    campusIndex: -1,
+    campusText: '请选择校区',
 
     images: [],
 
@@ -49,16 +43,26 @@ Page({
     submitting: false,
     categoryPickerVisible: false,
     conditionPickerVisible: false,
+    campusPickerVisible: false,
     errors: {},
 
-    categories: CATEGORY_NAMES,
+    categories: [],
     conditions: CONDITIONS,
+    campuses: CAMPUSES,
   },
 
   onLoad() {
     if (!isLoggedIn()) {
       wx.showToast({ title: '请先登录后再发布', icon: 'none' })
     }
+
+    // 动态加载分类（异步，不阻塞页面渲染）
+    categoryService.clearCache()
+    categoryService.getCategories().then(raw => {
+      this.setData({ categories: raw })
+    }).catch(() => {
+      // 静默失败，分类为空将阻止提交
+    })
   },
 
   onShow() {
@@ -94,20 +98,17 @@ Page({
     this.clearError('price')
   },
 
-  onCampusInput(e) {
-    this.setData({ campus: e.detail.value || '' })
-    this.clearError('campus')
-  },
-
   // ── 分类选择 ──────────────────────────────
   onCategoryTap() {
     this.setData({ categoryPickerVisible: true })
   },
   onCategoryChange(e) {
     const idx = Number(e.detail.value)
+    const cat = this.data.categories[idx]
+    if (!cat) return
     this.setData({
       categoryIndex: idx,
-      categoryText: CATEGORIES[idx].name,
+      categoryText: cat.name,
       categoryPickerVisible: false,
     })
     this.clearError('category')
@@ -132,6 +133,23 @@ Page({
   },
   onConditionCancel() {
     this.setData({ conditionPickerVisible: false })
+  },
+
+  // ── 校区选择 ──────────────────────────────
+  onCampusTap() {
+    this.setData({ campusPickerVisible: true })
+  },
+  onCampusChange(e) {
+    const idx = Number(e.detail.value)
+    this.setData({
+      campusIndex: idx,
+      campusText: CAMPUSES[idx].label,
+      campusPickerVisible: false,
+    })
+    this.clearError('campus')
+  },
+  onCampusCancel() {
+    this.setData({ campusPickerVisible: false })
   },
 
   // ── 图片操作 ──────────────────────────────
@@ -192,7 +210,7 @@ Page({
   },
 
   validate() {
-    const { title, price, categoryIndex, conditionValue, campus } = this.data
+    const { title, price, categoryIndex, conditionValue, campusIndex } = this.data
 
     if (!title || !title.trim()) {
       this.setError('title', '请输入商品标题')
@@ -227,8 +245,8 @@ Page({
       return false
     }
 
-    if (!campus || !campus.trim()) {
-      this.setError('campus', '请输入所在校区')
+    if (campusIndex < 0) {
+      this.setError('campus', '请选择所在校区')
       return false
     }
 
@@ -246,11 +264,12 @@ Page({
     if (!this.validate()) return
 
     this.setData({ submitting: true })
-    wx.showLoading({ title: '发布中...' })
+    wx.showLoading({ title: '发布中...', mask: true })
 
     try {
-      const { title, description, price, categoryIndex, campus } = this.data
-      const categoryId = CATEGORIES[categoryIndex].id
+      const { title, description, price, categoryIndex, campusIndex, categories } = this.data
+      const categoryId = categories[categoryIndex]?.id
+      const campus = CAMPUSES[campusIndex].label
 
       // 1. 先创建商品（不含图片）
       const created = await productService.create({
@@ -265,17 +284,17 @@ Page({
 
       // 2. 上传图片
       const filePaths = this.data.images.map(img => img.tempPath || img.path)
-      const urls = await productService.uploadImages(productId, filePaths)
-
-      // 3. 更新商品，填入图片 URL
-      if (urls.length > 0) {
-        await productService.update(productId, { images: urls })
+      if (filePaths.length > 0) {
+        await productService.uploadImages(productId, filePaths)
       }
+
+      // 3. 清空表单，防止重复提交
+      this.resetForm()
 
       wx.hideLoading()
       wx.showToast({ title: '发布成功', icon: 'success', duration: 2000 })
       setTimeout(() => {
-        wx.navigateBack()
+        wx.switchTab({ url: '/pages/home/index' })
       }, 2000)
     } catch (err) {
       wx.hideLoading()
@@ -283,6 +302,25 @@ Page({
     } finally {
       this.setData({ submitting: false })
     }
+  },
+
+  // ── 重置表单到初始状态 ────────────────────
+  resetForm() {
+    this.setData({
+      title: '',
+      description: '',
+      price: '',
+      categoryIndex: -1,
+      categoryText: '请选择分类',
+      conditionValue: '',
+      conditionText: '请选择成色',
+      campusIndex: -1,
+      campusText: '请选择校区',
+      images: [],
+      titleCount: 0,
+      descCount: 0,
+      errors: {},
+    })
   },
 })
 

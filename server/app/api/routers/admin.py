@@ -67,10 +67,20 @@ def review_product(
 def admin_reports(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    status: str | None = None,
+    target_type: str | None = None,
     db: Session = Depends(get_db),
     _: dict = Depends(get_current_admin),
 ) -> dict:
-    return api_ok(admin_reports_service(db, page=page, size=size))
+    return api_ok(
+        admin_reports_service(
+            db,
+            page=page,
+            size=size,
+            status=status,
+            target_type=target_type,
+        )
+    )
 
 
 @router.post("/reports/{report_id}/handle")
