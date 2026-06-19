@@ -55,7 +55,33 @@ def create_order(db: Session, payload: OrderCreateRequest, actor: CurrentActor) 
 def get_order(db: Session, order_id: int, actor: CurrentActor) -> dict:
     order = _require_order(db, order_id)
     _require_related(order, actor)
-    return order_crud.serialize_order(order)
+    return order_crud.serialize_order_with_product(db, order)
+
+
+def list_orders(
+    db: Session,
+    actor: CurrentActor,
+    page: int = 1,
+    size: int = 20,
+    role: str | None = None,
+    status: str | None = None,
+) -> dict:
+    page = max(page, 1)
+    size = min(max(size, 1), 100)
+    normalized_role = role if role in {"buyer", "seller"} else None
+    items, total = order_crud.list_orders(
+        db,
+        actor.user_id,
+        page=page,
+        size=size,
+        role=normalized_role,
+        status=status,
+    )
+    return {
+        "list": items,
+        "page": {"page": page, "size": size, "total": total},
+        "filters": {"role": normalized_role or "all", "status": status},
+    }
 
 
 def seller_confirm(db: Session, order_id: int, actor: CurrentActor) -> dict:
