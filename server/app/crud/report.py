@@ -62,6 +62,7 @@ def list_reports(
 	size: int = 20,
 	status: str | None = None,
 	target_type: str | None = None,
+	reporter_id: int | None = None,
 ) -> tuple[list[dict], int]:
 	"""分页查询举报列表，支持按 status 和 target_type 筛选。"""
 	size = _clamp_size(size)
@@ -71,6 +72,8 @@ def list_reports(
 			filters.append(Report.status == status)
 		if target_type:
 			filters.append(Report.target_type == target_type)
+		if reporter_id is not None:
+			filters.append(Report.reporter_id == reporter_id)
 
 		total = db.scalar(
 			select(func.count(Report.id)).where(*filters) if filters else select(func.count(Report.id))

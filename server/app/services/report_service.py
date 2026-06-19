@@ -37,6 +37,27 @@ def list_report_queue(page: int = 1, size: int = 20, status: str | None = None, 
     }
 
 
+def list_my_reports(
+    actor: CurrentActor,
+    page: int = 1,
+    size: int = 20,
+    status: str | None = None,
+    target_type: str | None = None,
+) -> dict:
+    rows, total = crud_list_reports(
+        page=page,
+        size=size,
+        status=status,
+        target_type=target_type,
+        reporter_id=actor.user_id,
+    )
+    return {
+        "list": rows,
+        "page": {"page": page, "size": size, "total": total},
+        "filters": {"status": status, "targetType": target_type},
+    }
+
+
 def handle_report(report_id: int, payload: ReportHandleRequest, actor: CurrentActor | None = None) -> dict:
     status = "REJECTED" if payload.action == "reject" else "HANDLED"
     assignee_id = actor.user_id if actor else 10
