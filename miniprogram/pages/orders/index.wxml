@@ -1,0 +1,42 @@
+<view class="page">
+  <view class="role-tabs">
+    <view
+      wx:for="{{roleOptions}}"
+      wx:key="value"
+      class="role-tab {{role === item.value ? 'active' : ''}}"
+      data-role="{{item.value}}"
+      bindtap="onRoleChange"
+    >
+      <text>{{item.label}}</text>
+    </view>
+  </view>
+
+  <loading-state wx:if="{{loading && orders.length === 0}}" count="4" />
+  <error-tip wx:elif="{{!loading && errorMsg && orders.length === 0}}" message="{{errorMsg}}" bind:retry="onRetry" />
+
+  <view wx:elif="{{orders.length > 0}}" class="order-list">
+    <view class="order-card" wx:for="{{orders}}" wx:key="id">
+      <view class="order-main">
+        <view class="order-image-wrap">
+          <image wx:if="{{item.productImage}}" class="order-image" src="{{item.productImage}}" mode="aspectFill" />
+          <view wx:else class="order-image-placeholder">
+            <image class="order-image-icon" src="/assets/icons/package.svg" mode="aspectFit" />
+          </view>
+        </view>
+        <view class="order-info">
+          <view class="order-title">{{item.productTitle}}</view>
+          <view class="order-meta">订单号 #{{item.id}}</view>
+          <view class="order-meta">金额 {{item.amountText}}</view>
+        </view>
+        <view class="order-status" style="color: {{item.statusColor}}">{{item.statusText}}</view>
+      </view>
+    </view>
+  </view>
+
+  <empty-state wx:elif="{{!loading && !errorMsg}}" message="暂无订单" />
+
+  <view class="bottom-tip" wx:if="{{orders.length > 0}}">
+    <text wx:if="{{loading}}">正在加载更多...</text>
+    <text wx:elif="{{!hasMore}}">没有更多了</text>
+  </view>
+</view>
