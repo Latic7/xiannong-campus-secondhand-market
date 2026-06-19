@@ -58,15 +58,18 @@
   <!-- 初始加载骨架屏 -->
   <loading-state wx:if="{{loading && products.length === 0}}" count="4" />
 
+  <!-- 错误态 -->
+  <error-tip wx:elif="{{!loading && errorMsg && products.length === 0}}" message="{{errorMsg}}" bind:retry="onRetry" />
+
   <!-- 商品列表 -->
-  <view class="product-list" wx:if="{{products.length > 0}}">
+  <view class="product-list" wx:elif="{{products.length > 0}}">
     <block wx:for="{{products}}" wx:key="id">
       <item-card item="{{item}}" bind:tap="onCardTap" />
     </block>
   </view>
 
   <!-- 空状态 -->
-  <empty-state wx:if="{{!loading && products.length === 0}}" message="暂无商品" />
+  <empty-state wx:elif="{{!loading && !errorMsg && products.length === 0}}" message="暂无商品" />
 
   <!-- 底部加载提示 -->
   <view class="bottom-tip" wx:if="{{products.length > 0}}">

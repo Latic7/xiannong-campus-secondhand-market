@@ -3,11 +3,10 @@
 //  微信登录、用户资料、信誉分、收藏入口、发布入口
 // ──────────────────────────────────────────────
 const {
-  isLoggedIn, getUserInfo, saveAuth, clearAuth, setUserInfo,
+  isLoggedIn, getUserInfo, clearAuth, setUserInfo,
 } = require('../../utils/storage')
 const authService = require('../../services/auth')
 const userService = require('../../services/user')
-const { setAuthExpiredHandler } = require('../../utils/api')
 
 Page({
   data: {
@@ -24,14 +23,7 @@ Page({
     loginLoading: false,
   },
 
-  onLoad() {
-    // 注册全局登录过期回调
-    setAuthExpiredHandler(() => {
-      clearAuth()
-      this.refreshUserState()
-      wx.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
-    })
-  },
+  onLoad() {},
 
   onShow() {
     // 同步底部导航栏选中状态（避免 getCurrentPages 时序问题）
@@ -80,6 +72,7 @@ Page({
         nickname: profile.nickname,
         avatar: profile.avatar,
         reputation: profile.score,
+        isAdmin: profile.isAdmin || profile.is_admin || false,
       }
       setUserInfo(updated)
       this.setData({
@@ -109,12 +102,14 @@ Page({
         avatar: '',
         reputation: 0,
         userId: '',
+        isAdmin: false,
       }
     }
     return {
       ...u,
       avatar: u.avatar || '',
       reputation: u.reputation != null ? u.reputation : 100,
+      isAdmin: !!(u.isAdmin || u.is_admin),
       reputationText: this.getReputationLabel(u.reputation),
       reputationColor: this.getReputationColor(u.reputation),
     }
@@ -189,7 +184,13 @@ Page({
   // ── 跳转：我的订单 ────────────────────────
   onMyOrders() {
     if (!this.checkLogin()) return
-    wx.showToast({ title: '订单功能开发中', icon: 'none' })
+    wx.navigateTo({ url: '/pages/orders/index' })
+  },
+
+  // ── 跳转：我的举报 ────────────────────────
+  onMyReports() {
+    if (!this.checkLogin()) return
+    wx.navigateTo({ url: '/pages/reports/index' })
   },
 
   // ── 跳转：关于我们 ────────────────────────
@@ -199,6 +200,12 @@ Page({
       content: '版本 1.0.0\n\n专为校园师生打造的二手交易平台，安全、便捷、值得信赖。',
       showCancel: false,
     })
+  },
+
+  // ── 跳转：管理后台 ────────────────────────
+  onAdmin() {
+    if (!this.checkLogin()) return
+    wx.navigateTo({ url: '/pages/admin/index' })
   },
 
   // ── 登录校验 ──────────────────────────────

@@ -17,6 +17,7 @@ Page({
     total: 0,
     loading: false,
     hasMore: true,
+    errorMsg: '',
 
     listType: '',        // '' | 'my_published' | 'my_favorites'
     pageTitle: '全部商品',
@@ -139,7 +140,7 @@ Page({
     const MIN_LOADING_TIME = 600;
     const startTime = Date.now();
 
-    this.setData({ loading: true });
+    this.setData({ loading: true, errorMsg: '' });
     try {
       let data;
 
@@ -164,14 +165,15 @@ Page({
         total: data.page?.total || 0,
         page: 2,
         hasMore: (data.list || []).length >= this.data.size,
-        loading: false
+        loading: false,
+        errorMsg: ''
       });
     } catch (err) {
       const elapsed = Date.now() - startTime;
       if (elapsed < MIN_LOADING_TIME) {
         await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
       }
-      this.setData({ loading: false });
+      this.setData({ loading: false, errorMsg: err.message || '列表加载失败，请重试' });
     }
   },
 
@@ -356,5 +358,9 @@ Page({
     if (productId) {
       wx.navigateTo({ url: `/pages/detail/index?id=${productId}` });
     }
+  },
+
+  onRetry() {
+    this.reload()
   }
 });

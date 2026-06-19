@@ -75,13 +75,14 @@
 
   <view class="section">
     <view class="section-title">新鲜上架</view>
-    <view class="product-list">
+    <error-tip wx:if="{{!loading && errorMsg}}" message="{{errorMsg}}" bind:retry="onRetry" />
+    <view wx:elif="{{latestProducts.length > 0}}" class="product-list">
       <block wx:for="{{latestProducts}}" wx:key="id">
         <item-card item="{{item}}" bind:tap="onProductTap" />
       </block>
     </view>
     <loading-state wx:if="{{loading}}" />
-    <empty-state wx:if="{{!loading && latestProducts.length === 0}}" message="暂无商品" />
+    <empty-state wx:if="{{!loading && !errorMsg && latestProducts.length === 0}}" message="暂无商品" />
   </view>
 
   <!-- 自定义 TabBar -->

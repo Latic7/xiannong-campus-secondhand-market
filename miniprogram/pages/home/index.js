@@ -19,7 +19,8 @@ Page({
     categories: [],
     recommends: [],
     latestProducts: [],
-    loading: true
+    loading: true,
+    errorMsg: ''
   },
   onLoad() {
     const systemInfo = wx.getSystemInfoSync();
@@ -55,7 +56,7 @@ Page({
     const MIN_LOADING_TIME = 800; // 骨架屏最小可见时长（ms）
     const startTime = Date.now();
     try {
-      this.setData({ loading: true });
+      this.setData({ loading: true, errorMsg: '' });
       const [recommendData, latestData] = await Promise.allSettled([
         fetchProductList({ page: 1, size: 6, sort: 'createdAt_desc' }),
         fetchProductList({ page: 1, size: 10, sort: 'createdAt_desc' })
@@ -70,14 +71,14 @@ Page({
         await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
       }
 
-      this.setData({ recommends, latestProducts, loading: false });
+      this.setData({ recommends, latestProducts, loading: false, errorMsg: '' });
     } catch (err) {
       // 兜底：即使出错也保证骨架屏可见
       const elapsed = Date.now() - startTime;
       if (elapsed < MIN_LOADING_TIME) {
         await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
       }
-      this.setData({ loading: false });
+      this.setData({ loading: false, errorMsg: err.message || '首页加载失败，请重试' });
     }
   },
   onPullDownRefresh() {
@@ -96,5 +97,8 @@ Page({
     if (productId) {
       wx.navigateTo({ url: `/pages/detail/index?id=${productId}` });
     }
+  },
+  onRetry() {
+    this.loadData()
   }
 });

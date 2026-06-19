@@ -6,6 +6,11 @@ const api = require('../utils/api')
 
 module.exports = {
 
+  /** 我的订单列表 */
+  list(params = {}) {
+    return api.get('/api/orders', params)
+  },
+
   /** 创建订单 */
   create(data) {
     return api.post('/api/orders', data)

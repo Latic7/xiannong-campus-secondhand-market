@@ -1,0 +1,83 @@
+<view class="page">
+  <!-- 状态筛选 tabs -->
+  <scroll-view class="filter-scroll" scroll-x>
+    <view class="filter-list">
+      <view
+        wx:for="{{statusOptions}}"
+        wx:key="value"
+        class="filter-tab {{statusFilter === item.value ? 'active' : ''}}"
+        data-status="{{item.value}}"
+        bindtap="onStatusFilter"
+      >
+        <text>{{item.label}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 加载骨架屏 -->
+  <loading-state wx:if="{{loading && reports.length === 0}}" count="4" />
+
+  <!-- 错误态 -->
+  <error-tip
+    wx:elif="{{!loading && errorMsg && reports.length === 0}}"
+    message="{{errorMsg}}"
+    bind:retry="onRetry"
+  />
+
+  <!-- 举报列表 -->
+  <view wx:elif="{{reports.length > 0}}" class="report-list">
+    <view class="report-card" wx:for="{{reports}}" wx:key="id">
+      <!-- 顶部：类型标签 + 状态 -->
+      <view class="report-top">
+        <view class="report-type">{{item.targetTypeText}}</view>
+        <view class="report-status" style="color: {{item.statusColor}}">{{item.statusText}}</view>
+      </view>
+
+      <!-- 举报对象 -->
+      <view class="report-target">举报对象 #{{item.targetId}}</view>
+
+      <!-- 举报人 -->
+      <view class="report-reporter">举报人 ID: {{item.reporterId}}</view>
+
+      <!-- 举报原因 -->
+      <view class="report-reason">{{item.reason}}</view>
+
+      <!-- 处理信息（已处理/已驳回时展示） -->
+      <view wx:if="{{!item.isOpen && item.handleAction}}" class="handle-info">
+        <view class="handle-divider"></view>
+        <view class="handle-row">
+          <text class="handle-label">处理结果：</text>
+          <text class="handle-value">{{item.handleAction}}</text>
+        </view>
+        <view wx:if="{{item.handleReason}}" class="handle-row">
+          <text class="handle-label">处理说明：</text>
+          <text class="handle-value">{{item.handleReason}}</text>
+        </view>
+      </view>
+
+      <!-- 操作按钮（仅 OPEN 状态显示） -->
+      <view wx:if="{{item.isOpen}}" class="action-row">
+        <view
+          wx:for="{{['reject', 'warning', 'unlist_product', 'ban_user']}}"
+          wx:for-item="act"
+          wx:key="*this"
+          class="action-btn action-{{act}}"
+          data-action="{{act}}"
+          data-report-id="{{item.id}}"
+          bindtap="onHandleReport"
+        >
+          <text>{{act === 'reject' ? '驳回' : act === 'warning' ? '警告' : act === 'unlist_product' ? '下架商品' : '封禁用户'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <empty-state wx:elif="{{!loading && !errorMsg}}" message="暂无举报记录" />
+
+  <!-- 底部加载提示 -->
+  <view class="bottom-tip" wx:if="{{reports.length > 0}}">
+    <text wx:if="{{loading}}">正在加载更多...</text>
+    <text wx:elif="{{!hasMore}}">没有更多了</text>
+  </view>
+</view>
