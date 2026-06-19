@@ -286,6 +286,7 @@ CREATE TABLE `users`  (
   `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '',
   `score` int NOT NULL DEFAULT 100,
   `status` enum('ACTIVE','BANNED') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'ACTIVE',
+  `is_admin` tinyint(1) NOT NULL DEFAULT 0,
   `college` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `contact` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -298,8 +299,8 @@ CREATE TABLE `users`  (
 -- ----------------------------
 -- Records of users
 -- ----------------------------
-INSERT INTO `users` VALUES (1, 'wx_openid_demo_1', 'DemoUser1', '', 100, 'ACTIVE', '中国农业大学', '13800000001', '2026-05-21 17:23:21', '2026-05-21 17:25:53');
-INSERT INTO `users` VALUES (2, 'wx_openid_demo_2', 'DemoUser2', '', 95, 'ACTIVE', '中国农业大学', '13800000002', '2026-05-21 17:23:21', '2026-05-21 17:25:53');
-INSERT INTO `users` VALUES (10, 'wx_openid_admin_10', 'AdminDemo', '', 100, 'ACTIVE', '中国农业大学', '13800000010', '2026-05-21 17:30:13', '2026-05-21 17:30:13');
+INSERT INTO `users` VALUES (1, 'wx_openid_demo_1', 'DemoUser1', '', 100, 'ACTIVE', 0, '中国农业大学', '13800000001', '2026-05-21 17:23:21', '2026-05-21 17:25:53');
+INSERT INTO `users` VALUES (2, 'wx_openid_demo_2', 'DemoUser2', '', 95, 'ACTIVE', 0, '中国农业大学', '13800000002', '2026-05-21 17:23:21', '2026-05-21 17:25:53');
+INSERT INTO `users` VALUES (10, 'wx_openid_admin_10', 'AdminDemo', '', 100, 'ACTIVE', 1, '中国农业大学', '13800000010', '2026-05-21 17:30:13', '2026-05-21 17:30:13');
 
 SET FOREIGN_KEY_CHECKS = 1;
