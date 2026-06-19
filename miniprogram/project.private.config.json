@@ -22,11 +22,25 @@
     "miniprogram": {
       "list": [
         {
-          "name": "pages/admin-reports/index",
-          "pathName": "pages/admin-reports/index",
+          "name": "pages/orders/index",
+          "pathName": "pages/orders/index",
           "query": "",
           "scene": null,
           "launchMode": "default"
+        },
+        {
+          "name": "pages/admin/index",
+          "pathName": "pages/admin/index",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "pages/admin-reports/index",
+          "pathName": "pages/admin-reports/index",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
         }
       ]
     }

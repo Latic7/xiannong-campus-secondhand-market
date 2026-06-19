@@ -72,6 +72,7 @@ Page({
         nickname: profile.nickname,
         avatar: profile.avatar,
         reputation: profile.score,
+        isAdmin: profile.isAdmin || profile.is_admin || false,
       }
       setUserInfo(updated)
       this.setData({
@@ -101,12 +102,14 @@ Page({
         avatar: '',
         reputation: 0,
         userId: '',
+        isAdmin: false,
       }
     }
     return {
       ...u,
       avatar: u.avatar || '',
       reputation: u.reputation != null ? u.reputation : 100,
+      isAdmin: !!(u.isAdmin || u.is_admin),
       reputationText: this.getReputationLabel(u.reputation),
       reputationColor: this.getReputationColor(u.reputation),
     }
@@ -197,6 +200,12 @@ Page({
       content: '版本 1.0.0\n\n专为校园师生打造的二手交易平台，安全、便捷、值得信赖。',
       showCancel: false,
     })
+  },
+
+  // ── 跳转：管理后台 ────────────────────────
+  onAdmin() {
+    if (!this.checkLogin()) return
+    wx.navigateTo({ url: '/pages/admin/index' })
   },
 
   // ── 登录校验 ──────────────────────────────
