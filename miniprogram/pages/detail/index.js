@@ -3,7 +3,7 @@
 //  根据商品 ID 加载并展示商品完整信息
 // ──────────────────────────────────────────────
 const { isLoggedIn, getUserInfo } = require('../../utils/storage')
-const { PRODUCT_STATUS } = require('../../utils/constants')
+const { PRODUCT_STATUS, getStatusMeta, normalizeStatus } = require('../../utils/constants')
 const productService = require('../../services/product')
 const orderService = require('../../services/order')
 const reportService = require('../../services/report')
@@ -81,7 +81,7 @@ Page({
       categoryId: raw.categoryId,
       condition: raw.condition || 'used_good',
       campus: raw.campus || '',
-      status: raw.status || 'published',
+      status: normalizeStatus(raw.status || 'PENDING'),
       viewCount: raw.viewCount || 0,
       favoriteCount: raw.favoriteCount || 0,
       seller: raw.seller || {
@@ -99,7 +99,7 @@ Page({
 
   // ── 格式化 ────────────────────────────────
   formatProduct(product) {
-    const st = PRODUCT_STATUS[product.status] || {}
+    const st = getStatusMeta(PRODUCT_STATUS, product.status)
     const condMap = { brand_new: '全新', used_like_new: '几乎全新', used_good: '良好', used_fair: '一般' }
     const fmtPrice = (p) => p == null ? '面议' : '¥' + Number(p).toFixed(2).replace(/\.00$/, '')
     const fmtTime = (t) => {
@@ -131,7 +131,7 @@ Page({
       const res = await userService.getFavorites(1, 100)
       const favList = res.list || []
       this.setData({
-        isFavorited: favList.some(f => f.productId === Number(productId)),
+        isFavorited: favList.some(f => Number(f.productId || f.id) === Number(productId)),
       })
     } catch (e) {
       // 静默失败
@@ -169,7 +169,7 @@ Page({
     if (!this.data.isLoggedIn) { wx.showToast({ title: '请先登录', icon: 'none' }); return }
     if (this.data.isOwner) { wx.showToast({ title: '不能购买自己的商品', icon: 'none' }); return }
     const p = this.data.product
-    if (!p || p.status !== 'published') { wx.showToast({ title: '该商品暂不可购买', icon: 'none' }); return }
+    if (!p || normalizeStatus(p.status) !== 'PUBLISHED') { wx.showToast({ title: '该商品暂不可购买', icon: 'none' }); return }
     wx.showModal({
       title: '确认下单',
       content: `确认购买「${p.title}」？\n价格：${p.priceText}`,
@@ -200,6 +200,7 @@ Page({
         const reasons = ['信息不实', '违规商品', '侵权内容', '其他原因']
         try {
           await reportService.create({
+            targetType: 'PRODUCT',
             productId: Number(this.data.productId),
             reason: reasons[res.tapIndex],
           })
