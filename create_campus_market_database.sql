@@ -168,8 +168,8 @@ INSERT INTO `products` (`id`, `owner_id`, `title`, `description`, `price`, `cate
 	(1002, 1, '二手计算机网络教材', '有少量笔记', 28.00, 2, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-19 07:06:09', 1, 6),
 	(1003, 1, '二手充电宝', '容量20000mAh', 45.00, 1, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-19 07:15:57', 0, 6),
 	(1004, 2, '小台灯', '宿舍用，正常亮', 12.00, 3, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 1),
-	(1005, 12, '【4K】Minecraft壁纸', '4K Minecraft壁纸，3D渲染，正版发售，未经原作者同意请勿转载！\n\n所在校区：东校区', 10.00, 1, 'PENDING', '2026-06-15 02:00:13', '2026-06-14 18:00:23', 0, 1),
-	(1006, 12, '二手运动手表，男生自用，九九成新', '二手手表，男生自用，九九成新\n\n所在校区：东校区', 114.00, 1, 'PENDING', '2026-06-19 15:10:12', '2026-06-19 07:11:47', 0, 1);
+	(1005, 12, '【4K】Minecraft壁纸', '4K Minecraft壁纸，3D渲染，正版发售，未经原作者同意请勿转载！\n\n所在校区：东校区', 10.00, 1, 'PUBLISHED', '2026-06-15 02:00:13', '2026-06-19 14:45:00', 0, 2),
+	(1006, 12, '二手运动手表，男生自用，九九成新', '二手手表，男生自用，九九成新\n\n所在校区：东校区', 114.00, 1, 'REMOVED', '2026-06-19 15:10:12', '2026-06-19 14:29:09', 0, 2);
 
 -- 导出  表 campus_market.refresh_tokens 结构
 DROP TABLE IF EXISTS `refresh_tokens`;
@@ -214,9 +214,9 @@ CREATE TABLE IF NOT EXISTS `reports` (
 -- 正在导出表  campus_market.reports 的数据：~3 rows (大约)
 DELETE FROM `reports`;
 INSERT INTO `reports` (`id`, `reporter_id`, `target_type`, `target_id`, `reason`, `status`, `assignee_id`, `handle_action`, `handle_reason`, `created_at`, `handled_at`) VALUES
-	(7001, 2, 'PRODUCT', 1001, '疑似虚假信息', 'OPEN', NULL, NULL, NULL, '2026-06-12 11:30:55', NULL),
+	(7001, 2, 'PRODUCT', 1001, '疑似虚假信息', 'REJECTED', 10, 'reject', '驳回', '2026-06-12 11:30:55', '2026-06-19 14:09:06'),
 	(7002, 1, 'USER', 2, '疑似骚扰', 'HANDLED', NULL, NULL, NULL, '2026-06-12 11:30:55', NULL),
-	(7003, 12, 'PRODUCT', 1002, '信息不实', 'OPEN', NULL, NULL, NULL, '2026-06-19 15:06:14', NULL);
+	(7003, 12, 'PRODUCT', 1002, '信息不实', 'HANDLED', 10, 'warning', '警告', '2026-06-19 15:06:14', '2026-06-19 14:09:02');
 
 -- 导出  表 campus_market.reviews 结构
 DROP TABLE IF EXISTS `reviews`;
@@ -289,7 +289,7 @@ INSERT INTO `users` (`id`, `openid`, `nickname`, `avatar`, `score`, `status`, `i
 	(2, 'wx_openid_demo_2', 'DemoUser2', '', 95, 'ACTIVE', 0, '中国农业大学', '13800000002', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
 	(10, 'wx_openid_admin_10', 'AdminDemo', '', 100, 'ACTIVE', 1, '中国农业大学', '13800000010', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
 	(11, 'orK423WwnIFshGd54OkS-nY5-gNM', 'WX_Y5-gNM', '', 100, 'ACTIVE', 0, NULL, NULL, '2026-06-12 11:31:42', '2026-06-12 11:31:42'),
-	(12, 'orK423dOa61pX84ZeFlUDtxWVgrQ', 'WX_xWVgrQ', '', 100, 'ACTIVE', 0, NULL, NULL, '2026-06-19 13:28:54', '2026-06-19 13:28:54');
+	(12, 'orK423dOa61pX84ZeFlUDtxWVgrQ', 'WX_xWVgrQ', '', 100, 'ACTIVE', 1, NULL, NULL, '2026-06-19 13:28:54', '2026-06-19 22:06:11');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
