@@ -1,0 +1,75 @@
+<view class="page">
+  <!-- 加载骨架屏 -->
+  <loading-state wx:if="{{loading && products.length === 0}}" count="4" />
+
+  <!-- 错误态 -->
+  <error-tip
+    wx:elif="{{!loading && errorMsg && products.length === 0}}"
+    message="{{errorMsg}}"
+    bind:retry="onRetry"
+  />
+
+  <!-- 商品审核列表 -->
+  <view wx:elif="{{products.length > 0}}" class="product-list">
+    <view class="product-card" wx:for="{{products}}" wx:key="id">
+      <!-- 商品图片 -->
+      <view class="card-top">
+        <image
+          wx:if="{{item.firstImage}}"
+          class="product-thumb"
+          src="{{item.firstImage}}"
+          mode="aspectFill"
+        />
+        <view wx:else class="product-thumb-placeholder">
+          <image class="placeholder-icon" src="/assets/icons/package.svg" mode="aspectFit" />
+        </view>
+
+        <view class="card-info">
+          <text class="product-title">{{item.title}}</text>
+          <view class="product-meta">
+            <text class="product-price">¥{{item.priceText}}</text>
+            <text class="product-category">{{item.categoryName || '未分类'}}</text>
+          </view>
+          <text class="product-owner">发布人: {{item.ownerName || 'ID:' + item.ownerId}}</text>
+        </view>
+      </view>
+
+      <!-- 商品描述 -->
+      <view wx:if="{{item.description}}" class="card-desc">
+        <text>{{item.description}}</text>
+      </view>
+
+      <!-- 底部：时间 + 操作 -->
+      <view class="card-bottom">
+        <text class="product-time">提交于 {{item.createdAtText}}</text>
+        <view class="action-row">
+          <view
+            class="action-btn action-approve"
+            data-action="approved"
+            data-product-id="{{item.id}}"
+            bindtap="onReviewProduct"
+          >
+            <text>通过</text>
+          </view>
+          <view
+            class="action-btn action-reject"
+            data-action="rejected"
+            data-product-id="{{item.id}}"
+            bindtap="onReviewProduct"
+          >
+            <text>驳回</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <empty-state wx:elif="{{!loading && !errorMsg}}" message="暂无待审核商品" />
+
+  <!-- 底部加载提示 -->
+  <view class="bottom-tip" wx:if="{{products.length > 0}}">
+    <text wx:if="{{loading}}">正在加载更多...</text>
+    <text wx:elif="{{!hasMore}}">没有更多了</text>
+  </view>
+</view>

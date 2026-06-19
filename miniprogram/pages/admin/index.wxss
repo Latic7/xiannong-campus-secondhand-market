@@ -53,6 +53,12 @@
   font-weight: 500;
 }
 
+.menu-divider {
+  height: 1rpx;
+  background: var(--color-border);
+  margin: 0 24rpx;
+}
+
 .menu-arrow {
   color: var(--color-text-secondary);
   font-size: 36rpx;
