@@ -1,0 +1,65 @@
+page {
+  background: var(--color-bg);
+}
+
+.page {
+  min-height: 100vh;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.report-card {
+  padding: 22rpx;
+  background: var(--color-surface);
+  border: 1rpx solid var(--color-border);
+  border-radius: 24rpx;
+}
+
+.report-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14rpx;
+}
+
+.report-type {
+  padding: 8rpx 14rpx;
+  color: var(--color-text-secondary);
+  font-size: 22rpx;
+  background: #f2f2f7;
+  border-radius: 999rpx;
+}
+
+.report-status {
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.report-title {
+  margin-bottom: 10rpx;
+  color: var(--color-text);
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.report-reason {
+  color: var(--color-text-secondary);
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.bottom-tip {
+  padding: 28rpx 0 40rpx;
+  text-align: center;
+}
+
+.bottom-tip text {
+  color: var(--color-text-tertiary);
+  font-size: 24rpx;
+}
