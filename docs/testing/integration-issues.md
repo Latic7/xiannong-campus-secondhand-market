@@ -35,7 +35,7 @@
 | 2026-06-20 | ISSUE-001 | Auth | refresh 响应 data 复测仍缺 user | 后端A | P0 | Open |
 | 2026-06-20 | ISSUE-004 | 全局 | products/orders/reports/appeals 缺参复测仍返回默认 422 detail | 后端A | P0 | Open |
 | 2026-06-20 | ISSUE-005 | Products | /api/products 分页参数越界复测仍返回默认 422 detail | 后端A | P1 | Open |
-| 2026-06-20 | ISSUE-006 | Reports/Appeals | reports 未带 token 已返回 401；appeals 未带 token 仍返回 200 | 后端A | P0 | Open |
+| 2026-06-20 | ISSUE-006 | Appeals | POST /api/appeals 未带 token 已返回 401 + ApiResponse，bearerAuth 已对齐 | 后端A | P0 | Fixed |
 | 2026-06-20 | ISSUE-013 | Favorites/Products | images URL 现象经 MySQL + products/favorites 原始字节复测，确认未在真实 payload 中复现 | 后端B | P1 | Closed |
 | 2026-06-20 | ISSUE-001 | Auth | refresh 响应 data 已返回 user，AuthTokens 契约已对齐 | 后端A | P0 | Fixed |
 | 2026-06-20 | ISSUE-004 | 全局 | products/orders/reports/appeals 缺参已统一返回 422 + ApiResponse | 后端A | P0 | Fixed |
@@ -236,14 +236,14 @@
 
 ---
 
-### ISSUE-006（OpenAPI 顶层 bearerAuth：appeals 鉴权仍未完全接入）
+### ISSUE-006（OpenAPI 顶层 bearerAuth：reports/appeals 鉴权已对齐）
 - 类型：返回结构不一致
 - 接口：
   - POST /api/reports
   - POST /api/appeals
 - 优先级：P0
 - 责任人：后端A
-- 状态：Open
+- 状态：Fixed
 - 复现步骤：
   1) 不带 Authorization 请求 POST /api/reports
   2) 不带 Authorization 请求 POST /api/appeals
@@ -254,13 +254,11 @@
   - 2026-06-19 初测时，POST /api/reports 未带 Authorization 仍返回 200 + ApiResponse，并成功创建举报
   - 2026-06-19 初测时，POST /api/appeals 未带 Authorization 仍返回 200 + ApiResponse，并成功提交申诉
   - 2026-06-20 复测时，POST /api/reports 未带 Authorization 已返回 401 + ApiResponse，reports 侧已修复
-  - 2026-06-20 复测时，POST /api/appeals 未带 Authorization 仍返回 200 + ApiResponse，并成功提交申诉
+  - 2026-06-20 最新复测时，POST /api/appeals 未带 Authorization 也已返回 401 + ApiResponse，message=missing bearer token
 - 影响范围：
-  - 当前仍存在未登录用户可直接执行申诉写操作的问题，权限边界与契约不一致
+  - 已修复
 - 备注：
-  - 这不是 reports/appeals 业务字段问题，而是统一鉴权依赖接入不完整
-  - 当前问题范围已收敛为 appeals
-
+  - reports / appeals 写操作现已对齐 OpenAPI 顶层 bearerAuth 要求
 ---
 
 ### ISSUE-007（资源不存在语义：reports 已对齐 404 + ApiResponse）
@@ -497,12 +495,12 @@
 - 说明：请求体验证错误已统一包装，对应 ISSUE-004 在 reports 侧已修复
 
 24) POST /api/appeals（未带 Authorization）
-- 结果：FAIL
+- 结果：PASS（2026-06-20 最新复测已修复）
 - 2026-06-19 初测：未带 Authorization 仍返回 200 + ApiResponse，并成功提交申诉
 - 实际返回 data：{"submitted":true,"targetType":"report","targetId":7001,"reason":"申诉测试"}
-- 2026-06-20 复测：未带 Authorization 仍返回 200 + ApiResponse，问题仍存在
-- 对应 ISSUE-006：已复测确认
-- 说明：当前后端A剩余待修问题已收敛为 appeals 写操作未接入 Bearer 校验
+- 2026-06-20 最新复测：未带 Authorization 已返回 401 + ApiResponse，message=missing bearer token
+- 对应 ISSUE-006：已修复
+- 说明：appeals 写操作现已接入 Bearer 校验
 
 25) POST /api/appeals（缺必填字段）
 - 结果：PASS（2026-06-20 复测已修复）
@@ -548,13 +546,13 @@
 - 对应 ISSUE-013 关闭
 
 31) 2026-06-20 定点复测 ISSUE-001 / ISSUE-004 / ISSUE-005 / ISSUE-006
-- 结果：PARTIAL
+- 结果：PASS
 - `POST /api/auth/refresh`：200 + ApiResponse，`data` 已返回 `user`
 - `POST /api/products`、`POST /api/orders`、`POST /api/reports`、`POST /api/appeals` 缺参：均已返回 422 + ApiResponse
 - `GET /api/products?page=0&size=999`：已返回 422 + ApiResponse
 - `POST /api/reports` 未带 Authorization：已返回 401 + ApiResponse
-- `POST /api/appeals` 未带 Authorization：仍返回 200 + ApiResponse
-- 说明：ISSUE-001 / ISSUE-004 / ISSUE-005 已修复；ISSUE-006 已收敛为 appeals 单点问题
+- `POST /api/appeals` 未带 Authorization：已返回 401 + ApiResponse
+- 说明：ISSUE-001 / ISSUE-004 / ISSUE-005 / ISSUE-006 已全部修复
 
 32) 2026-06-20 切换到 MySQL 数据源后复测 images URL
 - 结果：PASS
