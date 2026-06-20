@@ -126,11 +126,11 @@
     <text class="action-label">举报</text>
   </view>
 
-  <!-- 下单（非自己的商品才显示） -->
-  <button wx:if="{{!isOwner}}" class="action-btn-primary" bindtap="onPlaceOrder">
-    立即购买
+  <!-- 下单按钮（文案与状态由 JS 控制） -->
+  <button wx:if="{{orderBtnDisabled}}" class="action-btn-disabled" disabled>
+    {{orderBtnText}}
   </button>
-  <button wx:else class="action-btn-disabled" disabled>
-    我的商品
+  <button wx:else class="action-btn-primary" bindtap="onPlaceOrder">
+    {{orderBtnText}}
   </button>
 </view>
