@@ -46,13 +46,13 @@ def review_product(db: Session, product_id: int, payload) -> dict:
 
 
 def admin_reports(
-    db: Session,
-    page: int = 1,
-    size: int = 20,
-    status: str | None = None,
-    target_type: str | None = None,
+	db: Session,
+	page: int = 1,
+	size: int = 20,
+	status: str | None = None,
+	target_type: str | None = None,
 ) -> dict:
-    return list_report_queue(page=page, size=size, status=status, target_type=target_type)
+	return list_report_queue(db, page=page, size=size, status=status, target_type=target_type)
 
 
 def handle_report(db: Session, report_id: int, payload) -> dict:

@@ -1,5 +1,11 @@
 const adminService = require('../../services/admin')
-const { REPORT_STATUS, getStatusMeta } = require('../../utils/constants')
+const {
+  REPORT_STATUS,
+  PRODUCT_STATUS,
+  ORDER_STATUS,
+  USER_STATUS,
+  getStatusMeta,
+} = require('../../utils/constants')
 
 const TARGET_TYPE_MAP = {
   PRODUCT: '商品',
@@ -13,6 +19,56 @@ const ACTION_OPTIONS = [
   { action: 'unlist_product', label: '下架商品', desc: '下架被举报的商品', confirm: '确认下架该商品？' },
   { action: 'ban_user', label: '封禁用户', desc: '封禁被举报的用户', confirm: '确认封禁该用户？此操作不可撤销。' },
 ]
+
+function formatPrice(value) {
+  if (value == null) return '待确认'
+  return '¥' + Number(value).toFixed(2).replace(/\.00$/, '')
+}
+
+function formatTarget(report) {
+  const target = report.target
+  if (!target) return null
+
+  if (report.targetType === 'PRODUCT') {
+    return {
+      id: target.id,
+      title: target.title || '商品信息不可用',
+      price: target.price,
+      priceText: formatPrice(target.price),
+      image: target.image || '',
+      status: target.status,
+      statusText: getStatusMeta(PRODUCT_STATUS, target.status).label,
+    }
+  }
+
+  if (report.targetType === 'USER') {
+    return {
+      id: target.id,
+      nickname: target.nickname || '未知用户',
+      avatar: target.avatar || '',
+      status: target.status,
+      statusText: getStatusMeta(USER_STATUS, target.status).label,
+      score: target.score == null ? '—' : target.score,
+    }
+  }
+
+  if (report.targetType === 'ORDER') {
+    const product = target.product || {}
+    return {
+      id: target.id,
+      amount: target.amount,
+      amountText: formatPrice(target.amount),
+      status: target.status,
+      statusText: getStatusMeta(ORDER_STATUS, target.status).label,
+      product: {
+        title: product.title || '订单商品不可用',
+        image: product.image || '',
+      },
+    }
+  }
+
+  return null
+}
 
 Page({
   data: {
@@ -37,12 +93,16 @@ Page({
 
   formatReport(report) {
     const meta = getStatusMeta(REPORT_STATUS, report.status)
+    // targetType 统一为大写，供 wxml 条件判断使用
+    const targetType = String(report.targetType || '').toUpperCase()
     return {
       ...report,
-      targetTypeText: TARGET_TYPE_MAP[report.targetType] || report.targetType || '未知',
+      targetType,
+      targetTypeText: TARGET_TYPE_MAP[targetType] || report.targetType || '未知',
+      target: formatTarget({ ...report, targetType }),
       statusText: meta.label,
       statusColor: meta.color,
-      isOpen: report.status === 'OPEN',
+      isOpen: String(report.status || '').toUpperCase() === 'OPEN',
     }
   },
 

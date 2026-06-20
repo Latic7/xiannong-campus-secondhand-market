@@ -33,11 +33,56 @@
         <view class="report-status" style="color: {{item.statusColor}}">{{item.statusText}}</view>
       </view>
 
-      <!-- 举报对象 -->
-      <view class="report-target">举报对象 #{{item.targetId}}</view>
+      <!-- 举报对象详情（商品） -->
+      <view wx:if="{{item.targetType === 'PRODUCT' && item.target}}" class="target-card">
+        <view class="target-image-wrap">
+          <image wx:if="{{item.target.image}}" class="target-image" src="{{item.target.image}}" mode="aspectFill" />
+          <view wx:else class="target-image-placeholder">
+            <image class="target-image-icon" src="/assets/icons/package.svg" mode="aspectFit" />
+          </view>
+        </view>
+        <view class="target-info">
+          <view class="target-title">{{item.target.title}}</view>
+          <view class="target-meta">价格 {{item.target.priceText}}</view>
+          <view class="target-meta">商品 #{{item.target.id}}{{item.target.statusText ? ' · ' + item.target.statusText : ''}}</view>
+        </view>
+      </view>
+
+      <!-- 举报对象详情（用户） -->
+      <view wx:elif="{{item.targetType === 'USER' && item.target}}" class="target-card">
+        <view class="target-image-wrap">
+          <image wx:if="{{item.target.avatar}}" class="target-image" src="{{item.target.avatar}}" mode="aspectFill" />
+          <view wx:else class="target-image-placeholder">
+            <image class="target-image-icon" src="/assets/icons/user.svg" mode="aspectFit" />
+          </view>
+        </view>
+        <view class="target-info">
+          <view class="target-title">{{item.target.nickname}}</view>
+          <view class="target-meta">用户 #{{item.target.id}}{{item.target.statusText ? ' · ' + item.target.statusText : ''}}</view>
+          <view class="target-meta">信用分 {{item.target.score}}</view>
+        </view>
+      </view>
+
+      <!-- 举报对象详情（订单） -->
+      <view wx:elif="{{item.targetType === 'ORDER' && item.target}}" class="target-card">
+        <view class="target-image-wrap">
+          <image wx:if="{{item.target.product && item.target.product.image}}" class="target-image" src="{{item.target.product.image}}" mode="aspectFill" />
+          <view wx:else class="target-image-placeholder">
+            <image class="target-image-icon" src="/assets/icons/package.svg" mode="aspectFit" />
+          </view>
+        </view>
+        <view class="target-info">
+          <view class="target-title">{{item.target.product.title || '订单商品不可用'}}</view>
+          <view class="target-meta">订单 #{{item.target.id}} · 金额 {{item.target.amountText}}</view>
+          <view class="target-meta">{{item.target.statusText}}</view>
+        </view>
+      </view>
+
+      <!-- 举报对象已不存在时的兜底 -->
+      <view wx:elif="{{!item.target}}" class="report-reporter">举报对象 #{{item.targetId}}（信息不可用）</view>
 
       <!-- 举报人 -->
-      <view class="report-reporter">举报人 ID: {{item.reporterId}}</view>
+      <view class="report-reporter">举报人 ID: {{item.reporterId || '匿名'}}</view>
 
       <!-- 举报原因 -->
       <view class="report-reason">{{item.reason}}</view>
