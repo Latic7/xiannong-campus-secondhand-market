@@ -1,5 +1,75 @@
 const reportService = require('../../services/report')
-const { REPORT_STATUS, getStatusMeta } = require('../../utils/constants')
+const {
+  REPORT_STATUS,
+  PRODUCT_STATUS,
+  ORDER_STATUS,
+  USER_STATUS,
+  getStatusMeta,
+} = require('../../utils/constants')
+
+const TARGET_TYPE_MAP = {
+  PRODUCT: '商品',
+  ORDER: '订单',
+  USER: '用户',
+}
+
+// 管理员处理动作 → 中文文案，用于展示「处理结果」
+const ACTION_LABEL = {
+  reject: '驳回',
+  warning: '警告',
+  unlist_product: '下架商品',
+  ban_user: '封禁用户',
+}
+
+function formatPrice(value) {
+  if (value == null) return '待确认'
+  return '¥' + Number(value).toFixed(2).replace(/\.00$/, '')
+}
+
+function formatTarget(report) {
+  const target = report.target
+  if (!target) return null
+
+  if (report.targetType === 'PRODUCT') {
+    return {
+      id: target.id,
+      title: target.title || '商品信息不可用',
+      price: target.price,
+      priceText: formatPrice(target.price),
+      image: target.image || '',
+      status: target.status,
+      statusText: getStatusMeta(PRODUCT_STATUS, target.status).label,
+    }
+  }
+
+  if (report.targetType === 'USER') {
+    return {
+      id: target.id,
+      nickname: target.nickname || '未知用户',
+      avatar: target.avatar || '',
+      status: target.status,
+      statusText: getStatusMeta(USER_STATUS, target.status).label,
+      score: target.score == null ? '—' : target.score,
+    }
+  }
+
+  if (report.targetType === 'ORDER') {
+    const product = target.product || {}
+    return {
+      id: target.id,
+      amount: target.amount,
+      amountText: formatPrice(target.amount),
+      status: target.status,
+      statusText: getStatusMeta(ORDER_STATUS, target.status).label,
+      product: {
+        title: product.title || '订单商品不可用',
+        image: product.image || '',
+      },
+    }
+  }
+
+  return null
+}
 
 Page({
   data: {
@@ -17,11 +87,18 @@ Page({
 
   formatReport(report) {
     const meta = getStatusMeta(REPORT_STATUS, report.status)
+    // targetType 统一为大写，供 wxml 条件判断使用
+    const targetType = String(report.targetType || '').toUpperCase()
+    const action = report.handleAction
     return {
       ...report,
-      targetTypeText: report.targetType === 'PRODUCT' ? '商品' : report.targetType === 'ORDER' ? '订单' : '用户',
+      targetType,
+      targetTypeText: TARGET_TYPE_MAP[targetType] || report.targetType || '未知',
+      target: formatTarget({ ...report, targetType }),
       statusText: meta.label,
       statusColor: meta.color,
+      isOpen: String(report.status || '').toUpperCase() === 'OPEN',
+      handleAction: action ? (ACTION_LABEL[action] || action) : '',
     }
   },
 
