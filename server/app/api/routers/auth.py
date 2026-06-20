@@ -215,30 +215,27 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/refresh")
-def refresh_token(payload: TokenRefreshRequest):
-    """刷新 access token"""
+def refresh_token(payload: TokenRefreshRequest, db: Session = Depends(get_db)):
     try:
         token_data = jwt.decode(payload.refreshToken, settings.JWT_SECRET, algorithms=["HS256"])
     except jwt.PyJWTError:
-        return _json_error(
-            status_code=401,
-            code=10020,
-            message="refresh token invalid",
-        )
+        return _json_error(401, 10020, "refresh token invalid")
 
     if token_data.get("typ") != "refresh":
-        return _json_error(
-            status_code=401,
-            code=10021,
-            message="token type mismatch",
-        )
+        return _json_error(401, 10021, "token type mismatch")
+
+    # 新增：查库获取用户最新信息
+    user_service = UserService(db)
+    user = user_service.get_user_by_id(token_data.get("uid"))
+    if not user:
+        return _json_error(404, 10033, "user not found")
 
     new_access_token = _issue_token(
         {
             "sub": token_data.get("sub"),
-            "uid": token_data.get("uid"),
-            "nickname": token_data.get("nickname", ""),
-            "isAdmin": token_data.get("isAdmin", False),  # 改为 isAdmin
+            "uid": user.id,
+            "nickname": user.nickname,
+            "isAdmin": user.is_admin,
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -249,6 +246,14 @@ def refresh_token(payload: TokenRefreshRequest):
             "accessToken": new_access_token,
             "refreshToken": payload.refreshToken,
             "expiresIn": settings.JWT_EXPIRES_SECONDS,
+            "user": {  # 新增
+                "id": user.id,
+                "nickname": user.nickname,
+                "avatar": user.avatar,
+                "score": user.score,
+                "status": user.status,
+                "isAdmin": user.is_admin,
+            },
         }
     )
 

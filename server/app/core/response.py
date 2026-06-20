@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 from app.core.settings import settings
 from app.core.exceptions import BusinessError
@@ -51,5 +52,25 @@ def register_exception_handlers(app: FastAPI):
                 code=10000,
                 message="internal server error",
                 data={"detail": error_detail} if error_detail else None,
+            ),
+        )
+    
+    @app.exception_handler(RequestValidationError)
+    async def validation_error_handler(request: Request, exc: RequestValidationError):
+        """处理 Pydantic 请求体验证错误，统一为 ApiResponse 格式"""
+        errors = []
+        for error in exc.errors():
+            field = ".".join(str(loc) for loc in error.get("loc", []))
+            errors.append({
+                "field": field,
+                "message": error.get("msg", "validation error"),
+            })
+        
+        return JSONResponse(
+            status_code=422,
+            content=api_error(
+                code=10001,
+                message="validation error",
+                data={"errors": errors},
             ),
         )
