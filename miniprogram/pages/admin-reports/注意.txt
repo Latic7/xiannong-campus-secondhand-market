@@ -1,1 +1,0 @@
-注意：admin-reports 页面目前没有 UI 入口，需要通过 wx.navigateTo({ url: '/pages/admin-reports/index' }) 跳转。

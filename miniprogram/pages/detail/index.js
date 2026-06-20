@@ -26,6 +26,9 @@ Page({
     favoriting: false,
     isOwner: false,
     isLoggedIn: false,
+    // ── 下单状态 ──
+    orderBtnText: '立即购买',       // 按钮文案：立即购买 / 已预约 / 交易进行中 / 已售出
+    orderBtnDisabled: false,        // 按钮是否禁用
   },
 
   onLoad(options) {
@@ -60,8 +63,12 @@ Page({
         isOwner: this.checkIsOwner(formatted),
         isLoggedIn: isLoggedIn(),
       })
+      // 重置按钮状态
+      this.updateOrderBtnState(formatted)
       if (isLoggedIn()) {
         this.checkFavoriteStatus(productId)
+        // 异步检测当前用户对该商品是否有活跃订单
+        this.checkActiveOrder(productId)
       }
     } catch (err) {
       this.setData({ loading: false, errorMsg: err.message || '加载失败，请重试' })
@@ -138,6 +145,39 @@ Page({
     }
   },
 
+  // ── 检查当前用户对该商品是否有活跃订单 ──
+  async checkActiveOrder(productId) {
+    try {
+      const res = await orderService.list({ role: 'buyer', page: 1, size: 100 })
+      const orders = res.list || []
+      const activeOrder = orders.find(
+        o => Number(o.productId) === Number(productId) && ['RESERVED', 'CONFIRMED'].includes(o.status)
+      )
+      if (activeOrder) {
+        this.setData({
+          orderBtnText: activeOrder.status === 'RESERVED' ? '已预约' : '交易进行中',
+          orderBtnDisabled: true,
+        })
+      }
+    } catch (e) {
+      // 静默失败，不影响页面正常使用
+    }
+  },
+
+  // ── 根据商品状态更新按钮文案 ────────────────
+  updateOrderBtnState(product) {
+    const status = normalizeStatus(product.status)
+    if (status === 'SOLD') {
+      this.setData({ orderBtnText: '已售出', orderBtnDisabled: true })
+    } else if (this.checkIsOwner(product)) {
+      this.setData({ orderBtnText: '我的商品', orderBtnDisabled: true })
+    } else if (status !== 'PUBLISHED') {
+      this.setData({ orderBtnText: '暂不可购买', orderBtnDisabled: true })
+    } else {
+      this.setData({ orderBtnText: '立即购买', orderBtnDisabled: false })
+    }
+  },
+
   // ── 图片操作 ──────────────────────────────
   onSwiperChange(e) { this.setData({ currentImageIndex: e.detail.current }) },
   onPreviewImage() {
@@ -168,6 +208,7 @@ Page({
   onPlaceOrder() {
     if (!this.data.isLoggedIn) { wx.showToast({ title: '请先登录', icon: 'none' }); return }
     if (this.data.isOwner) { wx.showToast({ title: '不能购买自己的商品', icon: 'none' }); return }
+    if (this.data.orderBtnDisabled) { return }
     const p = this.data.product
     if (!p || normalizeStatus(p.status) !== 'PUBLISHED') { wx.showToast({ title: '该商品暂不可购买', icon: 'none' }); return }
     wx.showModal({
@@ -180,11 +221,22 @@ Page({
             await orderService.create({ productId: Number(this.data.productId) })
             wx.hideLoading()
             wx.showToast({ title: '下单成功', icon: 'success' })
-            // 刷新详情
-            this.loadProduct(this.data.productId)
+            // 立即切换按钮为「已预约」
+            this.setData({ orderBtnText: '已预约', orderBtnDisabled: true })
           } catch (e) {
             wx.hideLoading()
-            wx.showToast({ title: e.message || '下单失败', icon: 'none' })
+            if (e.message && e.message.includes('already has an active order')) {
+              wx.showModal({
+                title: '无法下单',
+                content: '该商品已存在进行中的订单，暂时无法重复购买。请等待当前订单完成或取消后再试。',
+                showCancel: false,
+                confirmText: '我知道了',
+              })
+              // 同步按钮状态
+              this.setData({ orderBtnText: '已预约', orderBtnDisabled: true })
+            } else {
+              wx.showToast({ title: e.message || '下单失败', icon: 'none' })
+            }
           }
         }
       },

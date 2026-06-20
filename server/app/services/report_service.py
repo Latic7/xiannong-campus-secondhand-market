@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from sqlalchemy.orm import Session
+
 from app.api.deps.auth import CurrentActor
 from app.core.exceptions import ResourceNotFoundError
 from app.crud.report import create_report as crud_create_report
 from app.crud.report import get_report as crud_get_report
-from app.crud.report import list_reports as crud_list_reports
+from app.crud.report import list_reports_with_target as crud_list_reports_with_target
 from app.crud.report import update_report as crud_update_report
 from app.schemas.admin import ReportHandleRequest
 from app.schemas.reports import AppealCreateRequest, ReportCreateRequest
@@ -29,22 +31,37 @@ def get_report(report_id: int) -> dict:
     return report
 
 
-def list_report_queue(page: int = 1, size: int = 20, status: str | None = None, target_type: str | None = None) -> dict:
-    rows, total = crud_list_reports(page=page, size=size, status=status, target_type=target_type)
-    return {
-        "list": rows,
-        "page": {"page": page, "size": size, "total": total},
-    }
+def list_report_queue(
+	db: Session,
+	page: int = 1,
+	size: int = 20,
+	status: str | None = None,
+	target_type: str | None = None,
+) -> dict:
+	rows, total = crud_list_reports_with_target(
+		db,
+		page=page,
+		size=size,
+		status=status,
+		target_type=target_type,
+	)
+	return {
+		"list": rows,
+		"page": {"page": page, "size": size, "total": total},
+	}
 
 
 def list_my_reports(
+    db: Session,
     actor: CurrentActor,
     page: int = 1,
     size: int = 20,
     status: str | None = None,
     target_type: str | None = None,
 ) -> dict:
-    rows, total = crud_list_reports(
+    # 与举报队列一致，附带被举报对象摘要，供前端富卡片展示
+    rows, total = crud_list_reports_with_target(
+        db,
         page=page,
         size=size,
         status=status,

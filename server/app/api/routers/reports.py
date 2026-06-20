@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
 
 from app.api.deps.auth import CurrentActor, get_current_actor
+from app.core.database import get_db
 from app.core.response import api_ok
 from app.schemas.reports import AppealCreateRequest, ReportCreateRequest
 from app.services.report_service import (
@@ -27,9 +29,19 @@ def list_my_reports(
     size: int = Query(20, ge=1, le=100),
     status: str | None = None,
     targetType: str | None = None,
+    db: Session = Depends(get_db),
     actor: CurrentActor = Depends(get_current_actor),
 ) -> dict:
-    return api_ok(list_my_reports_service(actor, page=page, size=size, status=status, target_type=targetType))
+    return api_ok(
+        list_my_reports_service(
+            db,
+            actor,
+            page=page,
+            size=size,
+            status=status,
+            target_type=targetType,
+        )
+    )
 
 
 @router.get("/api/reports/{report_id}")
