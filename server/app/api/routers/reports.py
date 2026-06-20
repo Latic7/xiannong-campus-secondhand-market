@@ -38,5 +38,8 @@ def get_report(report_id: int) -> dict:
 
 
 @router.post("/api/appeals")
-def create_appeal(payload: AppealCreateRequest) -> dict:
-    return api_ok(create_appeal_service(payload))
+def create_appeal(
+    payload: AppealCreateRequest,
+    actor: CurrentActor = Depends(get_current_actor),  # 添加这一行
+) -> dict:
+    return api_ok(create_appeal_service(payload, actor))  # 传入 actor
