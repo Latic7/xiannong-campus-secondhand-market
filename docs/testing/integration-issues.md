@@ -22,7 +22,7 @@
 |------|-------|-----------|----------|--------|--------|------|
 | 2026-06-09 | ISSUE-001 | Auth | refresh 响应 data 缺 user | 后端A | P0 | Open |
 | 2026-06-09 | ISSUE-004 | 全局 | 422 不走统一 ApiResponse | 后端A | P0 | Open |
-| 2026-06-09 | ISSUE-006 | 全局 | POST /api/reports、POST /api/appeals 未带 token 仍返回200 | 后端A | P0 | Open |
+| 2026-06-09 | ISSUE-006 | 全局 | POST /api/reports、POST /api/appeals 未带 token 仍返回 200 | 后端A | P0 | Open |
 | 2026-06-09 | ISSUE-002 | Orders | 订单详情已返回完整 Order 结构，productId 已补齐 | 后端B | P1 | Fixed |
 | 2026-06-09 | ISSUE-008 | Orders | 订单状态机约束与幂等策略已生效 | 后端B | P1 | Fixed |
 | 2026-06-09 | ISSUE-003 | Reports | 举报详情已返回完整 Report 结构，关键字段已补齐 | 后端C | P1 | Fixed |
@@ -32,6 +32,15 @@
 | 2026-06-18 | ISSUE-011 | Auth/Users | UserProfile 中 publishedCount/soldCount 已在 OpenAPI 中定义，契约已对齐 | 后端A | P1 | Fixed |
 | 2026-06-18 | ISSUE-013 | Favorites/Products | images URL 反引号/空格现象经复测未在真实 payload 中复现 | 后端B | P1 | Closed |
 | 2026-06-19 | ISSUE-007 | Reports | /api/reports/{reportId} 已返回 404 + ApiResponse，资源不存在语义已对齐 | 后端C | P1 | Fixed |
+| 2026-06-20 | ISSUE-001 | Auth | refresh 响应 data 复测仍缺 user | 后端A | P0 | Open |
+| 2026-06-20 | ISSUE-004 | 全局 | products/orders/reports/appeals 缺参复测仍返回默认 422 detail | 后端A | P0 | Open |
+| 2026-06-20 | ISSUE-005 | Products | /api/products 分页参数越界复测仍返回默认 422 detail | 后端A | P1 | Open |
+| 2026-06-20 | ISSUE-006 | Reports/Appeals | reports 未带 token 已返回 401；appeals 未带 token 仍返回 200 | 后端A | P0 | Open |
+| 2026-06-20 | ISSUE-013 | Favorites/Products | images URL 现象经 MySQL + products/favorites 原始字节复测，确认未在真实 payload 中复现 | 后端B | P1 | Closed |
+| 2026-06-20 | ISSUE-001 | Auth | refresh 响应 data 已返回 user，AuthTokens 契约已对齐 | 后端A | P0 | Fixed |
+| 2026-06-20 | ISSUE-004 | 全局 | products/orders/reports/appeals 缺参已统一返回 422 + ApiResponse | 后端A | P0 | Fixed |
+| 2026-06-20 | ISSUE-005 | Products | /api/products 分页参数越界已返回 422 + ApiResponse | 后端A | P1 | Fixed |
+| 2026-06-20 | ISSUE-006 | Appeals | POST /api/appeals 未带 token 仍返回 200，reports 侧已修复 | 后端A | P0 | Open |
 
 ---
 
@@ -42,19 +51,20 @@
 - 接口：POST /api/auth/refresh
 - 优先级：P0
 - 责任人：后端A
-- 状态：Open
+- 状态：Fixed
 - 复现步骤：
   1) 准备一个合法 refreshToken（typ=refresh，使用同一 JWT_SECRET）
   2) 请求体：{"refreshToken":"..."}
 - OpenAPI 期望：
   - 200：data 为 AuthTokens（required: accessToken/refreshToken/expiresIn/user）
 - 当前实际：
-  - 200：data 仅有 accessToken/refreshToken/expiresIn（缺 user）
   - 2026-06-19 复测仍缺 user，响应体中未返回用户资料对象
+  - 2026-06-20 使用合法 refreshToken 构造合法 JSON 请求体后再次复测，返回 200 + ApiResponse
+  - data 已包含 accessToken、refreshToken、expiresIn、user
 - 影响范围：
-  - 前端刷新登录态后无法更新 user，容易联调卡住
+  - 已修复
 - 备注：
-  - 临时绕过：refresh 后再调 GET /api/auth/me（不建议作为最终契约）
+  - refresh 响应当前已与 AuthTokens 契约对齐
 
 ---
 
@@ -162,43 +172,46 @@
 - 复现步骤：
   1) 用普通用户 access token 请求 GET /api/users/me/favorites?page=1&size=20
   2) 请求 GET /api/products?page=1&size=20
-  3) 请求 GET /api/products/1004
+  3) 请求 GET /api/products/1001
 - OpenAPI 期望：
   - images 为标准 URL 字符串数组
 - 当前实际：
   - 2026-06-19 复测数据库 `product_images.url` 的 `HEX(url)`，值均为正常 URL 字节流，不含空格或反引号字节
-  - 对 `GET /api/products`、`GET /api/users/me/favorites` 响应保存到文件后，读取原始字符串并查看 hex，结果均为正常 URL 字节流
+  - 2026-06-20 将服务切换到 MySQL 数据源后，复测 `GET /api/products/1001`，返回的 `images[0]` 原始字节仍为正常 URL
+  - 2026-06-20 复测 `GET /api/users/me/favorites?page=1&size=20`，返回列表中的 `images[0]` 原始字节同样为正常 URL
   - 前期看到的反引号/空格现象未在真实 payload 中复现
 - 影响范围：
   - 当前不构成后端缺陷
 - 备注：
   - 判定为显示/复制过程中的视觉痕迹，本 issue 关闭
+  - `products` 与 `favorites` 均为直接读取 `ProductImage.url`，未发现额外拼接空格或反引号的逻辑
 
 ---
 
 ## 二、返回结构不一致（Envelope / Validation / Auth Semantics）
 
-### ISSUE-004（请求体缺必填字段时：返回 FastAPI 默认 422，不是 ApiResponse 外层）
+### ISSUE-004（请求体缺必填字段时：返回结构未统一为 ApiResponse）
 - 类型：返回结构不一致
 - 接口：示例 POST /api/products（同类：POST /api/orders、POST /api/reports、POST /api/appeals 等）
 - 优先级：P0
 - 责任人：后端A
-- 状态：Open
+- 状态：Fixed
 - 复现步骤：
   1) POST /api/products
   2) 请求体缺 title/price/categoryId 任意一个
 - OpenAPI 期望：
   - 失败也应返回 ApiResponse 外层：code/message/data/requestId/timestamp
 - 当前实际：
-  - 多数情况下返回 {"detail":[...]}（没有 code/requestId/timestamp）
   - 2026-06-19 复测 POST /api/products 缺少 title 时，仍返回默认 422 detail
   - 2026-06-19 复测 POST /api/orders 缺少 productId 时，仍返回默认 422 detail
   - 2026-06-19 复测 POST /api/reports 缺少 reason 时，仍返回默认 422 detail
   - 2026-06-19 复测 POST /api/appeals 缺少 targetId 时，仍返回默认 422 detail
+  - 2026-06-20 再次复测 POST /api/products、POST /api/orders、POST /api/reports、POST /api/appeals 缺参场景，均返回 422 + ApiResponse
+  - 返回体已统一包含 code/message/data/requestId/timestamp，错误明细收敛到 data.errors
 - 影响范围：
-  - 前端统一错误处理无法按 code/message 解析
+  - 已修复
 - 备注：
-  - 需要全局异常处理把 422 转成 ApiResponse（后端基础设施）
+  - 全局请求体验证异常已接入统一 ApiResponse
 
 ---
 
@@ -207,23 +220,23 @@
 - 接口：GET /api/products
 - 优先级：P1
 - 责任人：后端A
-- 状态：Open
+- 状态：Fixed
 - 复现步骤：
   1) GET /api/products?page=0&size=999
 - OpenAPI 期望：
   - page>=1，size<=100；越界应返回失败 ApiResponse
 - 当前实际：
-  - GET /api/products?page=0&size=999 返回 HTTP 422
-  - 但响应体仍为 FastAPI 默认 {"detail":[...]}，未统一包装为 ApiResponse
+  - 2026-06-19 初测时，GET /api/products?page=0&size=999 返回 HTTP 422，响应体仍为默认 {"detail":[...]}
+  - 2026-06-20 复测时，返回 HTTP 422 + ApiResponse
+  - 响应体已包含 code/message/data/requestId/timestamp，data.errors 中能正确给出 page / size 校验失败信息
 - 影响范围：
-  - 前端无法统一按 code/message 处理分页参数越界错误
+  - 已修复
 - 备注：
-  - 参数校验本身已生效，但 422 错误结构仍未统一
-  - 可并入全局 ISSUE-004 一并修复
+  - 参数校验与统一错误结构现已同时生效
 
 ---
 
-### ISSUE-006（OpenAPI 顶层 bearerAuth：reports/appeals 未带 token 仍返回 200）
+### ISSUE-006（OpenAPI 顶层 bearerAuth：appeals 鉴权仍未完全接入）
 - 类型：返回结构不一致
 - 接口：
   - POST /api/reports
@@ -238,14 +251,15 @@
   - OpenAPI 顶层声明了 bearerAuth，除显式 security: [] 的接口外，其余默认需要 Bearer
   - 未登录应返回 401 + ApiResponse
 - 当前实际：
-  - POST /api/reports 未带 Authorization 仍返回 200 + ApiResponse，并成功创建举报
-  - POST /api/appeals 未带 Authorization 仍返回 200 + ApiResponse，并成功提交申诉
-  - 2026-06-19 复测 POST /api/products、POST /api/orders 未带 token 时均返回 401 + ApiResponse
+  - 2026-06-19 初测时，POST /api/reports 未带 Authorization 仍返回 200 + ApiResponse，并成功创建举报
+  - 2026-06-19 初测时，POST /api/appeals 未带 Authorization 仍返回 200 + ApiResponse，并成功提交申诉
+  - 2026-06-20 复测时，POST /api/reports 未带 Authorization 已返回 401 + ApiResponse，reports 侧已修复
+  - 2026-06-20 复测时，POST /api/appeals 未带 Authorization 仍返回 200 + ApiResponse，并成功提交申诉
 - 影响范围：
-  - 未登录用户仍可直接执行举报/申诉写操作，权限边界与契约不一致
+  - 当前仍存在未登录用户可直接执行申诉写操作的问题，权限边界与契约不一致
 - 备注：
-  - 这不是 reports/appeals 业务字段问题，而是统一鉴权依赖未接入
-  - 当前问题范围收敛为 reports / appeals
+  - 这不是 reports/appeals 业务字段问题，而是统一鉴权依赖接入不完整
+  - 当前问题范围已收敛为 appeals
 
 ---
 
@@ -337,7 +351,7 @@
 
 ---
 
-## 五、测试执行记录（2026-06-18 ~ 2026-06-19，后端D）
+## 五、测试执行记录（2026-06-18 ~ 2026-06-20，后端D）
 
 环境：
 - 分支：dev（已与 origin/dev 同步）
@@ -424,10 +438,10 @@
 - GET /api/products?categoryId=2：200 + ApiResponse
 
 14) GET /api/products?page=0&size=999
-- 结果：FAIL
-- 返回 HTTP 422
-- 响应体为 FastAPI 默认 {"detail":[...]}，未统一包装为 ApiResponse
-- 对应 ISSUE-005：已复测确认
+- 结果：PASS（2026-06-20 复测已修复）
+- 2026-06-19 初测：返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
+- 2026-06-20 复测：返回 HTTP 422 + ApiResponse，data.errors 中已正确给出 page / size 校验失败信息
+- 说明：分页参数越界的校验与统一错误结构现已同时生效，对应 ISSUE-005 已修复
 
 15) GET /api/products/{productId}
 - 结果：PASS
@@ -441,10 +455,10 @@
 - 实际新建商品：id=1006，status=PENDING，images=[]，seller 信息完整
 
 17) POST /api/products（缺必填字段）
-- 结果：FAIL
-- 缺少 title 时返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
-- 未统一包装为 ApiResponse
-- 对应 ISSUE-004：已复测确认
+- 结果：PASS（2026-06-20 复测已修复）
+- 2026-06-19 初测：缺少 title 时返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
+- 2026-06-20 复测：缺少 title/price/categoryId 时返回 HTTP 422 + ApiResponse，body 中已包含 code/message/data/requestId/timestamp
+- 说明：请求体验证错误已统一包装，对应 ISSUE-004 在 products 侧已修复
 
 18) GET /api/orders/{orderId}
 - 结果：PASS
@@ -459,10 +473,10 @@
 - 说明：商品拥有者不能购买自己的商品，这条业务规则生效，不能作为缺陷记录
 
 20) POST /api/orders（缺必填字段）
-- 结果：FAIL
-- 缺少 productId 时返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
-- 未统一包装为 ApiResponse
-- 对应 ISSUE-004：已复测确认
+- 结果：PASS（2026-06-20 复测已修复）
+- 2026-06-19 初测：缺少 productId 时返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
+- 2026-06-20 复测：缺少 productId 时返回 HTTP 422 + ApiResponse，body 中已包含 code/message/data/requestId/timestamp
+- 说明：请求体验证错误已统一包装，对应 ISSUE-004 在 orders 侧已修复
 
 21) GET /api/reports/{reportId}
 - 结果：PASS
@@ -471,34 +485,37 @@
 - 说明：reports 详情接口字段完整性与 404 语义均已通过复测，对应 ISSUE-003、ISSUE-007 已修复
 
 22) POST /api/reports（未带 Authorization）
-- 结果：FAIL
-- 未带 Authorization 仍返回 200 + ApiResponse，并成功创建举报
-- 实际返回 data：{"id":7003,"reporterId":3,"targetType":"PRODUCT","targetId":1001,"reason":"疑似虚假信息","status":"OPEN",...}
-- 对应 ISSUE-006：已复测确认
+- 结果：PASS（2026-06-20 复测已修复）
+- 2026-06-19 初测：未带 Authorization 仍返回 200 + ApiResponse，并成功创建举报
+- 2026-06-20 复测：返回 401 + ApiResponse，message=missing bearer token
+- 说明：reports 写操作已接入 Bearer 校验，ISSUE-006 在 reports 侧已修复
 
 23) POST /api/reports（缺必填字段）
-- 结果：FAIL
-- 缺少 reason 时返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
-- 未统一包装为 ApiResponse
-- 对应 ISSUE-004：已复测确认
+- 结果：PASS（2026-06-20 复测已修复）
+- 2026-06-19 初测：缺少 reason 时返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
+- 2026-06-20 复测：缺参时返回 HTTP 422 + ApiResponse，body 中已包含 code/message/data/requestId/timestamp
+- 说明：请求体验证错误已统一包装，对应 ISSUE-004 在 reports 侧已修复
 
 24) POST /api/appeals（未带 Authorization）
 - 结果：FAIL
-- 未带 Authorization 仍返回 200 + ApiResponse，并成功提交申诉
+- 2026-06-19 初测：未带 Authorization 仍返回 200 + ApiResponse，并成功提交申诉
 - 实际返回 data：{"submitted":true,"targetType":"report","targetId":7001,"reason":"申诉测试"}
+- 2026-06-20 复测：未带 Authorization 仍返回 200 + ApiResponse，问题仍存在
 - 对应 ISSUE-006：已复测确认
+- 说明：当前后端A剩余待修问题已收敛为 appeals 写操作未接入 Bearer 校验
 
 25) POST /api/appeals（缺必填字段）
-- 结果：FAIL
-- 缺少 targetId 时返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
-- 未统一包装为 ApiResponse
-- 对应 ISSUE-004：已复测确认
+- 结果：PASS（2026-06-20 复测已修复）
+- 2026-06-19 初测：缺少 targetId 时返回 HTTP 422，响应体为 FastAPI 默认 {"detail":[...]}
+- 2026-06-20 复测：缺参时返回 HTTP 422 + ApiResponse，body 中已包含 code/message/data/requestId/timestamp
+- 说明：请求体验证错误已统一包装，对应 ISSUE-004 在 appeals 侧已修复
 
 26) POST /api/auth/refresh
-- 结果：FAIL
-- 使用合法 refreshToken 请求后返回 200 + ApiResponse
-- data 中仅包含 accessToken、refreshToken、expiresIn，未返回 user
-- 对应 ISSUE-001：已复测确认
+- 结果：PASS（2026-06-20 复测已修复）
+- 2026-06-19 初测：使用合法 refreshToken 请求后返回 200 + ApiResponse，但 data 中仅包含 accessToken、refreshToken、expiresIn，未返回 user
+- 2026-06-20 使用合法 refreshToken 构造合法 JSON 请求体再次复测：返回 200 + ApiResponse
+- data 中已包含 accessToken、refreshToken、expiresIn、user
+- 说明：AuthTokens 契约已对齐，对应 ISSUE-001 已修复
 
 27) Orders 状态机 / 幂等复测
 - 结果：PASS
@@ -527,5 +544,21 @@
 30) images URL 原始值复测
 - 结果：PASS
 - 数据库 `product_images.url` 的 `HEX(url)` 均显示为正常 URL 字节流，不含空格或反引号字节
-- 对 `GET /api/products`、`GET /api/users/me/favorites` 响应保存到文件后，读取原始字符串并查看 hex，结果均为正常 URL 字节流
-- 说明：前期看到的反引号/空格现象未在真实 payload 中复现，对应 ISSUE-013 关闭
+- 前期看到的反引号/空格现象未在真实 payload 中复现
+- 对应 ISSUE-013 关闭
+
+31) 2026-06-20 定点复测 ISSUE-001 / ISSUE-004 / ISSUE-005 / ISSUE-006
+- 结果：PARTIAL
+- `POST /api/auth/refresh`：200 + ApiResponse，`data` 已返回 `user`
+- `POST /api/products`、`POST /api/orders`、`POST /api/reports`、`POST /api/appeals` 缺参：均已返回 422 + ApiResponse
+- `GET /api/products?page=0&size=999`：已返回 422 + ApiResponse
+- `POST /api/reports` 未带 Authorization：已返回 401 + ApiResponse
+- `POST /api/appeals` 未带 Authorization：仍返回 200 + ApiResponse
+- 说明：ISSUE-001 / ISSUE-004 / ISSUE-005 已修复；ISSUE-006 已收敛为 appeals 单点问题
+
+32) 2026-06-20 切换到 MySQL 数据源后复测 images URL
+- 结果：PASS
+- 直接查询 MySQL `product_images.url`，`HEX(url)` 为正常 URL 字节流
+- `GET /api/products/1001` 返回 `images[0]` 后，读取原始字符串并查看 hex，结果为正常 URL 字节流
+- `GET /api/users/me/favorites?page=1&size=20` 返回列表中的 `images[0]` 后，读取原始字符串并查看 hex，结果同样为正常 URL 字节流
+- 说明：`Favorites/Products` 图片 URL 问题不是后端真实缺陷，ISSUE-013 保持 Closed
