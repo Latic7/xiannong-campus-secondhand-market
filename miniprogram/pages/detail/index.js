@@ -184,7 +184,16 @@ Page({
             this.loadProduct(this.data.productId)
           } catch (e) {
             wx.hideLoading()
-            wx.showToast({ title: e.message || '下单失败', icon: 'none' })
+            if (e.message && e.message.includes('already has an active order')) {
+              wx.showModal({
+                title: '无法下单',
+                content: '该商品已存在进行中的订单，暂时无法重复购买。请等待当前订单完成或取消后再试。',
+                showCancel: false,
+                confirmText: '我知道了',
+              })
+            } else {
+              wx.showToast({ title: e.message || '下单失败', icon: 'none' })
+            }
           }
         }
       },
