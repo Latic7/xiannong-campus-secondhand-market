@@ -77,6 +77,12 @@ page {
   gap: 8rpx;
 }
 
+.nickname-row {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
 .user-nickname,
 .login-prompt {
   color: var(--color-text);
@@ -85,6 +91,17 @@ page {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.admin-badge {
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  line-height: 1.4;
 }
 
 .login-hint {

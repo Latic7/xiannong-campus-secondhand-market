@@ -21,7 +21,10 @@
       <!-- 用户信息 -->
       <view class="user-info">
         <view wx:if="{{isLoggedIn}}" class="info-logged-in">
-          <text class="user-nickname">{{user.nickname}}</text>
+          <view class="nickname-row">
+            <text class="user-nickname">{{user.nickname}}</text>
+            <text wx:if="{{user.isAdmin}}" class="admin-badge">管理员</text>
+          </view>
           <view class="reputation-row">
             <image class="reputation-star-img" src="/assets/icons/star.svg" mode="aspectFit" />
             <text class="reputation-score" style="color:{{user.reputationColor}}">
