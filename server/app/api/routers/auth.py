@@ -1,10 +1,11 @@
+import json
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Header, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-import httpx
 import jwt
 
 from app.core.response import api_error, api_ok
@@ -25,19 +26,18 @@ def _issue_token(payload: dict, expires_seconds: int) -> str:
 
 
 def _wechat_code_to_session(code: str) -> dict:
-    """调用微信接口，用 code 换取 openid"""
-    response = httpx.get(
-        "https://api.weixin.qq.com/sns/jscode2session",
-        params={
-            "appid": settings.WECHAT_APP_ID,
-            "secret": settings.WECHAT_APP_SECRET,
-            "js_code": code,
-            "grant_type": "authorization_code",
-        },
-        timeout=8.0,
+    """调用微信接口，用 code 换取 openid（改用 urllib，兼容性更好）"""
+    url = (
+        f"https://api.weixin.qq.com/sns/jscode2session"
+        f"?appid={settings.WECHAT_APP_ID}"
+        f"&secret={settings.WECHAT_APP_SECRET}"
+        f"&js_code={code}"
+        f"&grant_type=authorization_code"
     )
-    response.raise_for_status()
-    return response.json()
+    req = urllib.request.Request(url, method="GET")
+    # 设置较长的超时时间（云托管冷启动 + DNS 解析可能需要更长时间）
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode("utf-8"))
 
 
 def _json_error(status_code: int, code: int, message: str, data=None) -> JSONResponse:
@@ -80,7 +80,20 @@ def _get_current_user_from_token(
 @router.post("/wx-login")
 def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
     """微信授权登录"""
-    
+    try:
+        return _do_wx_login(payload, db)
+    except Exception as exc:
+        # 全局兜底：防止任何未捕获异常导致 502
+        import traceback
+        traceback.print_exc()
+        return _json_error(
+            status_code=500,
+            code=10999,
+            message=f"login internal error: {exc}",
+        )
+
+
+def _do_wx_login(payload: WxLoginRequest, db: Session):
     # ========== 临时测试用（正式环境请删除）==========
     if payload.code.startswith("test_code"):
         openid = f"test_openid_{payload.code}"
@@ -98,7 +111,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             "avatar": user.avatar,
             "score": user.score,
             "status": user.status if user.status else "active",
-            "isAdmin": user.is_admin,  # 改为 isAdmin
+            "isAdmin": user.is_admin,
         }
         
         access_token = _issue_token(
@@ -106,7 +119,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
                 "sub": openid,
                 "uid": user.id,
                 "nickname": user.nickname,
-                "isAdmin": user.is_admin,  # 改为 isAdmin
+                "isAdmin": user.is_admin,
                 "typ": "access",
             },
             settings.JWT_EXPIRES_SECONDS,
@@ -116,7 +129,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
                 "sub": openid,
                 "uid": user.id,
                 "nickname": user.nickname,
-                "isAdmin": user.is_admin,  # 改为 isAdmin
+                "isAdmin": user.is_admin,
                 "typ": "refresh",
             },
             settings.JWT_REFRESH_EXPIRES_SECONDS,
@@ -142,7 +155,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
 
     try:
         wx_result = _wechat_code_to_session(payload.code)
-    except httpx.HTTPError:
+    except Exception:
         return _json_error(
             status_code=502,
             code=10011,
@@ -180,7 +193,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
         "avatar": user.avatar,
         "score": user.score,
         "status": user.status if user.status else "active",
-        "isAdmin": user.is_admin,  # 改为 isAdmin
+        "isAdmin": user.is_admin,
     }
 
     access_token = _issue_token(
@@ -188,7 +201,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
-            "isAdmin": user.is_admin,  # 改为 isAdmin
+            "isAdmin": user.is_admin,
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -198,7 +211,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
-            "isAdmin": user.is_admin,  # 改为 isAdmin
+            "isAdmin": user.is_admin,
             "typ": "refresh",
         },
         settings.JWT_REFRESH_EXPIRES_SECONDS,
