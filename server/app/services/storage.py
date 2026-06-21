@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import os
 from abc import ABC, abstractmethod
 from pathlib import Path
 from uuid import uuid4
@@ -76,17 +77,39 @@ class LocalImageStorage(ImageStorage):
 
 
 class CosImageStorage(ImageStorage):
-    """腾讯云对象存储 COS"""
+    """腾讯云对象存储 COS
+
+    支持两种凭证来源（按优先级）：
+    1. 云托管运行时自动注入的 TENCENTCLOUD_* 环境变量（无需手动配密钥）
+    2. settings.py 中显式配置的 COS_SECRET_ID / COS_SECRET_KEY
+    """
 
     def __init__(self) -> None:
         from qcloud_cos import CosConfig, CosS3Client
 
         self._bucket = settings.cos_bucket
-        self._base_url = settings.cos_base_url.rstrip("/")
+        self._base_url = settings.cos_base_url.rstrip("/") if settings.cos_base_url else ""
+
+        # 尝试从云托管环境变量读取凭证（优先级高）
+        env_secret_id = os.environ.get("TENCENTCLOUD_SECRETID") or os.environ.get("COS_SECRET_ID")
+        env_secret_key = os.environ.get("TENCENTCLOUD_SECRETKEY") or os.environ.get("COS_SECRET_KEY")
+        env_token = os.environ.get("TENCENTCLOUD_SESSIONTOKEN")
+
+        secret_id = env_secret_id or settings.cos_secret_id
+        secret_key = env_secret_key or settings.cos_secret_key
+
+        if not secret_id or not secret_key:
+            raise RuntimeError(
+                "COS enabled but no credentials found. "
+                "Set COS_SECRET_ID/COS_SECRET_KEY in env, "
+                "or deploy on WeChat Cloud Hosting with built-in storage."
+            )
+
         config = CosConfig(
             Region=settings.cos_region,
-            SecretId=settings.cos_secret_id,
-            SecretKey=settings.cos_secret_key,
+            SecretId=secret_id,
+            SecretKey=secret_key,
+            Token=env_token,  # 云托管临时凭证需要 Token
         )
         self._client = CosS3Client(config)
 
