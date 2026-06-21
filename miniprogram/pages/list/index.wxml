@@ -1,4 +1,4 @@
-<image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 <view class="container">
   <!-- 页面标题（我的发布 / 我的收藏） -->
   <view class="page-title-bar" wx:if="{{listType}}">

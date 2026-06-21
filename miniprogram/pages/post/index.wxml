@@ -1,4 +1,4 @@
-<image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 <view class="page-body">
   <scroll-view scroll-y class="page-content">
 
