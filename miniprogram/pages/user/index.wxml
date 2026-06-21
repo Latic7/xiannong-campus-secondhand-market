@@ -8,12 +8,20 @@
     <view class="user-card">
       <!-- 头像区域（无论是否登录都展示） -->
       <view class="avatar-section" bindtap="{{isLoggedIn ? 'onEditProfile' : 'onLogin'}}">
+        <!-- 有真实头像 -->
         <image
+          wx:if="{{user.avatar && !user.avatarFailed}}"
           class="user-avatar"
-          src="{{user.avatar || ''}}"
+          src="{{user.avatar}}"
           mode="aspectFill"
+          binderror="onAvatarError"
         />
-        <view wx:if="{{!user.avatar}}" class="avatar-placeholder">
+        <!-- 已登录但无头像：生成随机头像 -->
+        <view wx:elif="{{isLoggedIn}}" class="user-avatar avatar-generated" style="background:{{user.avatarColor}}">
+          <text class="avatar-letter">{{user.avatarLetter}}</text>
+        </view>
+        <!-- 未登录：占位图标 -->
+        <view wx:else class="avatar-placeholder">
           <image class="avatar-icon-img" src="/assets/icons/user.svg" mode="aspectFit" />
         </view>
       </view>

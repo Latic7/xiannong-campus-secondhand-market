@@ -28,6 +28,7 @@ page {
   border-top: 6rpx solid rgba(11, 107, 67, 0.18);
 }
 
+/* ── 头像区域 ─────────────────────────────── */
 .avatar-section {
   position: relative;
   width: 116rpx;
@@ -44,6 +45,20 @@ page {
   height: 100%;
   border-radius: 50%;
   background: #ededf2;
+}
+
+/* 生成的随机头像 */
+.avatar-generated {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-letter {
+  color: #fff;
+  font-size: 44rpx;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .avatar-placeholder {

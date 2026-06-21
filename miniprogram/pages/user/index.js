@@ -7,6 +7,7 @@ const {
 } = require('../../utils/storage')
 const authService = require('../../services/auth')
 const userService = require('../../services/user')
+const { generateAvatar } = require('../../utils/avatar')
 
 Page({
   data: {
@@ -100,14 +101,22 @@ Page({
       return {
         nickname: '点击登录',
         avatar: '',
+        avatarColor: '',
+        avatarLetter: '',
         reputation: 0,
         userId: '',
         isAdmin: false,
       }
     }
+    // 没有真实头像时，根据用户 ID 生成随机头像
+    const hasAvatar = !!(u.avatar && u.avatar.trim())
+    const gen = hasAvatar ? { color: '', letter: '' } : generateAvatar(u.id || u.userId, u.nickname)
     return {
       ...u,
       avatar: u.avatar || '',
+      avatarColor: gen.color,
+      avatarLetter: gen.letter,
+      avatarFailed: false,
       reputation: u.reputation != null ? u.reputation : 100,
       isAdmin: !!(u.isAdmin || u.is_admin),
       reputationText: this.getReputationLabel(u.reputation),
@@ -215,6 +224,18 @@ Page({
       return false
     }
     return true
+  },
+
+  // ── 头像图片加载失败时回退到生成头像 ──────
+  onAvatarError() {
+    const user = this.data.user
+    if (!user || !user.avatar) return
+    const gen = generateAvatar(user.id || user.userId, user.nickname)
+    this.setData({
+      'user.avatarFailed': true,
+      'user.avatarColor': gen.color,
+      'user.avatarLetter': gen.letter,
+    })
   },
 
   // ── 编辑个人资料 ──────────────────────────
