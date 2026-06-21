@@ -1,7 +1,5 @@
+<image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
 <view class="page">
-  <!-- 背景图 -->
-  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
-
   <!-- 管理功能菜单 -->
   <view class="admin-menu">
     <view class="menu-item" bindtap="onReviewProducts">

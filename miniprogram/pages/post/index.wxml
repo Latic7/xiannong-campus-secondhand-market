@@ -1,7 +1,5 @@
+<image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
 <view class="page-body">
-  <!-- 背景图 -->
-  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
-
   <scroll-view scroll-y class="page-content">
 
   <!-- 图片上传区 -->
