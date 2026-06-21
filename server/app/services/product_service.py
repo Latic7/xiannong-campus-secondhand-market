@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-from uuid import uuid4
-
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -15,15 +12,10 @@ from app.core.exceptions import (
     StateConflictError,
 )
 from app.core.status import ProductStatus
-from app.core.settings import settings
 from app.crud import order as order_crud
 from app.crud import product as product_crud
 from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
-
-
-ALLOWED_IMAGE_TYPES = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}
-ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-MAX_IMAGE_SIZE = 5 * 1024 * 1024
+from app.services.storage import get_image_storage, validate_and_save_image
 
 
 def _require_product(db: Session, product_id: int, *, for_update: bool = False):
@@ -131,31 +123,18 @@ def upload_product_image(
     # 校验 product_id 为合法正整数，防止路径遍历
     if not isinstance(product_id, int) or product_id <= 0:
         raise InvalidRequestError("invalid product id")
-    product_dir_name = str(product_id)
 
     product = _require_product(db, product_id)
     _require_owner(product, actor)
-    suffix = Path(filename).suffix.lower()
-    if not filename or suffix not in ALLOWED_IMAGE_EXTENSIONS or content_type not in ALLOWED_IMAGE_TYPES:
-        raise InvalidRequestError("unsupported image type")
-    if not content:
-        raise InvalidRequestError("image file is empty")
-    if len(content) > MAX_IMAGE_SIZE:
-        raise InvalidRequestError("image file exceeds 5 MiB limit")
-    generated_name = f"{uuid4().hex}{ALLOWED_IMAGE_TYPES[content_type]}"
-    url = f"{base_url}/static/products/{product_dir_name}/{generated_name}"
 
-    # 保存文件到磁盘：static/products/{product_dir_name}/{generated_name}
-    static_root = Path(settings.static_dir).resolve()
-    products_root = (static_root / "products").resolve()
-    file_dir = (products_root / product_dir_name).resolve()
-    try:
-        file_dir.relative_to(products_root)
-    except ValueError as exc:
-        raise InvalidRequestError("invalid image path") from exc
+    # 使用存储抽象层校验并保存图片
+    storage = get_image_storage()
+    url, generated_name = validate_and_save_image(storage, product_id, filename, content_type, content)
 
-    file_dir.mkdir(parents=True, exist_ok=True)
-    (file_dir / generated_name).write_bytes(content)
+    # 如果是本地存储，URL 需要拼接 base_url
+    from app.core.settings import settings as app_settings
+    if not app_settings.cos_enabled:
+        url = f"{base_url}{url}"
 
     try:
         image = product_crud.add_product_image(db, product_id, url)
@@ -163,7 +142,7 @@ def upload_product_image(
         db.refresh(image)
     except IntegrityError as exc:
         db.rollback()
-        (file_dir / generated_name).unlink(missing_ok=True)
+        storage.delete(url)
         raise DuplicateConflictError("product image already exists", {"productId": product_id}) from exc
     return {"id": image.id, "productId": product_id, "filename": generated_name, "url": image.url}
 
@@ -174,6 +153,9 @@ def delete_product_image(db: Session, product_id: int, image_id: int, actor: Cur
     image = product_crud.get_product_image(db, product_id, image_id)
     if image is None:
         raise ResourceNotFoundError("product image not found", {"productId": product_id, "imageId": image_id})
+    # 从存储后端删除文件
+    storage = get_image_storage()
+    storage.delete(image.url)
     product_crud.delete_product_image(db, image)
     db.commit()
     return {"productId": product_id, "imageId": image_id, "deleted": True}
