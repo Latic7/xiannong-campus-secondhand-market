@@ -15,7 +15,7 @@ from app.core.status import ProductStatus
 from app.crud import order as order_crud
 from app.crud import product as product_crud
 from app.schemas.products import ProductCreateRequest, ProductUpdateRequest
-from app.services.storage import get_image_storage, validate_and_save_image
+from app.services.storage import save_product_image, delete_product_image_file
 
 
 def _require_product(db: Session, product_id: int, *, for_update: bool = False):
@@ -127,24 +127,19 @@ def upload_product_image(
     product = _require_product(db, product_id)
     _require_owner(product, actor)
 
-    # 使用存储抽象层校验并保存图片
-    storage = get_image_storage()
-    url, generated_name = validate_and_save_image(storage, product_id, filename, content_type, content)
-
-    # 如果是本地存储，URL 需要拼接 base_url
-    from app.core.settings import settings as app_settings
-    if not app_settings.cos_enabled:
-        url = f"{base_url}{url}"
+    # 校验并保存图片到本地文件系统
+    url, generated_name = save_product_image(product_id, filename, content_type, content)
+    full_url = f"{base_url}{url}"
 
     try:
-        image = product_crud.add_product_image(db, product_id, url)
+        image = product_crud.add_product_image(db, product_id, full_url)
         db.commit()
         db.refresh(image)
     except IntegrityError as exc:
         db.rollback()
-        storage.delete(url)
+        delete_product_image_file(url)
         raise DuplicateConflictError("product image already exists", {"productId": product_id}) from exc
-    return {"id": image.id, "productId": product_id, "filename": generated_name, "url": image.url}
+    return {"id": image.id, "productId": product_id, "filename": generated_name, "url": full_url}
 
 
 def delete_product_image(db: Session, product_id: int, image_id: int, actor: CurrentActor) -> dict:
@@ -153,9 +148,8 @@ def delete_product_image(db: Session, product_id: int, image_id: int, actor: Cur
     image = product_crud.get_product_image(db, product_id, image_id)
     if image is None:
         raise ResourceNotFoundError("product image not found", {"productId": product_id, "imageId": image_id})
-    # 从存储后端删除文件
-    storage = get_image_storage()
-    storage.delete(image.url)
+    # 删除本地图片文件
+    delete_product_image_file(image.url)
     product_crud.delete_product_image(db, image)
     db.commit()
     return {"productId": product_id, "imageId": image_id, "deleted": True}
