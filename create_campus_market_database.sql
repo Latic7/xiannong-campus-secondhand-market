@@ -36,12 +36,8 @@ CREATE TABLE IF NOT EXISTS `admin_logs` (
   KEY `idx_admin_logs_target` (`target_type`,`target_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9104 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.admin_logs 的数据：~3 rows (大约)
+-- 正在导出表  campus_market.admin_logs 的数据：~0 rows (大约)
 DELETE FROM `admin_logs`;
-INSERT INTO `admin_logs` (`id`, `actor_id`, `action`, `target_type`, `target_id`, `remark`, `created_at`) VALUES
-	(9101, 10, 'warning', 'user', 2, '测试：管理员警告用户', '2026-06-12 11:30:55'),
-	(9102, 10, 'unlist_product', 'product', 1003, '测试：下架商品', '2026-06-12 11:30:55'),
-	(9103, 10, 'handle_report', 'report', 7002, '测试：处理举报', '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.categories 结构
 DROP TABLE IF EXISTS `categories`;
@@ -83,13 +79,8 @@ CREATE TABLE IF NOT EXISTS `favorites` (
   KEY `idx_favorites_product` (`product_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.favorites 的数据：~4 rows (大约)
+-- 正在导出表  campus_market.favorites 的数据：~0 rows (大约)
 DELETE FROM `favorites`;
-INSERT INTO `favorites` (`id`, `user_id`, `product_id`, `created_at`) VALUES
-	(1, 2, 1001, '2026-06-12 11:30:55'),
-	(2, 2, 1002, '2026-06-12 11:30:55'),
-	(3, 1, 1004, '2026-06-12 11:30:55'),
-	(4, 12, 1001, '2026-06-19 15:05:47');
 
 -- 导出  表 campus_market.orders 结构
 DROP TABLE IF EXISTS `orders`;
@@ -111,12 +102,8 @@ CREATE TABLE IF NOT EXISTS `orders` (
   KEY `idx_orders_product_status` (`product_id`,`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5004 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.orders 的数据：~3 rows (大约)
+-- 正在导出表  campus_market.orders 的数据：~0 rows (大约)
 DELETE FROM `orders`;
-INSERT INTO `orders` (`id`, `product_id`, `buyer_id`, `seller_id`, `amount`, `remark`, `status`, `created_at`, `expire_at`) VALUES
-	(5001, 1001, 2, 1, 35.00, '想今晚当面交付', 'CREATED', '2026-06-12 11:30:55', NULL),
-	(5002, 1002, 2, 1, 28.00, '明天中午可以吗', 'CONFIRMED', '2026-06-12 11:30:55', NULL),
-	(5003, 1003, 12, 1, 45.00, NULL, 'RESERVED', '2026-06-19 15:06:35', '2026-06-21 07:06:36');
 
 -- 导出  表 campus_market.product_images 结构
 DROP TABLE IF EXISTS `product_images`;
@@ -130,13 +117,9 @@ CREATE TABLE IF NOT EXISTS `product_images` (
   KEY `idx_product_images_product` (`product_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6007 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.product_images 的数据：~6 rows (大约)
+-- 正在导出表  campus_market.product_images 的数据：~2 rows (大约)
 DELETE FROM `product_images`;
 INSERT INTO `product_images` (`id`, `product_id`, `url`, `created_at`) VALUES
-	(6001, 1001, 'https://cdn.example.com/p/demo-1001-1.jpg', '2026-06-12 11:30:55'),
-	(6002, 1002, 'https://cdn.example.com/p/demo-1002-1.jpg', '2026-06-12 11:30:55'),
-	(6003, 1003, 'https://cdn.example.com/p/demo-1003-1.jpg', '2026-06-12 11:30:55'),
-	(6004, 1004, 'https://cdn.example.com/p/demo-1004-1.jpg', '2026-06-12 11:30:55'),
 	(6005, 1005, 'http://localhost:8000/static/products/1005/f3c614e5070c460e804a6270a29d5544.jpg', '2026-06-15 02:00:13'),
 	(6006, 1006, 'http://localhost:8000/static/products/1006/95938cfa877642dc9eb4a658dcdd96ff.jpg', '2026-06-19 15:10:12');
 
@@ -161,13 +144,9 @@ CREATE TABLE IF NOT EXISTS `products` (
   KEY `idx_products_category_status_created` (`category_id`,`status`,`created_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1007 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.products 的数据：~6 rows (大约)
+-- 正在导出表  campus_market.products 的数据：~2 rows (大约)
 DELETE FROM `products`;
 INSERT INTO `products` (`id`, `owner_id`, `title`, `description`, `price`, `category_id`, `status`, `created_at`, `updated_at`, `favorite_count`, `view_count`) VALUES
-	(1001, 1, '二手高数教材', '九成新，可小刀', 35.00, 2, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-19 07:11:32', 2, 15),
-	(1002, 1, '二手计算机网络教材', '有少量笔记', 28.00, 2, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-19 07:06:09', 1, 6),
-	(1003, 1, '二手充电宝', '容量20000mAh', 45.00, 1, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-19 07:15:57', 0, 6),
-	(1004, 2, '小台灯', '宿舍用，正常亮', 12.00, 3, 'PUBLISHED', '2026-06-12 11:30:55', '2026-06-12 11:30:55', 0, 1),
 	(1005, 12, '【4K】Minecraft壁纸', '4K Minecraft壁纸，3D渲染，正版发售，未经原作者同意请勿转载！\n\n所在校区：东校区', 10.00, 1, 'PUBLISHED', '2026-06-15 02:00:13', '2026-06-19 14:45:00', 0, 2),
 	(1006, 12, '二手运动手表，男生自用，九九成新', '二手手表，男生自用，九九成新\n\n所在校区：东校区', 114.00, 1, 'REMOVED', '2026-06-19 15:10:12', '2026-06-19 14:29:09', 0, 2);
 
@@ -186,11 +165,8 @@ CREATE TABLE IF NOT EXISTS `refresh_tokens` (
   KEY `idx_refresh_tokens_expires` (`expires_at`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8003 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.refresh_tokens 的数据：~2 rows (大约)
+-- 正在导出表  campus_market.refresh_tokens 的数据：~0 rows (大约)
 DELETE FROM `refresh_tokens`;
-INSERT INTO `refresh_tokens` (`id`, `user_id`, `token`, `expires_at`, `revoked`, `created_at`) VALUES
-	(8001, 1, 'demo-refresh-token-1', '2026-06-19 11:30:55', 0, '2026-06-12 11:30:55'),
-	(8002, 2, 'demo-refresh-token-2', '2026-06-19 11:30:55', 0, '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.reports 结构
 DROP TABLE IF EXISTS `reports`;
@@ -211,12 +187,8 @@ CREATE TABLE IF NOT EXISTS `reports` (
   KEY `idx_reports_target` (`target_type`,`target_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7004 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.reports 的数据：~3 rows (大约)
+-- 正在导出表  campus_market.reports 的数据：~0 rows (大约)
 DELETE FROM `reports`;
-INSERT INTO `reports` (`id`, `reporter_id`, `target_type`, `target_id`, `reason`, `status`, `assignee_id`, `handle_action`, `handle_reason`, `created_at`, `handled_at`) VALUES
-	(7001, 2, 'PRODUCT', 1001, '疑似虚假信息', 'REJECTED', 10, 'reject', '驳回', '2026-06-12 11:30:55', '2026-06-19 14:09:06'),
-	(7002, 1, 'USER', 2, '疑似骚扰', 'HANDLED', NULL, NULL, NULL, '2026-06-12 11:30:55', NULL),
-	(7003, 12, 'PRODUCT', 1002, '信息不实', 'HANDLED', 10, 'warning', '警告', '2026-06-19 15:06:14', '2026-06-19 14:09:02');
 
 -- 导出  表 campus_market.reviews 结构
 DROP TABLE IF EXISTS `reviews`;
@@ -237,11 +209,8 @@ CREATE TABLE IF NOT EXISTS `reviews` (
   KEY `idx_reviews_reviewee` (`reviewee_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9003 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.reviews 的数据：~2 rows (大约)
+-- 正在导出表  campus_market.reviews 的数据：~0 rows (大约)
 DELETE FROM `reviews`;
-INSERT INTO `reviews` (`id`, `order_id`, `product_id`, `reviewer_id`, `reviewee_id`, `score`, `content`, `created_at`) VALUES
-	(9001, 5001, 1001, 2, 1, 5, '卖家回复很快，交易顺利。', '2026-06-12 11:30:55'),
-	(9002, 5002, 1002, 2, 1, 4, '总体不错，书页有一点点折痕。', '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.stats_daily 结构
 DROP TABLE IF EXISTS `stats_daily`;
@@ -257,11 +226,8 @@ CREATE TABLE IF NOT EXISTS `stats_daily` (
   UNIQUE KEY `uq_stats_daily_date` (`stat_date`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.stats_daily 的数据：~2 rows (大约)
+-- 正在导出表  campus_market.stats_daily 的数据：~0 rows (大约)
 DELETE FROM `stats_daily`;
-INSERT INTO `stats_daily` (`id`, `stat_date`, `users`, `products`, `orders`, `reports`, `created_at`) VALUES
-	(1, '2026-06-11', 2, 4, 2, 1, '2026-06-12 11:30:55'),
-	(2, '2026-06-12', 3, 4, 2, 2, '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.users 结构
 DROP TABLE IF EXISTS `users`;
@@ -282,12 +248,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `idx_users_status` (`status`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.users 的数据：~5 rows (大约)
+-- 正在导出表  campus_market.users 的数据：~2 rows (大约)
 DELETE FROM `users`;
 INSERT INTO `users` (`id`, `openid`, `nickname`, `avatar`, `score`, `status`, `is_admin`, `college`, `contact`, `created_at`, `updated_at`) VALUES
-	(1, 'wx_openid_demo_1', 'DemoUser1', '', 100, 'ACTIVE', 0, '中国农业大学', '13800000001', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
-	(2, 'wx_openid_demo_2', 'DemoUser2', '', 95, 'ACTIVE', 0, '中国农业大学', '13800000002', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
-	(10, 'wx_openid_admin_10', 'AdminDemo', '', 100, 'ACTIVE', 1, '中国农业大学', '13800000010', '2026-06-12 11:30:55', '2026-06-12 11:30:55'),
 	(11, 'orK423WwnIFshGd54OkS-nY5-gNM', 'WX_Y5-gNM', '', 100, 'ACTIVE', 0, NULL, NULL, '2026-06-12 11:31:42', '2026-06-12 11:31:42'),
 	(12, 'orK423dOa61pX84ZeFlUDtxWVgrQ', 'WX_xWVgrQ', '', 100, 'ACTIVE', 1, NULL, NULL, '2026-06-19 13:28:54', '2026-06-19 22:06:11');
 

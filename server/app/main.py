@@ -19,10 +19,12 @@ app = FastAPI(
 
 init_db()
 
-# 挂载 static 目录为静态文件，供上传的图片访问
-static_dir = Path(settings.static_dir)
-static_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+# 挂载 static 目录为静态文件，供上传的图片访问（仅本地存储模式下需要）
+# COS 模式下图片由腾讯云对象存储直接提供，无需挂载本地目录
+if not settings.cos_enabled:
+    static_dir = Path(settings.static_dir)
+    static_dir.mkdir(parents=True, exist_ok=True)
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 @app.exception_handler(BusinessError)
