@@ -220,7 +220,7 @@ Page({
   // ── 编辑个人资料 ──────────────────────────
   onEditProfile() {
     if (!this.checkLogin()) return
-    wx.showToast({ title: '编辑资料功能开发中', icon: 'none' })
+    wx.navigateTo({ url: '/pages/user/edit-profile/edit-profile' })
   },
 })
 

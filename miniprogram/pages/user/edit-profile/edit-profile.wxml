@@ -1,0 +1,67 @@
+<view class="page-body">
+
+  <!-- ── 基本信息 ──────────────────────────── -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">基本信息</text>
+    </view>
+
+    <!-- 昵称 -->
+    <view class="field-group">
+      <view class="field-label">
+        <text>昵称</text>
+        <text class="field-counter">{{nicknameCount}}/{{20}}</text>
+      </view>
+      <input
+        class="input-field"
+        placeholder="请输入昵称"
+        value="{{nickname}}"
+        maxlength="20"
+        bindinput="onNicknameInput"
+      />
+    </view>
+
+    <!-- 学院 -->
+    <view class="field-group">
+      <view class="field-label">
+        <text>学院</text>
+        <text class="field-counter">{{collegeCount}}/{{30}}</text>
+      </view>
+      <input
+        class="input-field"
+        placeholder="请输入所在学院（选填）"
+        value="{{college}}"
+        maxlength="30"
+        bindinput="onCollegeInput"
+      />
+    </view>
+
+    <!-- 联系方式 -->
+    <view class="field-group field-group-last">
+      <view class="field-label">
+        <text>联系方式</text>
+        <text class="field-counter">{{contactCount}}/{{30}}</text>
+      </view>
+      <input
+        class="input-field"
+        placeholder="QQ/微信/手机号（选填）"
+        value="{{contact}}"
+        maxlength="30"
+        bindinput="onContactInput"
+      />
+    </view>
+  </view>
+
+  <!-- ── 保存按钮 ──────────────────────────── -->
+  <view class="save-section">
+    <button
+      class="save-btn"
+      loading="{{saving}}"
+      disabled="{{saving || uploading}}"
+      bindtap="onSave"
+    >
+      保存
+    </button>
+  </view>
+
+</view>
