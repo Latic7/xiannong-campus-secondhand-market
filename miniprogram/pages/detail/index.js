@@ -267,8 +267,22 @@ Page({
   // ── 联系卖家 ──────────────────────────────
   onContactSeller() {
     if (this.data.isOwner) { wx.showToast({ title: '这是您自己的商品', icon: 'none' }); return }
-    // TODO: 跳转聊天页
-    wx.showToast({ title: '聊天功能开发中', icon: 'none' })
+    const seller = this.data.product?.seller
+    const contact = seller?.contact
+    if (contact) {
+      wx.showModal({
+        title: '卖家联系方式',
+        content: `手机号：${contact}\n\n您可复制该号码到微信或电话联系卖家`,
+        confirmText: '复制号码',
+        success(res) {
+          if (res.confirm) {
+            wx.setClipboardData({ data: contact })
+          }
+        }
+      })
+    } else {
+      wx.showToast({ title: '卖家暂未填写联系方式', icon: 'none' })
+    }
   },
 
   onShareAppMessage() {
