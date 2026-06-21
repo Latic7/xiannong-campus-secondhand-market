@@ -16,10 +16,12 @@
 
 
 -- 导出 campus_market 的数据库结构
+DROP DATABASE IF EXISTS `campus_market`;
 CREATE DATABASE IF NOT EXISTS `campus_market` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `campus_market`;
 
 -- 导出  表 campus_market.admin_logs 结构
+DROP TABLE IF EXISTS `admin_logs`;
 CREATE TABLE IF NOT EXISTS `admin_logs` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `actor_id` bigint NOT NULL,
@@ -41,6 +43,7 @@ INSERT INTO `admin_logs` (`id`, `actor_id`, `action`, `target_type`, `target_id`
 	(9103, 10, 'handle_report', 'report', 7002, '测试：处理举报', '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.categories 结构
+DROP TABLE IF EXISTS `categories`;
 CREATE TABLE IF NOT EXISTS `categories` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
@@ -66,6 +69,7 @@ INSERT INTO `categories` (`id`, `name`, `parent_id`, `sort_order`, `created_at`,
 	(8, '其他', NULL, 99, '2026-06-12 11:30:55', '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.favorites 结构
+DROP TABLE IF EXISTS `favorites`;
 CREATE TABLE IF NOT EXISTS `favorites` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint NOT NULL,
@@ -84,6 +88,7 @@ INSERT INTO `favorites` (`id`, `user_id`, `product_id`, `created_at`) VALUES
 	(3, 1, 1004, '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.orders 结构
+DROP TABLE IF EXISTS `orders`;
 CREATE TABLE IF NOT EXISTS `orders` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `product_id` bigint NOT NULL,
@@ -111,6 +116,7 @@ INSERT INTO `orders` (`id`, `product_id`, `buyer_id`, `seller_id`, `amount`, `re
 	(5005, 1005, 11, 12, 10.00, NULL, 'RESERVED', '2026-06-21 15:51:12', '2026-06-23 07:51:12');
 
 -- 导出  表 campus_market.products 结构
+DROP TABLE IF EXISTS `products`;
 CREATE TABLE IF NOT EXISTS `products` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `owner_id` bigint DEFAULT NULL,
@@ -139,6 +145,7 @@ INSERT INTO `products` (`id`, `owner_id`, `title`, `description`, `price`, `cate
 	(1005, 12, '【4K】Minecraft壁纸', '4K Minecraft壁纸，3D渲染，正版发售，未经原作者同意请勿转载！\n\n所在校区：东校区', 10.00, 1, 'PUBLISHED', '2026-06-15 02:00:13', '2026-06-21 07:51:08', 0, 3);
 
 -- 导出  表 campus_market.product_images 结构
+DROP TABLE IF EXISTS `product_images`;
 CREATE TABLE IF NOT EXISTS `product_images` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `product_id` bigint NOT NULL,
@@ -158,6 +165,7 @@ INSERT INTO `product_images` (`id`, `product_id`, `url`, `created_at`) VALUES
 	(6005, 1005, 'http://localhost:8000/static/products/1005/f3c614e5070c460e804a6270a29d5544.jpg', '2026-06-15 02:00:13');
 
 -- 导出  表 campus_market.refresh_tokens 结构
+DROP TABLE IF EXISTS `refresh_tokens`;
 CREATE TABLE IF NOT EXISTS `refresh_tokens` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_id` bigint NOT NULL,
@@ -177,6 +185,7 @@ INSERT INTO `refresh_tokens` (`id`, `user_id`, `token`, `expires_at`, `revoked`,
 	(8002, 2, 'demo-refresh-token-2', '2026-06-19 11:30:55', 0, '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.reports 结构
+DROP TABLE IF EXISTS `reports`;
 CREATE TABLE IF NOT EXISTS `reports` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `reporter_id` bigint DEFAULT NULL,
@@ -200,6 +209,7 @@ INSERT INTO `reports` (`id`, `reporter_id`, `target_type`, `target_id`, `reason`
 	(7002, 1, 'USER', 2, '疑似骚扰', 'HANDLED', NULL, NULL, NULL, '2026-06-12 11:30:55', NULL);
 
 -- 导出  表 campus_market.reviews 结构
+DROP TABLE IF EXISTS `reviews`;
 CREATE TABLE IF NOT EXISTS `reviews` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `order_id` bigint NOT NULL,
@@ -223,6 +233,7 @@ INSERT INTO `reviews` (`id`, `order_id`, `product_id`, `reviewer_id`, `reviewee_
 	(9002, 5002, 1002, 2, 1, 4, '总体不错，书页有一点点折痕。', '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.stats_daily 结构
+DROP TABLE IF EXISTS `stats_daily`;
 CREATE TABLE IF NOT EXISTS `stats_daily` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `stat_date` date NOT NULL,
@@ -241,6 +252,7 @@ INSERT INTO `stats_daily` (`id`, `stat_date`, `users`, `products`, `orders`, `re
 	(2, '2026-06-12', 3, 4, 2, 2, '2026-06-12 11:30:55');
 
 -- 导出  表 campus_market.users 结构
+DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `openid` varchar(64) DEFAULT NULL,
