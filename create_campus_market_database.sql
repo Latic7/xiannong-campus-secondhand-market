@@ -115,13 +115,10 @@ CREATE TABLE IF NOT EXISTS `product_images` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_product_images_product_url` (`product_id`,`url`),
   KEY `idx_product_images_product` (`product_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6007 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.product_images 的数据：~2 rows (大约)
+-- 正在导出表  campus_market.product_images 的数据：~0 rows (大约)
 DELETE FROM `product_images`;
-INSERT INTO `product_images` (`id`, `product_id`, `url`, `created_at`) VALUES
-	(6005, 1005, 'http://localhost:8000/static/products/1005/f3c614e5070c460e804a6270a29d5544.jpg', '2026-06-15 02:00:13'),
-	(6006, 1006, 'http://localhost:8000/static/products/1006/95938cfa877642dc9eb4a658dcdd96ff.jpg', '2026-06-19 15:10:12');
 
 -- 导出  表 campus_market.products 结构
 DROP TABLE IF EXISTS `products`;
@@ -142,13 +139,10 @@ CREATE TABLE IF NOT EXISTS `products` (
   KEY `idx_products_owner` (`owner_id`),
   KEY `idx_products_category` (`category_id`),
   KEY `idx_products_category_status_created` (`category_id`,`status`,`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=1007 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 正在导出表  campus_market.products 的数据：~2 rows (大约)
+-- 正在导出表  campus_market.products 的数据：~0 rows (大约)
 DELETE FROM `products`;
-INSERT INTO `products` (`id`, `owner_id`, `title`, `description`, `price`, `category_id`, `status`, `created_at`, `updated_at`, `favorite_count`, `view_count`) VALUES
-	(1005, 12, '【4K】Minecraft壁纸', '4K Minecraft壁纸，3D渲染，正版发售，未经原作者同意请勿转载！\n\n所在校区：东校区', 10.00, 1, 'PUBLISHED', '2026-06-15 02:00:13', '2026-06-19 14:45:00', 0, 2),
-	(1006, 12, '二手运动手表，男生自用，九九成新', '二手手表，男生自用，九九成新\n\n所在校区：东校区', 114.00, 1, 'REMOVED', '2026-06-19 15:10:12', '2026-06-19 14:29:09', 0, 2);
 
 -- 导出  表 campus_market.refresh_tokens 结构
 DROP TABLE IF EXISTS `refresh_tokens`;

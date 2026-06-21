@@ -1,6 +1,6 @@
 <view class="container">
   <!-- 背景图 -->
-  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+  <image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 
   <!-- 自定义导航栏 -->
   <view class="nav-bar" style="padding-top: {{statusBarHeight}}px;">

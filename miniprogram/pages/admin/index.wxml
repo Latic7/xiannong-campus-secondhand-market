@@ -1,6 +1,6 @@
 <view class="page">
   <!-- 背景图 -->
-  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+  <image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 
   <!-- 管理功能菜单 -->
   <view class="admin-menu">

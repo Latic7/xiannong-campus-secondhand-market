@@ -37,8 +37,11 @@ class Settings:
     cos_enabled: bool = os.getenv("COS_ENABLED", "false").lower() == "true"
     cos_bucket: str = os.getenv("COS_BUCKET", "")
     cos_region: str = os.getenv("COS_REGION", "ap-shanghai")
-    cos_secret_id: str = os.getenv("COS_SECRET_ID", "")
-    cos_secret_key: str = os.getenv("COS_SECRET_KEY", "")
+    # 优先从 OS 环境变量读取，兼容云托管注入和 settings 配置
+    _cos_secret_id_env: str = os.getenv("COS_SECRET_ID", "")
+    _cos_secret_key_env: str = os.getenv("COS_SECRET_KEY", "")
+    cos_secret_id: str = _cos_secret_id_env
+    cos_secret_key: str = _cos_secret_key_env
     # COS 访问根路径（用于生成可公开访问的 URL）
     cos_base_url: str = os.getenv("COS_BASE_URL", "")
 

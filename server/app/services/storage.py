@@ -99,10 +99,17 @@ class CosImageStorage(ImageStorage):
         secret_key = env_secret_key or settings.cos_secret_key
 
         if not secret_id or not secret_key:
+            # 输出调试信息到云日志
+            _dbg = (
+                f"env[COS_SECRET_ID]={'SET' if os.environ.get('COS_SECRET_ID') else 'EMPTY'}, "
+                f"env[COS_SECRET_KEY]={'SET' if os.environ.get('COS_SECRET_KEY') else 'EMPTY'}, "
+                f"env[TENCENTCLOUD_SECRETID]={'SET' if os.environ.get('TENCENTCLOUD_SECRETID') else 'EMPTY'}, "
+                f"settings.cos_secret_id={'SET' if settings.cos_secret_id else 'EMPTY'}"
+            )
             raise RuntimeError(
-                "COS enabled but no credentials found. "
-                "Set COS_SECRET_ID/COS_SECRET_KEY in env, "
-                "or deploy on WeChat Cloud Hosting with built-in storage."
+                f"COS enabled but no credentials found. Debug: {_dbg}. "
+                f"Set COS_SECRET_ID/COS_SECRET_KEY in env, "
+                f"or deploy on WeChat Cloud Hosting with built-in storage."
             )
 
         config = CosConfig(

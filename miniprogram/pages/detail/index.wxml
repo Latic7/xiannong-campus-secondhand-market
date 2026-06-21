@@ -14,7 +14,7 @@
 <!-- 商品详情 -->
 <view wx:elif="{{product}}" class="page-body">
   <!-- 背景图 -->
-  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
+  <image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 
   <!-- 图片轮播 -->
   <view class="image-section">
