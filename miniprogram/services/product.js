@@ -26,16 +26,30 @@ module.exports = {
     return api.put('/api/products/' + productId, data)
   },
 
-  /** 上传商品图片（需先创建商品获得 productId） */
-  uploadImage(productId, filePath) {
-    return api.uploadFile('/api/products/' + productId + '/images', filePath)
+  /**
+   * 上传商品图片（微信云托管对象存储方式）
+   * 1. 用 wx.cloud.uploadFile 上传到云存储
+   * 2. 将返回的 cloud:// fileId 发给后端保存
+   */
+  async uploadImage(productId, filePath) {
+    // 上传到微信云托管对象存储
+    const cloudRes = await wx.cloud.uploadFile({
+      cloudPath: `products/${productId}/${Date.now()}.jpg`,
+      filePath,
+    })
+    // cloudRes.fileID 形如 cloud://env-id/products/xxx.jpg
+    // 将 fileID 发送给后端保存
+    const res = await api.post('/api/products/' + productId + '/cloud-images', {
+      fileId: cloudRes.fileID,
+    })
+    return res
   },
 
-  /** 批量上传图片：依次上传，返回 URL 数组 */
+  /** 批量上传图片：依次上传，返回 URL/cloudID 数组 */
   async uploadImages(productId, filePaths) {
     const results = []
     for (const fp of filePaths) {
-      const res = await api.uploadFile('/api/products/' + productId + '/images', fp)
+      const res = await this.uploadImage(productId, fp)
       results.push(res.url || res)
     }
     return results

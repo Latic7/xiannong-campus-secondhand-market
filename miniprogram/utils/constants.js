@@ -4,6 +4,10 @@
 //  后端状态枚举变更时只需改这一处
 // ──────────────────────────────────────────────
 
+// ── 微信云托管环境配置 ─────────────────────────
+// 在云托管控制台 → 环境概览 中查看环境ID
+const CLOUD_ENV = 'xiannong-prod-d2gldqk278f8b5fee'
+
 // ── 商品状态 ───────────────────────────────────
 const PRODUCT_STATUS = {
   DRAFT: { label: '草稿', color: '#999' },
@@ -69,6 +73,7 @@ const STORAGE_KEYS = {
 }
 
 module.exports = {
+  CLOUD_ENV,
   PRODUCT_STATUS,
   ORDER_STATUS,
   REPORT_STATUS,
