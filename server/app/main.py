@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -11,13 +12,23 @@ from app.core.response import api_error, api_ok
 from app.core.settings import settings
 from app.db.init_db import init_db
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
     title="Campus Second-hand Market API",
     version="0.1.0-draft",
     description="FastAPI skeleton generated from OpenAPI draft.",
 )
 
-init_db()
+
+@app.on_event("startup")
+def on_startup() -> None:
+    """应用启动时初始化数据库，失败时只打日志不阻止启动"""
+    try:
+        init_db()
+        logger.info("Database tables initialized successfully")
+    except Exception as exc:
+        logger.warning("Database initialization skipped: %s", exc)
 
 # 挂载 static 目录为静态文件，供上传的图片访问（仅本地存储模式下需要）
 # COS 模式下图片由腾讯云对象存储直接提供，无需挂载本地目录
