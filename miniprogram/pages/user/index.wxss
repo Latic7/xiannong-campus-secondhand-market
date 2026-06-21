@@ -47,18 +47,28 @@ page {
   background: #ededf2;
 }
 
-/* 生成的随机头像 */
-.avatar-generated {
+/* 生成的几何头像（5×5 identicon） */
+.identicon {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 3rpx;
+  padding: 14rpx;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-.avatar-letter {
-  color: #fff;
-  font-size: 44rpx;
-  font-weight: 800;
-  line-height: 1;
+.identicon-row {
+  display: flex;
+  gap: 3rpx;
+}
+
+.identicon-cell {
+  width: 15rpx;
+  height: 15rpx;
+  border-radius: 3rpx;
+  flex-shrink: 0;
 }
 
 .avatar-placeholder {
