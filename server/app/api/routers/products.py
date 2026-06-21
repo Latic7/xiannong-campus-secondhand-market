@@ -2,6 +2,9 @@ from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import Response
+
+from app.core.settings import settings as app_settings
+from app.crud.product import get_images_with_ids
 from sqlalchemy.orm import Session
 
 from app.api.deps.auth import CurrentActor, get_current_actor
@@ -14,6 +17,26 @@ from app.services import product_service
 router = APIRouter(prefix="/api/products", tags=["Product"])
 
 
+def _rewrite_images_to_proxy(items: list[dict], product_id: int, base_url: str, db: Session) -> None:
+    """将 COS 直链替换为代理 URL"""
+    if not app_settings.cos_enabled:
+        return
+    pairs = get_images_with_ids(db, product_id)
+    id_map = {}  # url -> image_id
+    for url, img_id in pairs:
+        id_map[url] = img_id
+    for item in items:
+        old_images = item.get("images") or []
+        new_images = []
+        for url in old_images:
+            img_id = id_map.get(url)
+            if img_id:
+                new_images.append(f"{base_url}/api/products/{product_id}/images/{img_id}/content")
+            else:
+                new_images.append(url)
+        item["images"] = new_images
+
+
 @router.get("")
 def list_products(
     page: int = Query(1, ge=1),
@@ -22,9 +45,17 @@ def list_products(
     sort: str | None = None,
     categoryId: int | None = None,
     ownerId: int | None = None,
+    request: Request = None,
     db: Session = Depends(get_db),
 ) -> dict:
-    return api_ok(product_service.list_products(db, page, size, keyword, sort, categoryId, owner_id=ownerId))
+    result = product_service.list_products(db, page, size, keyword, sort, categoryId, owner_id=ownerId)
+    base_url = str(request.base_url).rstrip("/") if request else ""
+    if app_settings.cos_enabled and result.get("list"):
+        for item in result["list"]:
+            pid = item.get("id")
+            if pid:
+                _rewrite_images_to_proxy([item], pid, base_url, db)
+    return api_ok(result)
 
 
 @router.post("")
@@ -39,11 +70,15 @@ def create_product(
 @router.get("/{product_id}")
 def get_product(
     product_id: int,
+    request: Request = None,
     db: Session = Depends(get_db),
 ) -> dict:
     product = product_service.get_product(db, product_id)
     if product is None:
         raise ResourceNotFoundError("product not found", {"productId": product_id})
+    if app_settings.cos_enabled:
+        base_url = str(request.base_url).rstrip("/") if request else ""
+        _rewrite_images_to_proxy([product], product_id, base_url, db)
     return api_ok(product)
 
 

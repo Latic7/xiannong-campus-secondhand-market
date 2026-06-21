@@ -133,28 +133,26 @@ def upload_product_image(
 
     from app.core.settings import settings as app_settings
     if app_settings.cos_enabled:
-        # COS 模式下：数据库存代理路径，前端通过后端读取图片（绕过防盗链）
-        stored_url = f"{base_url}/api/products/{product_id}/images/{{image_id}}/content"
-        actual_cos_url = url  # 保留真实 COS URL，后续可能用于后台管理
+        # COS 模式下：数据库存真实 COS URL，序列化时自动转成代理路径
+        stored_url = url
     else:
-        # 本地模式下：存拼接后的静态文件路径
+        # 本地模式下：拼接 base_url
         stored_url = f"{base_url}{url}"
-        actual_cos_url = stored_url
 
     try:
-        # 先存一个占位 URL，拿到 image.id 后再替换
         image = product_crud.add_product_image(db, product_id, stored_url)
         db.commit()
         db.refresh(image)
-        # 用真实的 image.id 替换 URL 占位符并更新数据库
-        final_url = stored_url.replace("{image_id}", str(image.id))
-        product_crud.update_product_image_url(db, image.id, final_url)
-        db.commit()
+        # 返回给前端的 URL 用代理路径（COS 模式下绕过防盗链）
+        if app_settings.cos_enabled:
+            display_url = f"{base_url}/api/products/{product_id}/images/{image.id}/content"
+        else:
+            display_url = stored_url
     except IntegrityError as exc:
         db.rollback()
-        storage.delete(actual_cos_url)
+        storage.delete(url)
         raise DuplicateConflictError("product image already exists", {"productId": product_id}) from exc
-    return {"id": image.id, "productId": product_id, "filename": generated_name, "url": final_url}
+    return {"id": image.id, "productId": product_id, "filename": generated_name, "url": display_url}
 
 
 def get_product_image(db: Session, product_id: int, image_id: int):

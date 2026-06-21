@@ -6,6 +6,7 @@ from decimal import Decimal
 from sqlalchemy import func, select, delete, update
 from sqlalchemy.orm import Session
 
+from app.core.settings import settings
 from app.core.status import ProductStatus
 from app.models.product import Product
 from app.models.product_image import ProductImage
@@ -54,9 +55,18 @@ def _product_to_dict(product: Product, images: list[str] | None = None, seller: 
 def _get_images_for_product(db: Session, product_id: int) -> list[str]:
     """查询某商品的所有图片 URL 列表。"""
     rows = db.execute(
-        select(ProductImage.url).where(ProductImage.product_id == product_id)
+        select(ProductImage.url, ProductImage.id).where(ProductImage.product_id == product_id)
     ).all()
+    # COS 模式下由调用方负责将 URL 转为代理路径
     return [row[0] for row in rows]
+
+
+def get_images_with_ids(db: Session, product_id: int) -> list[tuple[str, int]]:
+    """返回 (url, image_id) 列表，用于路由层构造代理 URL"""
+    rows = db.execute(
+        select(ProductImage.url, ProductImage.id).where(ProductImage.product_id == product_id)
+    ).all()
+    return [(row[0], row[1]) for row in rows]
 
 
 def _image_to_dict(image: ProductImage) -> dict:
