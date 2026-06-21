@@ -9,7 +9,8 @@
     "pages/reports/index",
     "pages/admin/index",
     "pages/admin-reports/index",
-    "pages/admin-products/index"
+    "pages/admin-products/index",
+    "pages/user/edit-profile/edit-profile"
   ],
   "window": {
     "navigationBarTitleText": "校园二手交易",

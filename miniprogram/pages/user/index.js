@@ -7,6 +7,7 @@ const {
 } = require('../../utils/storage')
 const authService = require('../../services/auth')
 const userService = require('../../services/user')
+const { generateAvatar } = require('../../utils/avatar')
 
 Page({
   data: {
@@ -100,14 +101,22 @@ Page({
       return {
         nickname: '点击登录',
         avatar: '',
+        avatarBgColor: '',
+        avatarCellColor: '',
+        avatarCells: [],
         reputation: 0,
         userId: '',
         isAdmin: false,
       }
     }
+    // 始终使用根据用户 ID 生成的 GitHub 风格头像
+    const gen = generateAvatar(u.id || u.userId)
     return {
       ...u,
-      avatar: u.avatar || '',
+      avatar: '',
+      avatarBgColor: gen.bgColor,
+      avatarCellColor: gen.cellColor,
+      avatarCells: gen.cells,
       reputation: u.reputation != null ? u.reputation : 100,
       isAdmin: !!(u.isAdmin || u.is_admin),
       reputationText: this.getReputationLabel(u.reputation),
@@ -220,7 +229,7 @@ Page({
   // ── 编辑个人资料 ──────────────────────────
   onEditProfile() {
     if (!this.checkLogin()) return
-    wx.showToast({ title: '编辑资料功能开发中', icon: 'none' })
+    wx.navigateTo({ url: '/pages/user/edit-profile/edit-profile' })
   },
 })
 

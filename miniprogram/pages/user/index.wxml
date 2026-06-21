@@ -8,12 +8,24 @@
     <view class="user-card">
       <!-- 头像区域（无论是否登录都展示） -->
       <view class="avatar-section" bindtap="{{isLoggedIn ? 'onEditProfile' : 'onLogin'}}">
-        <image
-          class="user-avatar"
-          src="{{user.avatar || ''}}"
-          mode="aspectFill"
-        />
-        <view wx:if="{{!user.avatar}}" class="avatar-placeholder">
+        <!-- 已登录：GitHub 风格几何头像 -->
+        <view wx:if="{{isLoggedIn}}" class="user-avatar identicon" style="background:{{user.avatarBgColor}}">
+          <view
+            wx:for="{{user.avatarCells}}"
+            wx:key="row"
+            class="identicon-row"
+          >
+            <view
+              wx:for="{{item}}"
+              wx:for-item="filled"
+              wx:key="col"
+              class="identicon-cell"
+              style="background:{{filled ? user.avatarCellColor : 'transparent'}}"
+            ></view>
+          </view>
+        </view>
+        <!-- 未登录：占位图标 -->
+        <view wx:else class="avatar-placeholder">
           <image class="avatar-icon-img" src="/assets/icons/user.svg" mode="aspectFit" />
         </view>
       </view>
@@ -21,7 +33,10 @@
       <!-- 用户信息 -->
       <view class="user-info">
         <view wx:if="{{isLoggedIn}}" class="info-logged-in">
-          <text class="user-nickname">{{user.nickname}}</text>
+          <view class="nickname-row">
+            <text class="user-nickname">{{user.nickname}}</text>
+            <text wx:if="{{user.isAdmin}}" class="admin-badge">管理员</text>
+          </view>
           <view class="reputation-row">
             <image class="reputation-star-img" src="/assets/icons/star.svg" mode="aspectFit" />
             <text class="reputation-score" style="color:{{user.reputationColor}}">
