@@ -7,7 +7,7 @@
 
     <view class="user-card">
       <!-- 头像区域（无论是否登录都展示） -->
-      <view class="avatar-section" bindtap="{{isLoggedIn ? 'onEditProfile' : 'onLogin'}}">
+      <view class="avatar-section" bindtap="onTapAvatar">
         <!-- 已登录：GitHub 风格几何头像 -->
         <view wx:if="{{isLoggedIn}}" class="user-avatar identicon" style="background:{{user.avatarBgColor}}">
           <view

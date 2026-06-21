@@ -77,6 +77,16 @@ page {
   box-sizing: border-box;
 }
 
+.input-error {
+  border: 2rpx solid #ff3b30;
+}
+
+.field-error {
+  margin-top: 8rpx;
+  color: #ff3b30;
+  font-size: 24rpx;
+}
+
 /* ── 保存按钮 ─────────────────────────────── */
 .save-section {
   padding: 20rpx 0;

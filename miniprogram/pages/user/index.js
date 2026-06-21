@@ -74,6 +74,8 @@ Page({
         avatar: profile.avatar,
         reputation: profile.score,
         isAdmin: profile.isAdmin || profile.is_admin || false,
+        college: profile.college || '',
+        contact: profile.contact || '',
       }
       setUserInfo(updated)
       this.setData({
@@ -224,6 +226,15 @@ Page({
       return false
     }
     return true
+  },
+
+  // ── 头像点击（登录→编辑资料，未登录→登录）──
+  onTapAvatar() {
+    if (this.data.isLoggedIn) {
+      this.onEditProfile()
+    } else {
+      this.onLogin()
+    }
   },
 
   // ── 编辑个人资料 ──────────────────────────

@@ -36,19 +36,21 @@
       />
     </view>
 
-    <!-- 联系方式 -->
+    <!-- 手机号 -->
     <view class="field-group field-group-last">
       <view class="field-label">
-        <text>联系方式</text>
-        <text class="field-counter">{{contactCount}}/{{30}}</text>
+        <text>手机号</text>
+        <text class="field-counter">{{phoneCount}}/{{11}}</text>
       </view>
       <input
-        class="input-field"
-        placeholder="QQ/微信/手机号（选填）"
-        value="{{contact}}"
-        maxlength="30"
-        bindinput="onContactInput"
+        class="input-field {{phoneError ? 'input-error' : ''}}"
+        type="number"
+        placeholder="请输入手机号（交易联系方式）"
+        value="{{phone}}"
+        maxlength="11"
+        bindinput="onPhoneInput"
       />
+      <view wx:if="{{phoneError}}" class="field-error">{{phoneError}}</view>
     </view>
   </view>
 

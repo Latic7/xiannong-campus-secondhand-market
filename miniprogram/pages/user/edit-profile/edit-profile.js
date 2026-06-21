@@ -1,24 +1,26 @@
 // ──────────────────────────────────────────────
 //  编辑个人资料页
-//  昵称、学院、联系方式（头像上传待后端确定方案后补充）
+//  昵称、学院、手机号
 // ──────────────────────────────────────────────
 const { getUserInfo, setUserInfo } = require('../../../utils/storage')
 const userService = require('../../../services/user')
+const { validatePhone } = require('../../../utils/validator')
 
 const NICKNAME_MAX = 20
 const COLLEGE_MAX = 30
-const CONTACT_MAX = 30
+const PHONE_MAX = 11
 
 Page({
   data: {
     nickname: '',
     college: '',
-    contact: '',
+    phone: '',
 
     nicknameCount: 0,
     collegeCount: 0,
-    contactCount: 0,
+    phoneCount: 0,
 
+    phoneError: '',
     saving: false,
   },
 
@@ -28,10 +30,10 @@ Page({
       this.setData({
         nickname: user.nickname || '',
         college: user.college || '',
-        contact: user.contact || '',
+        phone: user.contact || '',
         nicknameCount: (user.nickname || '').length,
         collegeCount: (user.college || '').length,
-        contactCount: (user.contact || '').length,
+        phoneCount: (user.contact || '').length,
       })
     }
   },
@@ -53,11 +55,15 @@ Page({
     })
   },
 
-  onContactInput(e) {
+  onPhoneInput(e) {
     const val = e.detail.value || ''
+    // 只允许输入数字
+    const digits = val.replace(/\D/g, '').slice(0, PHONE_MAX)
+    const result = validatePhone(digits)
     this.setData({
-      contact: val.slice(0, CONTACT_MAX),
-      contactCount: val.length,
+      phone: digits,
+      phoneCount: digits.length,
+      phoneError: digits.length > 0 && !result.valid ? result.message : '',
     })
   },
 
@@ -65,9 +71,17 @@ Page({
   async onSave() {
     if (this.data.saving) return
 
-    const { nickname } = this.data
+    const { nickname, phone } = this.data
     if (!nickname.trim()) {
       wx.showToast({ title: '昵称不能为空', icon: 'none' })
+      return
+    }
+
+    // 手机号校验（非空 + 合法格式）
+    const phoneResult = validatePhone(phone)
+    if (!phoneResult.valid) {
+      this.setData({ phoneError: phoneResult.message })
+      wx.showToast({ title: phoneResult.message, icon: 'none' })
       return
     }
 
@@ -78,7 +92,7 @@ Page({
       const payload = {
         nickname: nickname.trim(),
         college: this.data.college.trim() || undefined,
-        contact: this.data.contact.trim() || undefined,
+        contact: phone,
       }
       await userService.updateProfile(payload)
 
@@ -89,7 +103,7 @@ Page({
           ...user,
           nickname: payload.nickname,
           college: payload.college || user.college,
-          contact: payload.contact || user.contact,
+          contact: payload.contact,
         })
       }
 

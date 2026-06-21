@@ -51,6 +51,8 @@ Page({
     if (tabBar) {
       tabBar.setData({ selected: 0 });
     }
+    // 每次回到首页自动刷新商品列表，按时间倒序
+    this.loadData();
   },
   async loadData() {
     const MIN_LOADING_TIME = 800; // 骨架屏最小可见时长（ms）
