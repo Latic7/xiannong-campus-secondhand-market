@@ -41,6 +41,11 @@ class ImageStorage(ABC):
         """根据 URL 删除已上传的图片"""
         ...
 
+    @abstractmethod
+    def read(self, url: str) -> bytes:
+        """根据 URL 读取图片的原始字节"""
+        ...
+
 
 class LocalImageStorage(ImageStorage):
     """本地文件系统存储"""
@@ -74,6 +79,16 @@ class LocalImageStorage(ImageStorage):
         except ValueError:
             return  # 安全保护：不允许删除 static 目录之外的文件
         file_path.unlink(missing_ok=True)
+
+    def read(self, url: str) -> bytes:
+        """从本地文件系统读取图片"""
+        static_root = Path(settings.static_dir).resolve()
+        file_path = (static_root / url.lstrip("/")).resolve()
+        try:
+            file_path.relative_to(static_root)
+        except ValueError:
+            raise InvalidRequestError("invalid image path")
+        return file_path.read_bytes()
 
 
 class CosImageStorage(ImageStorage):
@@ -139,16 +154,27 @@ class CosImageStorage(ImageStorage):
 
     def delete(self, url: str) -> None:
         """从 COS 删除图片"""
-        # 从 URL 中提取 object key
-        # 例如: https://bucket.cos.region.myqcloud.com/products/1001/abc.jpg
-        # 或    /products/1001/abc.jpg
-        key = url.split(".myqcloud.com/")[-1] if ".myqcloud.com/" in url else url.lstrip("/")
-        if not key.startswith("products/"):
-            return  # 安全保护
+        key = self._extract_key(url)
+        if not key:
+            return
         try:
             self._client.delete_object(Bucket=self._bucket, Key=key)
         except Exception:
             pass  # 删除失败不影响主流程
+
+    def read(self, url: str) -> bytes:
+        """从 COS 读取图片原始字节"""
+        key = self._extract_key(url)
+        if not key:
+            raise InvalidRequestError("invalid image url")
+        response = self._client.get_object(Bucket=self._bucket, Key=key)
+        return response["Body"].read()
+
+    def _extract_key(self, url: str) -> str:
+        """从 URL 中提取 COS object key"""
+        if ".myqcloud.com/" in url:
+            return url.split(".myqcloud.com/")[-1]
+        return url.lstrip("/")
 
 
 def get_image_storage() -> ImageStorage:

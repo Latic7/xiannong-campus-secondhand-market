@@ -131,20 +131,39 @@ def upload_product_image(
     storage = get_image_storage()
     url, generated_name = validate_and_save_image(storage, product_id, filename, content_type, content)
 
-    # 如果是本地存储，URL 需要拼接 base_url
     from app.core.settings import settings as app_settings
-    if not app_settings.cos_enabled:
-        url = f"{base_url}{url}"
+    if app_settings.cos_enabled:
+        # COS 模式下：数据库存代理路径，前端通过后端读取图片（绕过防盗链）
+        stored_url = f"{base_url}/api/products/{product_id}/images/{{image_id}}/content"
+        actual_cos_url = url  # 保留真实 COS URL，后续可能用于后台管理
+    else:
+        # 本地模式下：存拼接后的静态文件路径
+        stored_url = f"{base_url}{url}"
+        actual_cos_url = stored_url
 
     try:
-        image = product_crud.add_product_image(db, product_id, url)
+        # 先存一个占位 URL，拿到 image.id 后再替换
+        image = product_crud.add_product_image(db, product_id, stored_url)
         db.commit()
         db.refresh(image)
+        # 用真实的 image.id 替换 URL 占位符并更新数据库
+        final_url = stored_url.replace("{image_id}", str(image.id))
+        product_crud.update_product_image_url(db, image.id, final_url)
+        db.commit()
     except IntegrityError as exc:
         db.rollback()
-        storage.delete(url)
+        storage.delete(actual_cos_url)
         raise DuplicateConflictError("product image already exists", {"productId": product_id}) from exc
-    return {"id": image.id, "productId": product_id, "filename": generated_name, "url": image.url}
+    return {"id": image.id, "productId": product_id, "filename": generated_name, "url": final_url}
+
+
+def get_product_image(db: Session, product_id: int, image_id: int):
+    """获取图片记录（代理用）"""
+    from app.crud.product import get_product_image as _get_image
+    image = _get_image(db, product_id, image_id)
+    if image is None:
+        raise ResourceNotFoundError("product image not found", {"productId": product_id, "imageId": image_id})
+    return image
 
 
 def delete_product_image(db: Session, product_id: int, image_id: int, actor: CurrentActor) -> dict:

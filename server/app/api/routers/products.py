@@ -1,4 +1,7 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.api.deps.auth import CurrentActor, get_current_actor
@@ -87,3 +90,24 @@ def delete_product_image(
     actor: CurrentActor = Depends(get_current_actor),
 ) -> dict:
     return api_ok(product_service.delete_product_image(db, product_id, image_id, actor))
+
+
+@router.get("/{product_id}/images/{image_id}/content")
+def get_product_image_content(
+    product_id: int,
+    image_id: int,
+    db: Session = Depends(get_db),
+) -> Response:
+    """代理：通过后端返回图片原始字节（解决 COS 防盗链问题）"""
+    from fastapi.responses import Response as FastResponse
+    from app.services.storage import get_image_storage
+
+    image = product_service.get_product_image(db, product_id, image_id)
+    storage = get_image_storage()
+    data = storage.read(image.url)
+
+    # 根据 URL 后缀推断 Content-Type
+    ext = Path(image.url).suffix.lower()
+    mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+    content_type = mime.get(ext.lstrip("."), "application/octet-stream")
+    return FastResponse(content=data, media_type=content_type)

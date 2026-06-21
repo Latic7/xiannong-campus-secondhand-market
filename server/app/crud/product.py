@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy import func, select, delete
+from sqlalchemy import func, select, delete, update
 from sqlalchemy.orm import Session
 
 from app.core.status import ProductStatus
@@ -177,3 +177,10 @@ def get_product_image(db: Session, product_id: int, image_id: int) -> ProductIma
 
 def delete_product_image(db: Session, image: ProductImage) -> None:
     db.delete(image)
+
+
+def update_product_image_url(db: Session, image_id: int, url: str) -> None:
+    """更新图片 URL"""
+    db.execute(
+        update(ProductImage).where(ProductImage.id == image_id).values(url=url)
+    )
