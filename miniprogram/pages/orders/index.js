@@ -1,5 +1,6 @@
 const orderService = require('../../services/order')
 const { ORDER_STATUS, getStatusMeta } = require('../../utils/constants')
+const { getUserInfo } = require('../../utils/storage')
 
 Page({
   data: {
@@ -15,14 +16,38 @@ Page({
       { label: '我买的', value: 'buyer' },
       { label: '我卖的', value: 'seller' },
     ],
+    currentUserId: null,
   },
 
   onLoad() {
+    const user = getUserInfo()
+    this.setData({ currentUserId: user ? user.id : null })
+    this.loadOrders()
+  },
+
+  onShow() {
+    // Refresh user info (may have changed)
+    const user = getUserInfo()
+    const newUserId = user ? user.id : null
+    if (newUserId !== this.data.currentUserId) {
+      this.setData({ currentUserId: newUserId })
+    }
+    // Always refresh orders when page shows
+    this.setData({ page: 1, orders: [], hasMore: true })
     this.loadOrders()
   },
 
   formatOrder(order) {
     const meta = getStatusMeta(ORDER_STATUS, order.status)
+    const userId = this.data.currentUserId
+    const isSeller = userId && order.sellerId === userId
+    const isBuyer = userId && order.buyerId === userId
+
+    // Determine which actions are available
+    const canConfirm = isSeller && order.status === 'RESERVED'
+    const canCancel = (isBuyer || isSeller) && (order.status === 'RESERVED' || order.status === 'CONFIRMED')
+    const canComplete = isBuyer && order.status === 'CONFIRMED'
+
     return {
       ...order,
       amountText: order.amount == null ? '待确认' : '¥' + Number(order.amount).toFixed(2).replace(/\.00$/, ''),
@@ -30,6 +55,11 @@ Page({
       statusColor: meta.color,
       productTitle: order.product?.title || '商品信息不可用',
       productImage: order.product?.image || '',
+      isSeller,
+      isBuyer,
+      canConfirm,
+      canCancel,
+      canComplete,
     }
   },
 
@@ -61,6 +91,88 @@ Page({
     const { role } = e.currentTarget.dataset
     if (!role || role === this.data.role) return
     this.setData({ role, page: 1, orders: [], hasMore: true })
+    this.loadOrders()
+  },
+
+  // ── Tap order card → navigate to chat page ──
+  onOrderTap(e) {
+    const orderId = e.currentTarget.dataset.id
+    if (!orderId) return
+    wx.navigateTo({ url: `/pages/order-chat/index?orderId=${orderId}` })
+  },
+
+  // ── Seller confirms a buyer ──
+  async onSellerConfirm(e) {
+    const orderId = e.currentTarget.dataset.id
+    wx.showModal({
+      title: '确认交易',
+      content: '确定选择此买家进行交易？其他买家的预约将被自动取消。',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            wx.showLoading({ title: '处理中...' })
+            const data = await orderService.sellerConfirm(orderId)
+            wx.hideLoading()
+            wx.showToast({ title: '已确认交易', icon: 'success' })
+            this.refreshOrders()
+          } catch (err) {
+            wx.hideLoading()
+            wx.showToast({ title: err.message || '操作失败', icon: 'none' })
+          }
+        }
+      },
+    })
+  },
+
+  // ── Cancel order ──
+  async onCancelOrder(e) {
+    const orderId = e.currentTarget.dataset.id
+    wx.showModal({
+      title: '取消订单',
+      content: '确定取消此订单？',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            wx.showLoading({ title: '处理中...' })
+            await orderService.cancel(orderId)
+            wx.hideLoading()
+            wx.showToast({ title: '已取消', icon: 'success' })
+            this.refreshOrders()
+          } catch (err) {
+            wx.hideLoading()
+            wx.showToast({ title: err.message || '操作失败', icon: 'none' })
+          }
+        }
+      },
+    })
+  },
+
+  // ── Buyer completes order ──
+  async onCompleteOrder(e) {
+    const orderId = e.currentTarget.dataset.id
+    wx.showModal({
+      title: '确认完成',
+      content: '确认收货并完成交易？',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            wx.showLoading({ title: '处理中...' })
+            await orderService.complete(orderId)
+            wx.hideLoading()
+            wx.showToast({ title: '交易完成', icon: 'success' })
+            this.refreshOrders()
+          } catch (err) {
+            wx.hideLoading()
+            wx.showToast({ title: err.message || '操作失败', icon: 'none' })
+          }
+        }
+      },
+    })
+  },
+
+  // ── Refresh list ──
+  refreshOrders() {
+    this.setData({ page: 1, orders: [], hasMore: true })
     this.loadOrders()
   },
 

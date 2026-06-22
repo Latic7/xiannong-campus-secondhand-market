@@ -26,6 +26,7 @@ Page({
     favoriting: false,
     isOwner: false,
     isLoggedIn: false,
+    activeOrderId: null,
     // ── 下单状态 ──
     orderBtnText: '立即购买',       // 按钮文案：立即购买 / 已预约 / 交易进行中 / 已售出
     orderBtnDisabled: false,        // 按钮是否禁用
@@ -69,6 +70,8 @@ Page({
         this.checkFavoriteStatus(productId)
         // 异步检测当前用户对该商品是否有活跃订单
         this.checkActiveOrder(productId)
+      } else {
+        this.setData({ activeOrderId: null })
       }
     } catch (err) {
       this.setData({ loading: false, errorMsg: err.message || '加载失败，请重试' })
@@ -157,6 +160,7 @@ Page({
         this.setData({
           orderBtnText: activeOrder.status === 'RESERVED' ? '已预约' : '交易进行中',
           orderBtnDisabled: true,
+          activeOrderId: activeOrder.id,
         })
       }
     } catch (e) {
@@ -225,14 +229,8 @@ Page({
             this.setData({ orderBtnText: '已预约', orderBtnDisabled: true })
           } catch (e) {
             wx.hideLoading()
-            if (e.message && e.message.includes('already has an active order')) {
-              wx.showModal({
-                title: '无法下单',
-                content: '该商品已存在进行中的订单，暂时无法重复购买。请等待当前订单完成或取消后再试。',
-                showCancel: false,
-                confirmText: '我知道了',
-              })
-              // 同步按钮状态
+            if (e.message && e.message.includes('you already have an active order')) {
+              wx.showToast({ title: '您已预约过该商品', icon: 'none' })
               this.setData({ orderBtnText: '已预约', orderBtnDisabled: true })
             } else {
               wx.showToast({ title: e.message || '下单失败', icon: 'none' })
@@ -283,6 +281,16 @@ Page({
     } else {
       wx.showToast({ title: '卖家暂未填写联系方式', icon: 'none' })
     }
+  },
+
+  // ── 通过聊天联系卖家（跳转到订单聊天页）──
+  onContactSellerChat() {
+    const orderId = this.data.activeOrderId
+    if (!orderId) {
+      wx.showToast({ title: '请先下单后再留言', icon: 'none' })
+      return
+    }
+    wx.navigateTo({ url: `/pages/order-chat/index?orderId=${orderId}` })
   },
 
   onShareAppMessage() {

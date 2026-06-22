@@ -355,3 +355,20 @@ page {
   color: var(--color-text-tertiary);
   background: #e5e5ea;
 }
+
+.action-btn-chat {
+  flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
+  color: var(--color-primary);
+  font-size: 28rpx;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 22rpx;
+  background: #e8f5e9;
+  border: 2rpx solid var(--color-primary) !important;
+}
+
+.action-btn-chat::after {
+  border: none;
+}

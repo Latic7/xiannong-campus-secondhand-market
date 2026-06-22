@@ -16,7 +16,7 @@
   <error-tip wx:elif="{{!loading && errorMsg && orders.length === 0}}" message="{{errorMsg}}" bind:retry="onRetry" />
 
   <view wx:elif="{{orders.length > 0}}" class="order-list">
-    <view class="order-card" wx:for="{{orders}}" wx:key="id">
+    <view class="order-card" wx:for="{{orders}}" wx:key="id" data-id="{{item.id}}" bindtap="onOrderTap">
       <view class="order-main">
         <view class="order-image-wrap">
           <image wx:if="{{item.productImage}}" class="order-image" src="{{item.productImage}}" mode="aspectFill" />
@@ -30,6 +30,31 @@
           <view class="order-meta">金额 {{item.amountText}}</view>
         </view>
         <view class="order-status" style="color: {{item.statusColor}}">{{item.statusText}}</view>
+      </view>
+
+      <!-- Action buttons -->
+      <view class="order-actions" wx:if="{{item.canConfirm || item.canCancel || item.canComplete}}">
+        <button
+          wx:if="{{item.canConfirm}}"
+          class="btn-action btn-confirm"
+          size="mini"
+          data-id="{{item.id}}"
+          catchtap="onSellerConfirm"
+        >确认交易</button>
+        <button
+          wx:if="{{item.canCancel}}"
+          class="btn-action btn-cancel"
+          size="mini"
+          data-id="{{item.id}}"
+          catchtap="onCancelOrder"
+        >取消订单</button>
+        <button
+          wx:if="{{item.canComplete}}"
+          class="btn-action btn-complete"
+          size="mini"
+          data-id="{{item.id}}"
+          catchtap="onCompleteOrder"
+        >确认完成</button>
       </view>
     </view>
   </view>

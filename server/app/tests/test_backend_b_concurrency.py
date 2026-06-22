@@ -24,7 +24,7 @@ class BackendBConcurrencyTest(unittest.TestCase):
     def test_competing_order_attempts_create_only_one_active_order(self) -> None:
         with ThreadPoolExecutor(max_workers=2) as executor:
             outcomes = list(executor.map(self.attempt_order, [2, 3]))
-        self.assertCountEqual(outcomes, ["created", "conflict"])
+        self.assertCountEqual(outcomes, ["created", "created"])
 
 
 if __name__ == "__main__":
