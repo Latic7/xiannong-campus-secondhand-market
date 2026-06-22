@@ -1,0 +1,71 @@
+<view class="page">
+  <!-- Loading -->
+  <loading-state wx:if="{{loading}}" />
+
+  <!-- Order summary card -->
+  <view wx:elif="{{order}}" class="order-header">
+    <view class="header-main">
+      <view class="header-image-wrap">
+        <image wx:if="{{order.productImage}}" class="header-image" src="{{order.productImage}}" mode="aspectFill" />
+        <view wx:else class="header-image-placeholder">
+          <image class="header-image-icon" src="/assets/icons/package.svg" mode="aspectFit" />
+        </view>
+      </view>
+      <view class="header-info">
+        <view class="header-title">{{order.productTitle}}</view>
+        <view class="header-meta">{{order.amountText}}</view>
+        <view class="header-meta">订单号 #{{order.id}}</view>
+      </view>
+      <view class="header-status" style="color:{{order.statusColor}}">{{order.statusText}}</view>
+    </view>
+
+    <!-- Seller/Buyer quick actions in header -->
+    <view class="header-actions" wx:if="{{!isTerminal && currentUserId}}">
+      <block wx:if="{{currentUserId === order.sellerId && order.status === 'RESERVED'}}">
+        <text class="header-tip">作为卖家，您可以在此与买家沟通后确认交易</text>
+      </block>
+      <block wx:elif="{{currentUserId === order.buyerId && order.status === 'RESERVED'}}">
+        <text class="header-tip">等待卖家确认中，您可以发送消息与卖家沟通</text>
+      </block>
+      <block wx:elif="{{currentUserId === order.buyerId && order.status === 'CONFIRMED'}}">
+        <text class="header-tip">卖家已确认，完成交易后请确认收货</text>
+      </block>
+    </view>
+    <view wx:elif="{{isTerminal}}" class="header-tip muted">订单已结束，消息仅供查看</view>
+  </view>
+
+  <!-- Messages list -->
+  <scroll-view wx:if="{{order}}" class="msg-list" scroll-y scroll-into-view="msg-{{messages.length - 1}}">
+    <view wx:if="{{messages.length === 0}}" class="msg-empty">
+      <text>暂无消息，发送第一条消息开始沟通吧</text>
+    </view>
+    <view
+      wx:for="{{messages}}"
+      wx:key="id"
+      id="msg-{{index}}"
+      class="msg-item {{item.isMine ? 'msg-mine' : 'msg-other'}}"
+    >
+      <view class="msg-bubble {{item.isMine ? 'bubble-mine' : 'bubble-other'}}">
+        <text class="msg-content">{{item.content}}</text>
+      </view>
+      <view class="msg-time">{{item.time}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- Input bar (hidden for terminal orders) -->
+  <view wx:if="{{!isTerminal && order}}" class="input-bar">
+    <input
+      class="msg-input"
+      value="{{inputValue}}"
+      placeholder="输入消息..."
+      bindinput="onInput"
+      confirm-type="send"
+      bindconfirm="onSend"
+      maxlength="1000"
+      disabled="{{sending}}"
+    />
+    <button class="btn-send" size="mini" bindtap="onSend" disabled="{{sending || !inputValue}}">
+      发送
+    </button>
+  </view>
+</view>

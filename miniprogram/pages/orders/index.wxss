@@ -109,6 +109,39 @@ page {
   font-weight: 700;
 }
 
+.order-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 18rpx;
+  justify-content: flex-end;
+}
+
+.btn-action {
+  font-size: 24rpx !important;
+  padding: 0 24rpx !important;
+  height: 56rpx !important;
+  line-height: 56rpx !important;
+  border-radius: 999rpx !important;
+}
+
+.btn-confirm {
+  background: var(--color-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.btn-cancel {
+  background: rgba(0,0,0,0.06) !important;
+  color: var(--color-text-secondary) !important;
+  border: none !important;
+}
+
+.btn-complete {
+  background: var(--color-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
 .bottom-tip {
   padding: 28rpx 0 40rpx;
   text-align: center;

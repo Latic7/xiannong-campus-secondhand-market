@@ -105,6 +105,22 @@ CREATE TABLE IF NOT EXISTS `orders` (
 -- 正在导出表  campus_market.orders 的数据：~0 rows (大约)
 DELETE FROM `orders`;
 
+-- 导出  表 campus_market.order_messages 结构
+DROP TABLE IF EXISTS `order_messages`;
+CREATE TABLE IF NOT EXISTS `order_messages` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `order_id` bigint NOT NULL,
+  `sender_id` bigint NOT NULL,
+  `content` varchar(1000) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_om_order` (`order_id`),
+  KEY `idx_om_sender` (`sender_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- 正在导出表  campus_market.order_messages 的数据：~0 rows (大约)
+DELETE FROM `order_messages`;
+
 -- 导出  表 campus_market.product_images 结构
 DROP TABLE IF EXISTS `product_images`;
 CREATE TABLE IF NOT EXISTS `product_images` (

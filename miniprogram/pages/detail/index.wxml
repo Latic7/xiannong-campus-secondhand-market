@@ -125,8 +125,13 @@
     <text class="action-label">举报</text>
   </view>
 
+  <!-- 给卖家留言（有活跃订单时才显示） -->
+  <button wx:if="{{activeOrderId}}" class="action-btn-chat" bindtap="onContactSellerChat">
+    给卖家留言
+  </button>
+
   <!-- 下单按钮（文案与状态由 JS 控制） -->
-  <button wx:if="{{orderBtnDisabled}}" class="action-btn-disabled" disabled>
+  <button wx:elif="{{orderBtnDisabled}}" class="action-btn-disabled" disabled>
     {{orderBtnText}}
   </button>
   <button wx:else class="action-btn-primary" bindtap="onPlaceOrder">

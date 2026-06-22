@@ -10,6 +10,7 @@ from app.models.order import Order
 from app.models.product import Product
 from app.models.product_image import ProductImage
 from app.models.review import Review
+from app.models.order_message import OrderMessage
 
 
 ACTIVE_ORDER_STATUSES = ("RESERVED", "CONFIRMED")
@@ -119,6 +120,44 @@ def get_active_order_for_product(db: Session, product_id: int) -> Order | None:
     )
 
 
+def get_active_order_for_buyer_and_product(
+    db: Session, buyer_id: int, product_id: int
+) -> Order | None:
+    """Return any RESERVED/CONFIRMED order by this buyer for this product."""
+    return db.scalar(
+        select(Order)
+        .where(
+            Order.buyer_id == buyer_id,
+            Order.product_id == product_id,
+            Order.status.in_(ACTIVE_ORDER_STATUSES),
+        )
+        .limit(1)
+    )
+
+
+def get_reserved_orders_for_product(
+    db: Session, product_id: int, *, exclude_id: int | None = None, for_update: bool = False
+) -> list[Order]:
+    """Return all RESERVED orders for a product, optionally excluding one."""
+    stmt = select(Order).where(
+        Order.product_id == product_id,
+        Order.status == "RESERVED",
+    )
+    if exclude_id is not None:
+        stmt = stmt.where(Order.id != exclude_id)
+    if for_update:
+        stmt = stmt.with_for_update()
+    return list(db.scalars(stmt).all())
+
+
+def cancel_orders_batch(db: Session, orders: list[Order]) -> int:
+    """Set status to CANCELLED for a batch of orders. Returns count."""
+    for o in orders:
+        o.status = "CANCELLED"
+    db.flush()
+    return len(orders)
+
+
 def update_order_status(db: Session, order: Order, status: str) -> Order:
     order.status = status
     db.flush()
@@ -153,4 +192,39 @@ def serialize_review(review: Review) -> dict:
         "score": review.score,
         "content": review.content,
         "createdAt": review.created_at.isoformat() if review.created_at else None,
+    }
+
+
+# ── Message CRUD ─────────────────────────────────────────────────────
+
+
+def create_message(
+    db: Session, order_id: int, sender_id: int, content: str
+) -> OrderMessage:
+    msg = OrderMessage(order_id=order_id, sender_id=sender_id, content=content)
+    db.add(msg)
+    db.flush()
+    return msg
+
+
+def list_messages_for_order(
+    db: Session, order_id: int, page: int = 1, size: int = 50
+) -> tuple[list[OrderMessage], int]:
+    base = select(OrderMessage).where(OrderMessage.order_id == order_id)
+    total = db.scalar(select(func.count()).select_from(base.subquery())) or 0
+    rows = db.scalars(
+        base.order_by(OrderMessage.created_at.asc())
+        .offset((page - 1) * size)
+        .limit(size)
+    ).all()
+    return list(rows), int(total)
+
+
+def serialize_message(msg: OrderMessage) -> dict:
+    return {
+        "id": msg.id,
+        "orderId": msg.order_id,
+        "senderId": msg.sender_id,
+        "content": msg.content,
+        "createdAt": msg.created_at.isoformat() if msg.created_at else None,
     }

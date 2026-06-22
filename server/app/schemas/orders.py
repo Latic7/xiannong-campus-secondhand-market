@@ -26,3 +26,15 @@ class Order(BaseModel):
     status: OrderStatusValue
     createdAt: str | None = None
     expireAt: str | None = None
+
+
+class OrderMessageCreateRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=1000)
+
+
+class OrderMessage(BaseModel):
+    id: int
+    orderId: int
+    senderId: int
+    content: str
+    createdAt: str | None = None

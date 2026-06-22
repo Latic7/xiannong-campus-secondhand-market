@@ -35,4 +35,14 @@ module.exports = {
   complete(orderId) {
     return api.post('/api/orders/' + orderId + '/complete')
   },
+
+  /** 获取订单消息列表 */
+  getMessages(orderId, params = {}) {
+    return api.get('/api/orders/' + orderId + '/messages', params)
+  },
+
+  /** 发送订单消息 */
+  sendMessage(orderId, data) {
+    return api.post('/api/orders/' + orderId + '/messages', data)
+  },
 }
