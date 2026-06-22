@@ -49,9 +49,28 @@ def get_report(report_id: int) -> dict:
     return api_ok(get_report_service(report_id))
 
 
+@router.get("/api/reports/against-me")
+def list_reports_against_me(
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    actor: CurrentActor = Depends(get_current_actor),
+) -> dict:
+    """查询当前用户被举报的记录"""
+    from app.services.report_service import list_reports_against_user
+    return api_ok(
+        list_reports_against_user(
+            db,
+            actor,
+            page=page,
+            size=size,
+        )
+    )
+
+
 @router.post("/api/appeals")
 def create_appeal(
     payload: AppealCreateRequest,
-    actor: CurrentActor = Depends(get_current_actor),  # 添加这一行
+    actor: CurrentActor = Depends(get_current_actor),
 ) -> dict:
-    return api_ok(create_appeal_service(payload, actor))  # 传入 actor
+    return api_ok(create_appeal_service(payload, actor))

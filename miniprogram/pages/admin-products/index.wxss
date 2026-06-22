@@ -3,6 +3,8 @@ page {
 }
 
 .page {
+  position: relative;
+  background: rgba(245, 245, 247, 0.2);
   min-height: 100vh;
   padding: 24rpx;
   box-sizing: border-box;

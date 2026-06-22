@@ -1,3 +1,4 @@
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 <view class="page">
   <view class="role-tabs">
     <view

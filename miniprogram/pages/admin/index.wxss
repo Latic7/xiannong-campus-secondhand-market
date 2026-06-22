@@ -57,3 +57,22 @@
   font-size: 36rpx;
   opacity: 0.4;
 }
+
+.badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36rpx;
+  height: 36rpx;
+  padding: 0 8rpx;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 22rpx;
+  font-weight: 700;
+  border-radius: 18rpx;
+  margin-right: 8rpx;
+}
+
+.badge-warning {
+  background: #ff9500;
+}

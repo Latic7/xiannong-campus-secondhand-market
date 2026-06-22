@@ -3,9 +3,10 @@ page {
 }
 
 .page-body {
+  position: relative;
+  background: rgba(245, 245, 247, 0.2);
   min-height: 100vh;
   padding-bottom: 150rpx;
-  background: var(--color-bg);
 }
 
 .user-header {

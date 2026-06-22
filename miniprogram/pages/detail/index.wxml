@@ -1,3 +1,5 @@
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
+
 <!-- 加载中 -->
 <view wx:if="{{loading}}" class="page-status">
   <view class="loading-spinner"></view>
@@ -13,7 +15,6 @@
 
 <!-- 商品详情 -->
 <view wx:elif="{{product}}" class="page-body">
-  <image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
   <!-- 图片轮播 -->
   <view class="image-section">
     <swiper

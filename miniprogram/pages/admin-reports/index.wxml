@@ -1,3 +1,4 @@
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 <view class="page">
   <!-- 状态筛选 tabs -->
   <scroll-view class="filter-scroll" scroll-x>

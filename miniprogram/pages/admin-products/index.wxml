@@ -1,4 +1,4 @@
-<view class="page">
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" /><view class="page">
   <!-- 加载骨架屏 -->
   <loading-state wx:if="{{loading && products.length === 0}}" count="4" />
 

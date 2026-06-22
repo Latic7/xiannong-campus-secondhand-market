@@ -175,8 +175,13 @@ def list_reports_with_target(
 	status: str | None = None,
 	target_type: str | None = None,
 	reporter_id: int | None = None,
+	target_user_id: int | None = None,
 ) -> tuple[list[dict], int]:
-	"""分页查询举报列表，并为每条记录附上被举报对象摘要。"""
+	"""分页查询举报列表，并为每条记录附上被举报对象摘要。
+
+	参数 target_user_id 用于查询针对某个用户的举报（被举报人是该用户，
+	或被举报商品属于该用户）。
+	"""
 	size = _clamp_size(size)
 	filters = []
 	if status:
@@ -185,6 +190,18 @@ def list_reports_with_target(
 		filters.append(Report.target_type == target_type)
 	if reporter_id is not None:
 		filters.append(Report.reporter_id == reporter_id)
+	if target_user_id is not None:
+		# 查询针对该用户的举报：直接举报用户 OR 举报的商品属于该用户
+		from sqlalchemy import or_
+		user_product_ids = db.scalars(
+			select(Product.id).where(Product.owner_id == target_user_id)
+		).all()
+		filters.append(
+			or_(
+				(Report.target_type == "USER") & (Report.target_id == target_user_id),
+				(Report.target_type == "PRODUCT") & (Report.target_id.in_(user_product_ids)),
+			)
+		)
 
 	total = db.scalar(
 		select(func.count(Report.id)).where(*filters) if filters else select(func.count(Report.id))

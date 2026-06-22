@@ -1,3 +1,4 @@
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 <view class="page">
   <loading-state wx:if="{{loading && reports.length === 0}}" count="4" />
   <error-tip wx:elif="{{!loading && errorMsg && reports.length === 0}}" message="{{errorMsg}}" bind:retry="onRetry" />
