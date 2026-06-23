@@ -36,6 +36,11 @@
 
   <!-- Messages list -->
   <scroll-view wx:if="{{order}}" class="msg-list" scroll-y scroll-into-view="msg-{{messages.length - 1}}">
+    <!-- Terminal notice banner (prominent) -->
+    <view wx:if="{{isTerminal}}" class="terminated-banner">
+      <image class="terminated-icon" src="/assets/icons/info.svg" mode="aspectFit" />
+      <text class="terminated-text">订单已结束，消息仅供查看，无法发送新消息</text>
+    </view>
     <view wx:if="{{messages.length === 0}}" class="msg-empty">
       <text>暂无消息，发送第一条消息开始沟通吧</text>
     </view>
