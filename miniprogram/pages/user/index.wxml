@@ -106,7 +106,10 @@
         <image class="menu-icon-img" src="/assets/icons/clipboard.svg" mode="aspectFit" />
         <text class="menu-text">我的订单</text>
       </view>
-      <text class="menu-arrow">›</text>
+      <view class="menu-right">
+        <view wx:if="{{unreadOrders > 0}}" class="unread-badge">{{unreadOrders > 99 ? '99+' : unreadOrders}}</view>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
 
     <!-- 我的举报 -->

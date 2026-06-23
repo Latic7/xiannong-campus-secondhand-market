@@ -52,6 +52,14 @@ def _product_summary(db: Session, product_id: int) -> dict | None:
 def serialize_order_with_product(db: Session, order: Order) -> dict:
     data = serialize_order(order)
     data["product"] = _product_summary(db, order.product_id)
+    # Include latest message for frontend unread tracking
+    latest = db.scalar(
+        select(OrderMessage)
+        .where(OrderMessage.order_id == order.id)
+        .order_by(OrderMessage.created_at.desc(), OrderMessage.id.desc())
+        .limit(1)
+    )
+    data["latestMessage"] = serialize_message(latest) if latest else None
     return data
 
 

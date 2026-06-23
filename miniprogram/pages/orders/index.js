@@ -1,6 +1,7 @@
 const orderService = require('../../services/order')
 const { ORDER_STATUS, getStatusMeta } = require('../../utils/constants')
 const { getUserInfo } = require('../../utils/storage')
+const orderUnread = require('../../utils/orderUnread')
 
 Page({
   data: {
@@ -48,6 +49,9 @@ Page({
     const canCancel = (isBuyer || isSeller) && (order.status === 'RESERVED' || order.status === 'CONFIRMED')
     const canComplete = isBuyer && order.status === 'CONFIRMED'
 
+    // Check unread status
+    const unread = orderUnread.hasUnread(order, userId)
+
     return {
       ...order,
       amountText: order.amount == null ? '待确认' : '¥' + Number(order.amount).toFixed(2).replace(/\.00$/, ''),
@@ -60,6 +64,7 @@ Page({
       canConfirm,
       canCancel,
       canComplete,
+      hasUnread: unread,
     }
   },
 
@@ -96,6 +101,13 @@ Page({
 
   // ── Tap order card → navigate to chat page ──
   onOrderTap(e) {
+    const orderId = e.currentTarget.dataset.id
+    if (!orderId) return
+    wx.navigateTo({ url: `/pages/order-chat/index?orderId=${orderId}` })
+  },
+
+  // ── Tap message button → navigate to chat (mark as read) ──
+  onMessageTap(e) {
     const orderId = e.currentTarget.dataset.id
     if (!orderId) return
     wx.navigateTo({ url: `/pages/order-chat/index?orderId=${orderId}` })

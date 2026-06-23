@@ -8,6 +8,8 @@ const {
 const authService = require('../../services/auth')
 const userService = require('../../services/user')
 const { generateAvatar } = require('../../utils/avatar')
+const orderService = require('../../services/order')
+const orderUnread = require('../../utils/orderUnread')
 
 Page({
   data: {
@@ -22,6 +24,7 @@ Page({
 
     loading: true,
     loginLoading: false,
+    unreadOrders: 0,
   },
 
   onLoad() {},
@@ -52,6 +55,8 @@ Page({
       })
       // 异步从服务器拉取最新资料和统计
       this.fetchUserProfile()
+      // 异步拉取未读消息数
+      this.fetchUnreadCount()
     } else {
       this.setData({
         isLoggedIn: false,
@@ -94,6 +99,23 @@ Page({
     } catch (err) {
       // 静默失败，使用本地缓存数据
       console.warn('获取用户资料失败:', err.message)
+    }
+  },
+
+  // ── 获取未读消息数 ──────────────────────────
+  async fetchUnreadCount() {
+    try {
+      const data = await orderService.list({ page: 1, size: 100 })
+      const orders = data.list || []
+      const userInfo = getUserInfo()
+      const userId = userInfo ? userInfo.id : null
+      if (userId) {
+        const count = orderUnread.totalUnread(orders, userId)
+        this.setData({ unreadOrders: count })
+      }
+    } catch (err) {
+      // 静默失败，不影响页面
+      console.warn('获取未读消息数失败:', err.message)
     }
   },
 
