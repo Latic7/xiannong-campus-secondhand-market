@@ -230,7 +230,8 @@ Page({
         await productService.addFavorite(productId)
       }
       this.setData({ isFavorited: !isFavorited })
-      wx.showToast({ title: isFavorited ? '已取消收藏' : '已收藏', icon: 'success' })
+      // 重新加载商品信息以更新收藏数
+      this.loadProduct(this.data.productId)
     } catch (e) {
       wx.showToast({ title: e.message || '操作失败', icon: 'none' })
     } finally { this.setData({ favoriting: false }) }
@@ -276,18 +277,26 @@ Page({
     if (!this.data.isLoggedIn) { wx.showToast({ title: '请先登录', icon: 'none' }); return }
     wx.showActionSheet({
       itemList: ['信息不实', '违规商品', '侵权内容', '其他原因'],
-      success: async (res) => {
+      success: (res) => {
         const reasons = ['信息不实', '违规商品', '侵权内容', '其他原因']
-        try {
-          await reportService.create({
-            targetType: 'PRODUCT',
-            productId: Number(this.data.productId),
-            reason: reasons[res.tapIndex],
-          })
-          wx.showToast({ title: '举报已提交', icon: 'success' })
-        } catch (e) {
-          wx.showToast({ title: e.message || '举报失败', icon: 'none' })
-        }
+        const reason = reasons[res.tapIndex]
+        wx.showModal({
+          title: '确认举报',
+          content: `您确定要举报该商品为"${reason}"吗？\n\n举报后管理员将进行审核，若核实违规，卖家将被扣除信誉分，严重者将被封禁。请确保您的举报真实有效。`,
+          success: async (modal) => {
+            if (!modal.confirm) return
+            try {
+              await reportService.create({
+                targetType: 'PRODUCT',
+                productId: Number(this.data.productId),
+                reason,
+              })
+              wx.showToast({ title: '举报已提交', icon: 'success' })
+            } catch (e) {
+              wx.showToast({ title: e.message || '举报失败', icon: 'none' })
+            }
+          },
+        })
       },
     })
   },
