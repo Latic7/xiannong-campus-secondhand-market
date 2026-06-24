@@ -11,6 +11,7 @@ from app.models.product import Product
 from app.models.product_image import ProductImage
 from app.models.review import Review
 from app.models.order_message import OrderMessage
+from app.models.user import User
 
 
 ACTIVE_ORDER_STATUSES = ("RESERVED", "CONFIRMED")
@@ -49,9 +50,20 @@ def _product_summary(db: Session, product_id: int) -> dict | None:
     }
 
 
+def _user_summary(db: Session, user_id: int | None) -> dict | None:
+    if user_id is None:
+        return None
+    user = db.get(User, user_id)
+    if user is None:
+        return None
+    return {"id": user.id, "nickname": user.nickname}
+
+
 def serialize_order_with_product(db: Session, order: Order) -> dict:
     data = serialize_order(order)
     data["product"] = _product_summary(db, order.product_id)
+    data["buyer"] = _user_summary(db, order.buyer_id)
+    data["seller"] = _user_summary(db, order.seller_id)
     # Include latest message for frontend unread tracking
     latest = db.scalar(
         select(OrderMessage)

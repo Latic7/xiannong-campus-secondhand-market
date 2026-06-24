@@ -50,6 +50,10 @@ Page({
       const meta = getStatusMeta(ORDER_STATUS, data.status)
       const productStatus = (data.product?.status || '').toUpperCase()
       const isTerminal = data.status === 'CANCELLED' || data.status === 'COMPLETED' || productStatus === 'REMOVED'
+      const currentUserId = this.data.currentUserId
+      const otherPartyName = currentUserId === data.sellerId
+        ? (data.buyer?.nickname || '买家')
+        : (data.seller?.nickname || '卖家')
       this.setData({
         order: {
           ...data,
@@ -59,6 +63,7 @@ Page({
           productTitle: data.product?.title || '商品信息不可用',
           productImage: data.product?.image || '',
           productStatus,
+          otherPartyName,
         },
         isTerminal,
         loading: false,

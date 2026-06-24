@@ -15,6 +15,7 @@
         <view class="header-title">{{order.productTitle}}</view>
         <view class="header-meta">{{order.amountText}}</view>
         <view class="header-meta">订单号 #{{order.id}}</view>
+        <view class="header-meta">与 {{order.otherPartyName}} 的聊天</view>
       </view>
       <view class="header-status" style="color:{{order.statusColor}}">{{order.statusText}}</view>
     </view>

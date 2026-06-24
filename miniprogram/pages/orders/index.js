@@ -52,6 +52,10 @@ Page({
     // Check unread status
     const unread = orderUnread.hasUnread(order, userId)
 
+    const otherPartyName = isSeller
+      ? (order.buyer?.nickname || '买家')
+      : (order.seller?.nickname || '卖家')
+
     return {
       ...order,
       amountText: order.amount == null ? '待确认' : '¥' + Number(order.amount).toFixed(2).replace(/\.00$/, ''),
@@ -59,6 +63,7 @@ Page({
       statusColor: meta.color,
       productTitle: order.product?.title || '商品信息不可用',
       productImage: order.product?.image || '',
+      otherPartyName,
       isSeller,
       isBuyer,
       canConfirm,

@@ -245,11 +245,12 @@ Page({
         if (res.confirm) {
           try {
             wx.showLoading({ title: '下单中...' })
-            await orderService.create({ productId: Number(this.data.productId) })
+            const newOrder = await orderService.create({ productId: Number(this.data.productId) })
             wx.hideLoading()
             wx.showToast({ title: '下单成功', icon: 'success' })
-            // 立即切换按钮为「已预约」
-            this.setData({ orderBtnText: '已预约', orderBtnDisabled: true })
+            // 立即刷新订单状态，显示聊天按钮
+            this.setData({ activeOrderId: newOrder.id })
+            this.checkActiveOrder(this.data.productId)
           } catch (e) {
             wx.hideLoading()
             if (e.message && e.message.includes('you already have an active order')) {
