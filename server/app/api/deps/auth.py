@@ -3,10 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import jwt
-from fastapi import Header
+from fastapi import Depends, Header
+from sqlalchemy.orm import Session
 
-from app.core.exceptions import AuthenticationError
+from app.core.database import get_db
+from app.core.exceptions import AuthenticationError, ForbiddenError
 from app.core.settings import settings
+from app.models.user import User
 
 
 @dataclass(frozen=True)
@@ -15,7 +18,10 @@ class CurrentActor:
     nickname: str = ""
 
 
-def get_current_actor(authorization: str | None = Header(default=None)) -> CurrentActor:
+def get_current_actor(
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+) -> CurrentActor:
     if not authorization or not authorization.startswith("Bearer "):
         raise AuthenticationError("missing bearer token")
 
@@ -27,4 +33,11 @@ def get_current_actor(authorization: str | None = Header(default=None)) -> Curre
 
     if token_data.get("typ") != "access" or not token_data.get("uid"):
         raise AuthenticationError("token type mismatch")
-    return CurrentActor(user_id=int(token_data["uid"]), nickname=token_data.get("nickname", ""))
+
+    user_id = int(token_data["uid"])
+    # 检查用户是否被封禁
+    user = db.get(User, user_id)
+    if user and user.status == "BANNED":
+        raise ForbiddenError("账户已被封禁，请联系后端管理员解封")
+
+    return CurrentActor(user_id=user_id, nickname=token_data.get("nickname", ""))

@@ -119,6 +119,18 @@ page {
   white-space: nowrap;
 }
 
+.banned-badge {
+  display: inline-block;
+  margin-left: 10rpx;
+  padding: 4rpx 14rpx;
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 600;
+  background: #ff3b30;
+  border-radius: 999rpx;
+  vertical-align: middle;
+}
+
 .admin-badge {
   flex-shrink: 0;
   color: #fff;

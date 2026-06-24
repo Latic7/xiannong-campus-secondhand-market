@@ -49,11 +49,14 @@ Page({
       const data = await orderService.getDetail(this.data.orderId)
       const meta = getStatusMeta(ORDER_STATUS, data.status)
       const productStatus = (data.product?.status || '').toUpperCase()
-      const isTerminal = data.status === 'CANCELLED' || data.status === 'COMPLETED' || productStatus === 'REMOVED'
+      const isTerminal = data.status === 'CANCELLED' || data.status === 'COMPLETED' || productStatus === 'REMOVED' || partyBanned
       const currentUserId = this.data.currentUserId
       const otherPartyName = currentUserId === data.sellerId
         ? (data.buyer?.nickname || '买家')
         : (data.seller?.nickname || '卖家')
+      const buyerBanned = (data.buyer?.status || '').toUpperCase() === 'BANNED'
+      const sellerBanned = (data.seller?.status || '').toUpperCase() === 'BANNED'
+      const partyBanned = buyerBanned || sellerBanned
       this.setData({
         order: {
           ...data,
@@ -64,6 +67,7 @@ Page({
           productImage: data.product?.image || '',
           productStatus,
           otherPartyName,
+          partyBanned,
         },
         isTerminal,
         loading: false,

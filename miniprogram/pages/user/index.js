@@ -86,6 +86,7 @@ Page({
         avatar: profile.avatar,
         reputation: profile.score,
         isAdmin: profile.isAdmin || profile.is_admin || false,
+        status: (profile.status || '').toUpperCase(),
         college: profile.college || '',
         contact: profile.contact || '',
       }
@@ -174,6 +175,7 @@ Page({
         reputation: 0,
         userId: '',
         isAdmin: false,
+        isBanned: false,
       }
     }
     // 始终使用根据用户 ID 生成的 GitHub 风格头像
@@ -186,6 +188,7 @@ Page({
       avatarCells: gen.cells,
       reputation: u.reputation != null ? u.reputation : 100,
       isAdmin: !!(u.isAdmin || u.is_admin),
+      isBanned: (u.status || '').toUpperCase() === 'BANNED',
       reputationText: this.getReputationLabel(u.reputation),
       reputationColor: this.getReputationColor(u.reputation),
     }

@@ -27,7 +27,16 @@ def list_users(db: Session, page: int = 1, size: int = 20, keyword: str | None =
 
 
 def patch_user_status(db: Session, user_id: int, payload) -> dict:
-    return {"userId": user_id, **payload.model_dump()}
+    from app.models.user import User as UserModel
+    user = db.get(UserModel, user_id)
+    if user is None:
+        from app.core.exceptions import ResourceNotFoundError
+        raise ResourceNotFoundError("user not found", {"userId": user_id})
+    user.status = payload.status
+    if payload.status == "BANNED":
+        user.score = 0
+    db.commit()
+    return {"userId": user_id, "status": payload.status}
 
 
 def pending_products(db: Session, page: int = 1, size: int = 20, status: str | None = None) -> dict:

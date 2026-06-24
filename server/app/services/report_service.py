@@ -117,6 +117,7 @@ def handle_report(report_id: int, payload: ReportHandleRequest, actor: CurrentAc
             if user:
                 if payload.action == "ban_user":
                     user.score = 0  # 封禁直接清零
+                    user.status = "BANNED"
                 else:
                     deduction = {"warning": 5, "unlist_product": 15}.get(payload.action, 10)
                     user.score = max(0, min(100, (user.score or 100) - deduction))

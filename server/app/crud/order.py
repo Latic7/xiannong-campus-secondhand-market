@@ -56,7 +56,7 @@ def _user_summary(db: Session, user_id: int | None) -> dict | None:
     user = db.get(User, user_id)
     if user is None:
         return None
-    return {"id": user.id, "nickname": user.nickname}
+    return {"id": user.id, "nickname": user.nickname, "status": user.status}
 
 
 def serialize_order_with_product(db: Session, order: Order) -> dict:
