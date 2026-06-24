@@ -45,6 +45,10 @@ Component({
           wx.showToast({ title: '请先登录后再发布', icon: 'none' })
           return
         }
+        if ((user.status || '').toUpperCase() === 'BANNED') {
+          wx.showToast({ title: '账户已被封禁，请联系后端管理员解封', icon: 'none' })
+          return
+        }
       }
       // 先更新状态，切换页面后show会再次更新
       this.setData({ selected: index });

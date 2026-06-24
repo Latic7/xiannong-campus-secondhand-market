@@ -93,8 +93,26 @@
   </scroll-view>
   <empty-state wx:elif="{{tabIndex === 1 && !rptLoading && !rptError}}" message="暂无{{rptFilter === 'handled' ? '已处理' : '待处理'}}举报" />
 
+  <!-- ── 封禁管理 ──────────────────────────── -->
+  <view wx:elif="{{tabIndex === 2}}" class="ban-section">
+    <loading-state wx:if="{{banLoading}}" count="3" />
+    <error-tip wx:if="{{!banLoading && banError && bannedUsers.length === 0}}" message="{{banError}}" bind:retry="loadBannedUsers" />
+    <view wx:if="{{!banLoading && bannedUsers.length > 0}}" class="ban-list">
+      <view class="admin-card ban-card" wx:for="{{bannedUsers}}" wx:key="id">
+        <view class="ban-user-row">
+          <view class="ban-user-info">
+            <text class="ban-user-nickname">{{item.nickname || '未知用户'}}</text>
+            <text class="ban-user-meta">ID: {{item.id}} · 信誉分: {{item.score}}</text>
+          </view>
+          <button class="btn-approve" data-user="{{item}}" bindtap="onUnbanUser">解封</button>
+        </view>
+      </view>
+    </view>
+    <empty-state wx:if="{{!banLoading && bannedUsers.length === 0}}" message="暂无被封禁的用户" />
+  </view>
+
   <!-- ── 报表 ──────────────────────────────── -->
-  <view wx:elif="{{tabIndex === 2}}" class="stats-section">
+  <view wx:elif="{{tabIndex === 3}}" class="stats-section">
     <!-- 日期筛选 -->
     <view class="stats-date-bar">
       <picker mode="date" value="{{statsDateStart}}" bindchange="onStatsDateStartChange">

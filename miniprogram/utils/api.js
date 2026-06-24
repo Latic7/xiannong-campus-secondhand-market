@@ -170,6 +170,10 @@ function del(url) {
   return request('DELETE', url)
 }
 
+function patch(url, data) {
+  return request('PATCH', url, data)
+}
+
 module.exports = {
   BASE_URL,
   setAuthExpiredHandler,
@@ -179,4 +183,5 @@ module.exports = {
   post,
   put,
   del,
+  patch,
 }

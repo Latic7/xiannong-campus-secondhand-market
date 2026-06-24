@@ -259,6 +259,41 @@ page {
   font-weight: 600;
 }
 
+/* ── 封禁管理 ────────────────────── */
+
+.ban-section {
+  padding: 24rpx;
+}
+
+.ban-card {
+  margin-bottom: 16rpx;
+}
+
+.ban-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ban-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ban-user-nickname {
+  display: block;
+  color: var(--color-text);
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.ban-user-meta {
+  display: block;
+  margin-top: 4rpx;
+  color: var(--color-text-secondary);
+  font-size: 22rpx;
+}
+
 /* ── 报表 ────────────────────────── */
 
 .stats-section {

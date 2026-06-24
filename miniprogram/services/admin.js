@@ -48,6 +48,16 @@ module.exports = {
     return api.get('/api/admin/logs', params)
   },
 
+  /** 用户列表（支持 status 筛选） */
+  listUsers(params = {}) {
+    return api.get('/api/admin/users', params)
+  },
+
+  /** 修改用户状态（封禁/解封） */
+  patchUserStatus(userId, data) {
+    return api.patch('/api/admin/users/' + userId + '/status', data)
+  },
+
   /** 每日趋势（商品发布/成交/注册） */
   statsTrends(params = {}) {
     return api.get('/api/admin/stats/trends', params)

@@ -29,10 +29,11 @@ def admin_list_users(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     keyword: str | None = None,
+    status: str | None = Query(None, description="用户状态筛选"),
     db: Session = Depends(get_db),
-    _: dict = Depends(get_current_admin),  # 只用于校验，不使用返回值
+    _: dict = Depends(get_current_admin),
 ) -> dict:
-    return api_ok(list_users_service(db, page=page, size=size, keyword=keyword))
+    return api_ok(list_users_service(db, page=page, size=size, keyword=keyword, status=status))
 
 
 @router.patch("/users/{user_id}/status")

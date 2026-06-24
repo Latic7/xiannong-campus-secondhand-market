@@ -2,7 +2,7 @@
 //  发布商品页
 //  表单校验 + 图片上传 + 发布提交
 // ──────────────────────────────────────────────
-const { isLoggedIn } = require('../../utils/storage')
+const { isLoggedIn, getUserInfo } = require('../../utils/storage')
 const { IMAGE_MAX_COUNT, IMAGE_MAX_SIZE } = require('../../utils/constants')
 const productService = require('../../services/product')
 const categoryService = require('../../services/category')
@@ -54,6 +54,12 @@ Page({
   onLoad() {
     if (!isLoggedIn()) {
       wx.showToast({ title: '请先登录后再发布', icon: 'none' })
+    }
+    const user = getUserInfo()
+    if (user && (user.status || '').toUpperCase() === 'BANNED') {
+      wx.showToast({ title: '账户已被封禁，请联系后端管理员解封', icon: 'none' })
+      setTimeout(() => wx.navigateBack(), 1500)
+      return
     }
 
     // 动态加载分类（异步，不阻塞页面渲染）

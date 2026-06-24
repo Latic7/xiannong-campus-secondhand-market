@@ -18,12 +18,37 @@ from app.services.report_service import handle_report as report_handle_report
 from app.services.report_service import list_report_queue
 
 
-def list_users(db: Session, page: int = 1, size: int = 20, keyword: str | None = None) -> dict:
-    return {
-        "list": [],
-        "page": {"page": page, "size": size, "total": 0},
-        "keyword": keyword,
-    }
+def list_users(db: Session, page: int = 1, size: int = 20, keyword: str | None = None, status: str | None = None) -> dict:
+    from app.models.user import User
+    from sqlalchemy import select, func
+
+    stmt = select(User)
+    if keyword:
+        kw = f"%{keyword}%"
+        stmt = stmt.where(User.nickname.ilike(kw) | User.openid.ilike(kw))
+    if status:
+        stmt = stmt.where(User.status == status)
+
+    total = db.scalar(select(func.count()).select_from(stmt.subquery())) or 0
+    rows = db.scalars(
+        stmt.order_by(User.created_at.desc())
+        .offset((page - 1) * size)
+        .limit(size)
+    ).all()
+
+    items = [
+        {
+            "id": u.id,
+            "nickname": u.nickname,
+            "avatar": u.avatar,
+            "score": u.score,
+            "status": u.status,
+            "isAdmin": u.is_admin,
+            "createdAt": u.created_at.isoformat() if u.created_at else None,
+        }
+        for u in rows
+    ]
+    return {"list": items, "page": {"page": page, "size": size, "total": int(total)}}
 
 
 def patch_user_status(db: Session, user_id: int, payload) -> dict:
@@ -35,8 +60,10 @@ def patch_user_status(db: Session, user_id: int, payload) -> dict:
     user.status = payload.status
     if payload.status == "BANNED":
         user.score = 0
+    elif payload.status == "ACTIVE":
+        user.score = 20  # 解封后赋予基础信誉分
     db.commit()
-    return {"userId": user_id, "status": payload.status}
+    return {"userId": user_id, "status": payload.status, "score": user.score}
 
 
 def pending_products(db: Session, page: int = 1, size: int = 20, status: str | None = None) -> dict:

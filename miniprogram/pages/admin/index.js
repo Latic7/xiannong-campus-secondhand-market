@@ -23,6 +23,7 @@ const HANDLE_ACTION_LABELS = {
 const TAB_OPTIONS = [
   { key: 'products', label: '商品审核' },
   { key: 'reports', label: '举报审核' },
+  { key: 'bans', label: '封禁管理' },
   { key: 'stats', label: '报表' },
 ]
 
@@ -47,6 +48,10 @@ Page({
     REPORT_ACTIONS,
     // 待处理计数
     pendingReports: 0,
+    // 封禁管理
+    bannedUsers: [],
+    banLoading: false,
+    banError: '',
     pendingProducts: 0,
     // 筛选开关（pending=待处理, handled=已处理）
     prodFilter: 'pending',
@@ -84,6 +89,7 @@ Page({
     const tab = TAB_OPTIONS[this.data.tabIndex]?.key
     if (tab === 'products') this.loadProducts()
     else if (tab === 'reports') this.loadReports()
+    else if (tab === 'bans') this.loadBannedUsers()
     else if (tab === 'stats') this.loadStats()
   },
 
@@ -285,6 +291,36 @@ Page({
   onRptScrollBottom() {
     if (!this.data.rptHasMore || this.data.rptLoading) return
     this.loadReports({ append: true })
+  },
+
+  // ── 封禁管理 ──────────────────────────────
+  async loadBannedUsers() {
+    this.setData({ banLoading: true, banError: '' })
+    try {
+      const data = await adminService.listUsers({ status: 'BANNED', size: 100 })
+      this.setData({ bannedUsers: data.list || [], banLoading: false })
+    } catch (err) {
+      this.setData({ banLoading: false, banError: err.message || '加载失败' })
+    }
+  },
+
+  onUnbanUser(e) {
+    const user = e.currentTarget.dataset.user
+    if (!user) return
+    wx.showModal({
+      title: '确认解封',
+      content: `确定解封用户「${user.nickname}」？解封后信誉分将重置为 20 分。`,
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          await adminService.patchUserStatus(user.id, { status: 'ACTIVE' })
+          wx.showToast({ title: '已解封', icon: 'success' })
+          this.loadBannedUsers()
+        } catch (err) {
+          wx.showToast({ title: err.message || '解封失败', icon: 'none' })
+        }
+      },
+    })
   },
 
   // ── 报表 ──────────────────────────────────
