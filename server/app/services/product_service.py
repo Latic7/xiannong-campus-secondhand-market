@@ -45,9 +45,12 @@ def list_products(
     # 如果前端传了 status_list 则用指定的状态，否则走默认逻辑
     # 默认：公开列表显示已发布、已售出、已下架商品；owner 自己的列表显示所有状态
     if status_list is None:
-        statuses = [ProductStatus.PUBLISHED.value, ProductStatus.SOLD.value, ProductStatus.REMOVED.value] if owner_id is None else None
+        statuses = [ProductStatus.PUBLISHED.value, ProductStatus.SOLD.value] if owner_id is None else None
     else:
-        statuses = status_list
+        # 公开列表不允许筛选 REMOVED（被驳回/下架的商品不对公众显示）
+        if owner_id is None:
+            status_list = [s for s in status_list if s != ProductStatus.REMOVED.value]
+        statuses = status_list if status_list else None
     items, total = product_crud.list_products(db, page, size, keyword, sort, category_ids, status=statuses, owner_id=owner_id)
     return {
         "list": items,
@@ -93,6 +96,7 @@ def update_product(db: Session, product_id: int, payload: ProductUpdateRequest, 
         ProductStatus.PENDING.value: {ProductStatus.REMOVED.value},
         ProductStatus.PUBLISHED.value: {ProductStatus.REMOVED.value},
         ProductStatus.REMOVED.value: {ProductStatus.PENDING.value},
+        ProductStatus.REJECTED.value: set(),  # 终态，不可再变更
     }
     target = changes.get("status")
     if target and target != product.status and target not in allowed_targets.get(product.status, set()):
@@ -185,7 +189,7 @@ def list_pending_products(db: Session, page: int = 1, size: int = 20, status: st
 
 def review_product(db: Session, product_id: int, result: str, reason: str | None = None) -> dict:
     product = _require_product(db, product_id, for_update=True)
-    target = ProductStatus.PUBLISHED.value if result == "approved" else ProductStatus.REMOVED.value
+    target = ProductStatus.PUBLISHED.value if result == "approved" else ProductStatus.REJECTED.value
     if product.status == target:
         return {"productId": product_id, "result": result, "reason": reason, "status": target}
     if product.status != ProductStatus.PENDING.value:

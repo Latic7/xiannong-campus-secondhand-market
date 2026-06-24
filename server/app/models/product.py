@@ -25,7 +25,7 @@ class Product(Base):
 	price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 	category_id: Mapped[int | None] = mapped_column()
 	status: Mapped[str] = mapped_column(
-		Enum("DRAFT", "PENDING", "PUBLISHED", "REMOVED", "SOLD", name="product_status_enum"),
+		Enum("DRAFT", "PENDING", "PUBLISHED", "REMOVED", "SOLD", "REJECTED", name="product_status_enum"),
 		nullable=False,
 		server_default="PENDING",
 	)

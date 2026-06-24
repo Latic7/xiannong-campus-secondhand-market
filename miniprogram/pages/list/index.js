@@ -54,7 +54,6 @@ Page({
     statusOptions: [
       { value: 'PUBLISHED', label: '在售' },
       { value: 'SOLD', label: '已售出' },
-      { value: 'REMOVED', label: '已下架' },
     ],
   },
 

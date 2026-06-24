@@ -31,6 +31,9 @@ Component({
       } else if (status === 'REMOVED') {
         statusClass = 'status-removed';
         displayStatus = '已下架';
+      } else if (status === 'REJECTED') {
+        statusClass = 'status-removed';
+        displayStatus = '审核未通过';
       } else if (status === 'SOLD') {
         statusClass = 'status-sold';
         displayStatus = '已售出';

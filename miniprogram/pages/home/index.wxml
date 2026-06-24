@@ -56,8 +56,9 @@
         <block wx:for="{{recommends}}" wx:key="id">
           <view class="recommend-item" data-product-id="{{item.id}}" bindtap="onProductTap">
             <view class="recommend-image-wrap">
-              <image class="recommend-image {{item.status === 'REMOVED' || item.status === 'SOLD' ? 'img-grayscale' : ''}}" src="{{item.images[0]}}" mode="aspectFill" />
+              <image class="recommend-image {{item.status === 'REMOVED' || item.status === 'REJECTED' || item.status === 'SOLD' ? 'img-grayscale' : ''}}" src="{{item.images[0]}}" mode="aspectFill" />
               <view wx:if="{{item.status === 'REMOVED'}}" class="recommend-status-tag status-removed">已下架</view>
+              <view wx:elif="{{item.status === 'REJECTED'}}" class="recommend-status-tag status-removed">审核未通过</view>
               <view wx:elif="{{item.status === 'SOLD'}}" class="recommend-status-tag status-sold">已售出</view>
             </view>
             <view class="recommend-tags">
@@ -65,7 +66,7 @@
             </view>
             <view class="recommend-info">
               <text class="recommend-title">{{item.title}}</text>
-              <text class="recommend-price {{item.status === 'REMOVED' || item.status === 'SOLD' ? 'price-gray' : ''}}">¥{{item.price}}</text>
+              <text class="recommend-price {{item.status === 'REMOVED' || item.status === 'REJECTED' || item.status === 'SOLD' ? 'price-gray' : ''}}">¥{{item.price}}</text>
             </view>
           </view>
         </block>

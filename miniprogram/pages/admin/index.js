@@ -120,7 +120,7 @@ Page({
     try {
       const p = append ? this.data.prodPage : 1
       const params = { page: p, size: this.data.prodSize }
-      if (this.data.prodFilter === 'handled') params.status = 'PUBLISHED,REMOVED'
+      if (this.data.prodFilter === 'handled') params.status = 'PUBLISHED,REMOVED,REJECTED'
       const data = await adminService.listPendingProducts(params)
       const list = (data.list || []).map(item => this.formatProduct(item))
       this.setData({
