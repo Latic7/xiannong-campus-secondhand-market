@@ -96,7 +96,8 @@ Page({
 
   async loadAgainstBadge() {
     try {
-      const data = await reportService.listAgainstMe({ size: 1 })
+      // 只统计未读的被举报记录
+      const data = await reportService.listAgainstMe({ size: 1, seenByTarget: 'NOT_SEEN' })
       this.setData({ againstBadge: data?.page?.total || 0 })
     } catch (e) {
       // 静默
@@ -107,7 +108,16 @@ Page({
     const idx = typeof e === 'number' ? e : (e.currentTarget?.dataset?.index ?? 0)
     if (idx === this.data.tabIndex) return
     this.setData({ tabIndex: idx, page: 1, reports: [], hasMore: true })
+    // 切换到「我被举报的」时，标记所有为已读
+    if (idx === 1) this.markAgainstMeSeen()
     this.loadReports()
+  },
+
+  async markAgainstMeSeen() {
+    try {
+      await reportService.markAgainstMeSeen()
+      this.setData({ againstBadge: 0 })
+    } catch (e) { /* 静默 */ }
   },
 
   formatReport(report) {

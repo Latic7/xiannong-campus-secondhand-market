@@ -1,29 +1,63 @@
 <image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 <view class="page">
-  <!-- 管理功能菜单 -->
-  <view class="admin-menu">
-    <view class="menu-item" bindtap="onReviewProducts">
-      <view class="menu-left">
-        <image class="menu-icon-img" src="/assets/icons/package.svg" mode="aspectFit" />
-        <text class="menu-text">商品审核</text>
-      </view>
-      <view class="menu-right">
-        <view wx:if="{{pendingProducts > 0}}" class="badge">{{pendingProducts > 99 ? '99+' : pendingProducts}}</view>
-        <text class="menu-arrow">›</text>
-      </view>
-    </view>
-
-    <view class="menu-divider"></view>
-
-    <view class="menu-item" bindtap="onReviewReports">
-      <view class="menu-left">
-        <image class="menu-icon-img" src="/assets/icons/warning.svg" mode="aspectFit" />
-        <text class="menu-text">举报审核</text>
-      </view>
-      <view class="menu-right">
-        <view wx:if="{{pendingReports > 0}}" class="badge badge-warning">{{pendingReports > 99 ? '99+' : pendingReports}}</view>
-        <text class="menu-arrow">›</text>
-      </view>
+  <!-- tab 切换 -->
+  <view class="tab-bar">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="tab-item {{tabIndex === index ? 'tab-active' : ''}}"
+      data-index="{{index}}"
+      bindtap="onTabChange"
+    >
+      <text>{{item.label}}</text>
+      <view wx:if="{{item.key === 'products' && pendingProducts > 0}}" class="tab-badge">{{pendingProducts > 99 ? '99+' : pendingProducts}}</view>
+      <view wx:if="{{item.key === 'reports' && pendingReports > 0}}" class="tab-badge tab-badge-warning">{{pendingReports > 99 ? '99+' : pendingReports}}</view>
+      <view wx:if="{{tabIndex === index}}" class="tab-underline"></view>
     </view>
   </view>
+
+  <!-- 商品审核列表 -->
+  <loading-state wx:if="{{tabIndex === 0 && prodLoading && products.length === 0}}" count="4" />
+  <error-tip wx:elif="{{tabIndex === 0 && !prodLoading && prodError && products.length === 0}}" message="{{prodError}}" bind:retry="loadProducts" />
+  <scroll-view wx:elif="{{tabIndex === 0 && products.length > 0}}" class="list-scroll" scroll-y bindscrolltolower="onProdScrollBottom">
+    <view class="admin-card" wx:for="{{products}}" wx:key="id">
+      <view class="card-header">
+        <text class="card-title">{{item.title}}</text>
+        <text class="card-price">{{item.priceText}}</text>
+      </view>
+      <view class="card-body">
+        <text class="card-desc">{{item.description || '暂无描述'}}</text>
+      </view>
+      <view class="card-actions">
+        <button class="btn-approve" data-id="{{item.id}}" data-action="approved" bindtap="onReviewProduct">通过</button>
+        <button class="btn-reject" data-id="{{item.id}}" data-action="rejected" bindtap="onReviewProduct">驳回</button>
+      </view>
+    </view>
+    <loading-state wx:if="{{prodLoading && products.length > 0}}" count="1" />
+  </scroll-view>
+  <empty-state wx:elif="{{tabIndex === 0 && !prodLoading && !prodError}}" message="暂无待审核商品" />
+
+  <!-- 举报审核列表 -->
+  <loading-state wx:elif="{{tabIndex === 1 && rptLoading && reports.length === 0}}" count="4" />
+  <error-tip wx:elif="{{tabIndex === 1 && !rptLoading && rptError && reports.length === 0}}" message="{{rptError}}" bind:retry="loadReports" />
+  <scroll-view wx:elif="{{tabIndex === 1 && reports.length > 0}}" class="list-scroll" scroll-y bindscrolltolower="onRptScrollBottom">
+    <view class="admin-card" wx:for="{{reports}}" wx:key="id" wx:for-item="rpt">
+      <view class="card-header">
+        <text class="card-title">举报 #{{rpt.id}}</text>
+        <text class="card-status" style="color:{{rpt.statusColor}}">{{rpt.statusText}}</text>
+      </view>
+      <view class="card-body">
+        <text>被举报{{rpt.targetType === 'PRODUCT' ? '商品' : rpt.targetType === 'USER' ? '用户' : '订单'}} #{{rpt.targetId}}</text>
+        <text>\n理由：{{rpt.reason}}</text>
+      </view>
+      <view class="card-actions">
+        <button class="btn-approve" data-id="{{rpt.id}}" data-action="warning" bindtap="onHandleReport">警告</button>
+        <button class="btn-approve" data-id="{{rpt.id}}" data-action="ban_user" bindtap="onHandleReport">封禁</button>
+        <button class="btn-action" data-id="{{rpt.id}}" data-action="unlist_product" bindtap="onHandleReport">下架</button>
+        <button class="btn-reject" data-id="{{rpt.id}}" data-action="reject" bindtap="onHandleReport">驳回</button>
+      </view>
+    </view>
+    <loading-state wx:if="{{rptLoading && reports.length > 0}}" count="1" />
+  </scroll-view>
+  <empty-state wx:elif="{{tabIndex === 1 && !rptLoading && !rptError}}" message="暂无待处理举报" />
 </view>

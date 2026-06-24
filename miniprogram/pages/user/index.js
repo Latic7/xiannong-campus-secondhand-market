@@ -150,11 +150,11 @@ Page({
     this.fetchAdminPendingCount()
   },
 
-  // ── 获取被举报数 ──────────────────────────
+  // ── 获取被举报数（仅显示未读的） ─────────
   async fetchReportsAgainstMe() {
     try {
       const reportService = require('../../services/report')
-      const data = await reportService.listAgainstMe({ size: 1 })
+      const data = await reportService.listAgainstMe({ size: 1, seenByTarget: 'NOT_SEEN' })
       this.setData({ reportsAgainstMe: data?.page?.total || 0 })
     } catch (err) {
       // 静默失败

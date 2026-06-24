@@ -127,6 +127,7 @@ def list_reports_against_user(
     actor: CurrentActor,
     page: int = 1,
     size: int = 20,
+    seen_by_target: str | None = None,
 ) -> dict:
     """查询针对当前用户的举报（通过被举报对象关联）"""
     from app.models.report import Report as ReportModel
@@ -136,13 +137,42 @@ def list_reports_against_user(
         db,
         page=page,
         size=size,
-        # 查询 target 是当前用户，或 target 的商品属于当前用户
         target_user_id=actor.user_id,
+        seen_by_target=seen_by_target,
     )
     return {
         "list": rows,
         "page": {"page": page, "size": size, "total": total},
     }
+
+
+def mark_against_me_as_seen(db: Session, actor: CurrentActor) -> dict:
+    """将当前用户被举报的所有记录的 seen_by_target 置为 SEEN"""
+    from app.models.report import Report as ReportModel
+    from app.models.product import Product
+    from sqlalchemy import or_, select, update
+
+    # 找出该用户的商品 ID
+    product_ids = db.scalars(
+        select(Product.id).where(Product.owner_id == actor.user_id)
+    ).all()
+
+    rows = db.scalars(
+        select(ReportModel).where(
+            or_(
+                (ReportModel.target_type == "USER") & (ReportModel.target_id == actor.user_id),
+                (ReportModel.target_type == "PRODUCT") & (ReportModel.target_id.in_(product_ids)),
+            ),
+            ReportModel.seen_by_target == "NOT_SEEN",
+        )
+    ).all()
+
+    count = len(rows)
+    for r in rows:
+        r.seen_by_target = "SEEN"
+    db.commit()
+
+    return {"markedCount": count}
 
 
 def create_appeal(payload: AppealCreateRequest) -> dict:

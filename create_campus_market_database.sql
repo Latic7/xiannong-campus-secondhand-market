@@ -198,6 +198,7 @@ CREATE TABLE IF NOT EXISTS `reports` (
   `handle_reason` varchar(255) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `handled_at` datetime DEFAULT NULL,
+  `seen_by_target` enum('NOT_SEEN','SEEN') NOT NULL DEFAULT 'NOT_SEEN',
   PRIMARY KEY (`id`),
   KEY `idx_reports_status_created` (`status`,`created_at`),
   KEY `idx_reports_target` (`target_type`,`target_id`)

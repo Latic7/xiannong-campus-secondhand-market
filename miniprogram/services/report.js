@@ -16,6 +16,11 @@ module.exports = {
     return api.get('/api/reports/against-me', params)
   },
 
+  /** 标记所有针对我的举报为已读 */
+  markAgainstMeSeen() {
+    return api.post('/api/reports/against-me/mark-seen')
+  },
+
   /** 创建举报 */
   create(data) {
     // 后端期望: { targetType, targetId, reason }

@@ -27,6 +27,7 @@ def _to_schema_dict(report: Report) -> dict:
 		"assigneeId": report.assignee_id,
 		"handleAction": report.handle_action,
 		"handleReason": report.handle_reason,
+		"seenByTarget": report.seen_by_target,
 	}
 
 
@@ -176,6 +177,7 @@ def list_reports_with_target(
 	target_type: str | None = None,
 	reporter_id: int | None = None,
 	target_user_id: int | None = None,
+	seen_by_target: str | None = None,
 ) -> tuple[list[dict], int]:
 	"""分页查询举报列表，并为每条记录附上被举报对象摘要。
 
@@ -190,6 +192,8 @@ def list_reports_with_target(
 		filters.append(Report.target_type == target_type)
 	if reporter_id is not None:
 		filters.append(Report.reporter_id == reporter_id)
+	if seen_by_target:
+		filters.append(Report.seen_by_target == seen_by_target)
 	if target_user_id is not None:
 		# 查询针对该用户的举报：直接举报用户 OR 举报的商品属于该用户
 		from sqlalchemy import or_

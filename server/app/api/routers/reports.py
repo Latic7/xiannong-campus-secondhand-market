@@ -48,10 +48,11 @@ def list_my_reports(
 def list_reports_against_me(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    seenByTarget: str | None = Query(None, pattern=r"^(NOT_SEEN|SEEN)$"),
     db: Session = Depends(get_db),
     actor: CurrentActor = Depends(get_current_actor),
 ) -> dict:
-    """查询当前用户被举报的记录"""
+    """查询当前用户被举报的记录，可选按 seenByTarget 筛选"""
     from app.services.report_service import list_reports_against_user
     return api_ok(
         list_reports_against_user(
@@ -59,8 +60,19 @@ def list_reports_against_me(
             actor,
             page=page,
             size=size,
+            seen_by_target=seenByTarget,
         )
     )
+
+
+@router.post("/api/reports/against-me/mark-seen")
+def mark_against_me_as_seen(
+    db: Session = Depends(get_db),
+    actor: CurrentActor = Depends(get_current_actor),
+) -> dict:
+    """将当前用户所有被举报记录标记为已读"""
+    from app.services.report_service import mark_against_me_as_seen as _mark_seen
+    return api_ok(_mark_seen(db, actor))
 
 
 @router.get("/api/reports/{report_id}")

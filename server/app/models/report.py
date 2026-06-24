@@ -37,3 +37,8 @@ class Report(Base):
 		server_default=text("CURRENT_TIMESTAMP"),
 	)
 	handled_at: Mapped[datetime | None] = mapped_column(DateTime)
+	seen_by_target: Mapped[str] = mapped_column(
+		Enum("NOT_SEEN", "SEEN", name="report_seen_enum"),
+		nullable=False,
+		server_default="NOT_SEEN",
+	)
