@@ -1,4 +1,5 @@
 const orderService = require('../../services/order')
+const chatSocket = require('../../services/chatSocket')
 const { ORDER_STATUS, getStatusMeta } = require('../../utils/constants')
 const { getUserInfo } = require('../../utils/storage')
 const orderUnread = require('../../utils/orderUnread')
@@ -12,7 +13,7 @@ Page({
     loading: true,
     sending: false,
     currentUserId: null,
-    isTerminal: false,   // CANCELLED or COMPLETED → no more messages
+    isTerminal: false,
     page: 1,
     hasMore: false,
   },
@@ -22,7 +23,6 @@ Page({
     this.setData({ orderId })
     const user = getUserInfo()
     this.setData({ currentUserId: user ? user.id : null })
-    this._pollTimer = null
     if (!orderId) {
       this.setData({ loading: false })
       wx.showToast({ title: '订单 ID 缺失', icon: 'none' })
@@ -32,15 +32,11 @@ Page({
   },
 
   onUnload() {
-    // Stop polling when leaving the page
-    if (this._pollTimer) {
-      clearInterval(this._pollTimer)
-      this._pollTimer = null
-    }
+    chatSocket.off('onMessage')
+    chatSocket.close()
   },
 
   onShow() {
-    // Refresh messages when page becomes visible
     if (this.data.orderId && !this.data.loading) {
       this.loadMessages()
     }
@@ -71,37 +67,7 @@ Page({
     }
   },
 
-  // ── Start auto-polling (every 5s for active orders) ──
-  _startPolling() {
-    if (this._pollTimer) return
-    if (this.data.isTerminal) return
-    this._pollTimer = setInterval(() => {
-      this._pollNewMessages()
-    }, 5000)
-  },
-
-  // ── Poll for new messages (lightweight, only fetches latest) ──
-  async _pollNewMessages() {
-    try {
-      const data = await orderService.getMessages(this.data.orderId, { page: 1, size: 50 })
-      const newList = (data.list || []).map(m => this.formatMessage(m))
-      const oldIds = new Set(this.data.messages.map(m => m.id))
-      // Only append messages we don't already have
-      const appended = newList.filter(m => !oldIds.has(m.id))
-      if (appended.length > 0) {
-        this.setData({
-          messages: [...this.data.messages, ...appended],
-        })
-        // Mark new messages as read
-        const lastMsg = appended[appended.length - 1]
-        orderUnread.markAsRead(this.data.orderId, lastMsg.id)
-      }
-    } catch (err) {
-      // Silently fail on poll errors
-    }
-  },
-
-  // ── Load messages ──
+  // ── Load messages via REST, then connect WebSocket for real-time updates ──
   async loadMessages() {
     try {
       const data = await orderService.getMessages(this.data.orderId, { page: 1, size: 50 })
@@ -111,17 +77,36 @@ Page({
         page: 2,
         hasMore: list.length >= 50,
       })
-      // Mark as read: get the latest message ID
+      // Mark as read
       if (list.length > 0) {
         const lastMsg = list[list.length - 1]
         orderUnread.markAsRead(this.data.orderId, lastMsg.id)
       }
-      // Start polling for new messages (active orders only)
-      this._startPolling()
+      // Connect WebSocket for real-time updates (only for active orders)
+      if (!this.data.isTerminal) {
+        this._connectSocket()
+      }
     } catch (err) {
-      // Silently fail — messages are secondary
       console.warn('加载消息失败:', err.message)
     }
+  },
+
+  // ── Connect WebSocket and set up handlers ──
+  _connectSocket() {
+    chatSocket.connect(this.data.orderId)
+    chatSocket.on('onMessage', (data) => {
+      if (data.type === 'new_message') {
+        const msg = this.formatMessage(data.data)
+        // Avoid duplicates
+        const exists = this.data.messages.some(m => m.id === msg.id)
+        if (!exists) {
+          this.setData({
+            messages: [...this.data.messages, msg],
+          })
+        }
+        orderUnread.markAsRead(this.data.orderId, msg.id)
+      }
+    })
   },
 
   formatMessage(msg) {
@@ -140,16 +125,23 @@ Page({
     return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
   },
 
-  // ── Send message ──
   onInput(e) {
     this.setData({ inputValue: e.detail.value })
   },
 
+  // ── Send via WebSocket (fallback to REST) ──
   async onSend() {
     const content = this.data.inputValue.trim()
     if (!content || this.data.sending || this.data.isTerminal) return
 
     this.setData({ sending: true })
+    // Try WebSocket first
+    const sent = chatSocket.send(content)
+    if (sent) {
+      this.setData({ inputValue: '', sending: false })
+      return
+    }
+    // Fallback to REST API
     try {
       const msg = await orderService.sendMessage(this.data.orderId, { content })
       const formatted = this.formatMessage(msg)
@@ -158,7 +150,6 @@ Page({
         inputValue: '',
         sending: false,
       })
-      // Mark own message as read
       orderUnread.markAsRead(this.data.orderId, msg.id)
     } catch (err) {
       this.setData({ sending: false })
@@ -166,7 +157,6 @@ Page({
     }
   },
 
-  // ── Pull down refresh ──
   onPullDownRefresh() {
     this.loadMessages().finally(() => wx.stopPullDownRefresh())
   },
