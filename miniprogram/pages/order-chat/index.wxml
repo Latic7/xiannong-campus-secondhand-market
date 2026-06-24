@@ -64,6 +64,8 @@
       value="{{inputValue}}"
       placeholder="输入消息..."
       bindinput="onInput"
+      bindblur="onBlur"
+      focus="{{inputFocus}}"
       confirm-type="send"
       bindconfirm="onSend"
       maxlength="1000"

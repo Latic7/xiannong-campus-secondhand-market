@@ -10,6 +10,7 @@ Page({
     order: null,
     messages: [],
     inputValue: '',
+    inputFocus: false,
     loading: true,
     sending: false,
     currentUserId: null,
@@ -129,6 +130,18 @@ Page({
     this.setData({ inputValue: e.detail.value })
   },
 
+  // ── Keep input focused after send ──
+  _refocusInput() {
+    this.setData({ inputFocus: false })
+    wx.nextTick(() => {
+      this.setData({ inputFocus: true })
+    })
+  },
+
+  onBlur() {
+    this.setData({ inputFocus: false })
+  },
+
   // ── Send via WebSocket (fallback to REST) ──
   async onSend() {
     const content = this.data.inputValue.trim()
@@ -139,6 +152,7 @@ Page({
     const sent = chatSocket.send(content)
     if (sent) {
       this.setData({ inputValue: '', sending: false })
+      this._refocusInput()
       return
     }
     // Fallback to REST API
@@ -150,6 +164,7 @@ Page({
         inputValue: '',
         sending: false,
       })
+      this._refocusInput()
       orderUnread.markAsRead(this.data.orderId, msg.id)
     } catch (err) {
       this.setData({ sending: false })
