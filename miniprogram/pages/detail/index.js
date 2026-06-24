@@ -29,6 +29,7 @@ Page({
     activeOrderId: null,
     canUnlist: false,               // 是否可下架（true=显示红色可点击按钮）
     unlistBlockedReason: '',        // 不可下架的原因提示文案
+    sellerBanned: false,            // 卖家是否被封禁
     // ── 下单状态 ──
     orderBtnText: '立即购买',       // 按钮文案：立即购买 / 已预约 / 交易进行中 / 已售出
     orderBtnDisabled: false,        // 按钮是否禁用
@@ -70,8 +71,10 @@ Page({
           canUnlist = true
         }
       }
+      const sellerBanned = (formatted.seller?.status || '').toUpperCase() === 'BANNED'
       this.setData({
         product: formatted,
+        sellerBanned,
         images: formatted.images || [],
         loading: false,
         isOwner,
@@ -200,7 +203,7 @@ Page({
       this.setData({ orderBtnText: '我的商品', orderBtnDisabled: true })
     } else if (status !== 'PUBLISHED') {
       this.setData({ orderBtnText: '暂不可购买', orderBtnDisabled: true })
-    } else if ((product.seller?.status || '').toUpperCase() === 'BANNED') {
+    } else if (this.data.sellerBanned) {
       this.setData({ orderBtnText: '商家已被封禁', orderBtnDisabled: true })
     } else {
       this.setData({ orderBtnText: '立即购买', orderBtnDisabled: false })

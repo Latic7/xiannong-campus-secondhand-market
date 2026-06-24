@@ -85,7 +85,7 @@
   <!-- 卖家信息 -->
   <view class="seller-section">
     <view class="section-title">卖家信息</view>
-    <view wx:if="{{(product.seller.status || '').toUpperCase() === 'BANNED'}}" class="seller-banned-banner">该商家已被封禁</view>
+    <view wx:if="{{sellerBanned}}" class="seller-banned-banner">该商家已被封禁</view>
     <view class="seller-card">
       <image class="seller-avatar" src="{{product.seller.avatar}}" mode="aspectFill" />
       <view class="seller-info">
