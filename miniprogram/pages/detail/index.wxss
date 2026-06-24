@@ -387,3 +387,18 @@ page {
 .action-btn-unlist::after {
   border: none;
 }
+
+.action-btn-unlist-disabled {
+  flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
+  color: var(--color-text-tertiary);
+  font-size: 28rpx;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 22rpx;
+  background: #e5e5ea;
+}
+.action-btn-unlist-disabled::after {
+  border: none;
+}

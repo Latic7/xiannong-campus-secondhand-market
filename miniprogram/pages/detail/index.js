@@ -27,7 +27,8 @@ Page({
     isOwner: false,
     isLoggedIn: false,
     activeOrderId: null,
-    canUnlist: false,               // 是否显示「下架商品」按钮
+    canUnlist: false,               // 是否可下架（true=显示红色可点击按钮）
+    unlistBlockedReason: '',        // 不可下架的原因提示文案
     // ── 下单状态 ──
     orderBtnText: '立即购买',       // 按钮文案：立即购买 / 已预约 / 交易进行中 / 已售出
     orderBtnDisabled: false,        // 按钮是否禁用
@@ -60,12 +61,22 @@ Page({
       const formatted = this.formatProduct(product)
       const isOwner = this.checkIsOwner(formatted)
       const st = normalizeStatus(formatted.status)
+      let canUnlist = false
+      let unlistBlockedReason = ''
+      if (isOwner) {
+        if (st === 'SOLD') {
+          unlistBlockedReason = '商品已售出，不可下架'
+        } else if (['PUBLISHED', 'PENDING', 'DRAFT'].includes(st)) {
+          canUnlist = true
+        }
+      }
       this.setData({
         product: formatted,
         images: formatted.images || [],
         loading: false,
         isOwner,
-        canUnlist: isOwner && ['PUBLISHED', 'PENDING', 'DRAFT'].includes(st),
+        canUnlist,
+        unlistBlockedReason,
         isLoggedIn: isLoggedIn(),
       })
       // 重置按钮状态
@@ -161,11 +172,19 @@ Page({
         o => Number(o.productId) === Number(productId) && ['RESERVED', 'CONFIRMED'].includes(o.status)
       )
       if (activeOrder) {
+        const isConfirmed = activeOrder.status === 'CONFIRMED'
         this.setData({
-          orderBtnText: activeOrder.status === 'RESERVED' ? '已预约' : '交易进行中',
+          orderBtnText: isConfirmed ? '交易进行中' : '已预约',
           orderBtnDisabled: true,
           activeOrderId: activeOrder.id,
         })
+        // 有已确认订单时，更新下架按钮状态
+        if (isConfirmed) {
+          this.setData({
+            canUnlist: false,
+            unlistBlockedReason: '商品已进入交易确认阶段，不可下架',
+          })
+        }
       }
     } catch (e) {
       // 静默失败，不影响页面正常使用
@@ -268,6 +287,12 @@ Page({
 
   // ── 下架商品 ──────────────────────────────
   onUnlistProduct() {
+    const { unlistBlockedReason } = this.data
+    // 如果不可下架（已售出/已确认），直接提示原因
+    if (unlistBlockedReason) {
+      wx.showToast({ title: unlistBlockedReason, icon: 'none' })
+      return
+    }
     wx.showModal({
       title: '确认下架',
       content: '下架后商品将显示为"已下架"，其他用户将无法购买。确定要下架吗？',
@@ -275,15 +300,13 @@ Page({
         if (!res.confirm) return
         try {
           wx.showLoading({ title: '下架中...' })
-          // 使用 DELETE 接口（后端 remove_product）
           await productService.remove(this.data.productId)
           wx.hideLoading()
           wx.showToast({ title: '已下架', icon: 'success' })
-          // 刷新页面状态
           this.loadProduct(this.data.productId)
         } catch (e) {
           wx.hideLoading()
-          wx.showToast({ title: e.message || '下架失败', icon: 'none' })
+          wx.showToast({ title: '下架失败，请稍后重试', icon: 'none' })
         }
       },
     })

@@ -105,7 +105,14 @@ def handle_report(report_id: int, payload: ReportHandleRequest, actor: CurrentAc
             if user:
                 deduction = {"warning": 10, "ban_user": 30, "unlist_product": 5}.get(payload.action, 10)
                 user.score = max(0, (user.score or 100) - deduction)
-                db.commit()
+
+        # 下架商品：将目标商品状态设为 REMOVED
+        if payload.action == "unlist_product" and report["targetType"] == "PRODUCT":
+            product = db.get(Product, report["targetId"])
+            if product and product.status != "REMOVED":
+                product.status = "REMOVED"
+
+        db.commit()
 
     updated = crud_update_report(
         report_id,

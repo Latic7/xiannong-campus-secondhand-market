@@ -1,11 +1,13 @@
 const { list: fetchProductList } = require('../../services/product.js');
 const userService = require('../../services/user.js');
 const categoryService = require('../../services/category.js');
+const orderService = require('../../services/order.js');
 const { getUserInfo } = require('../../utils/storage.js');
 
 const PAGE_TITLES = {
   my_published: '我的发布',
   my_favorites: '我的收藏',
+  my_sold: '我的售出',
   default: '全部商品',
 };
 
@@ -182,6 +184,20 @@ Page({
 
       if (listType === 'my_favorites') {
         data = await userService.getFavorites(this.data.page, this.data.size, this.buildParams());
+      } else if (listType === 'my_sold') {
+        data = await orderService.list({ role: 'seller', status: 'COMPLETED', page: this.data.page, size: this.data.size });
+        // 将订单数据映射为商品卡片可用的格式
+        if (data.list) {
+          data.list = data.list.map(order => ({
+            id: order.productId,
+            orderId: order.id,
+            title: order.product?.title || '商品信息不可用',
+            price: order.product?.price || 0,
+            images: order.product?.image ? [order.product.image] : [],
+            status: order.product?.status || 'SOLD',
+            description: '',
+          }))
+        }
       } else {
         const params = this.buildParams();
         if (listType === 'my_published') {
@@ -232,15 +248,30 @@ Page({
 
     const doLoad = listType === 'my_favorites'
       ? userService.getFavorites(page, size, this.buildParams())
-      : (() => {
-          const params = this.buildParams();
-          params.page = page;
-          if (listType === 'my_published') {
-            const user = getUserInfo();
-            if (user && user.id) params.ownerId = user.id;
-          }
-          return fetchProductList(params);
-        })();
+      : listType === 'my_sold'
+        ? orderService.list({ role: 'seller', status: 'COMPLETED', page, size }).then(data => {
+            if (data.list) {
+              data.list = data.list.map(order => ({
+                id: order.productId,
+                orderId: order.id,
+                title: order.product?.title || '商品信息不可用',
+                price: order.product?.price || 0,
+                images: order.product?.image ? [order.product.image] : [],
+                status: order.product?.status || 'SOLD',
+                description: '',
+              }))
+            }
+            return data
+          })
+        : (() => {
+            const params = this.buildParams();
+            params.page = page;
+            if (listType === 'my_published') {
+              const user = getUserInfo();
+              if (user && user.id) params.ownerId = user.id;
+            }
+            return fetchProductList(params);
+          })();
 
     doLoad.then(data => {
       const list = data.list || [];
@@ -428,9 +459,17 @@ Page({
 
   onCardTap(e) {
     const productId = e.detail?.productId || e.currentTarget.dataset?.productId;
-    if (productId) {
-      wx.navigateTo({ url: `/pages/detail/index?id=${productId}` });
+    if (!productId) return
+    // 我的售出：跳转到订单详情
+    if (this.data.listType === 'my_sold') {
+      // 从 products 中查找对应的 orderId
+      const item = this.data.products.find(p => p.id === productId)
+      if (item && item.orderId) {
+        wx.navigateTo({ url: `/pages/orders/detail?orderId=${item.orderId}` })
+        return
+      }
     }
+    wx.navigateTo({ url: `/pages/detail/index?id=${productId}` });
   },
 
   onRetry() {

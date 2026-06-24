@@ -69,7 +69,7 @@
       <text class="stat-label">已发布</text>
     </view>
     <view class="stat-divider"></view>
-    <view class="stat-item" bindtap="onMyOrders">
+    <view class="stat-item" bindtap="onMySold">
       <text class="stat-num">{{stats.sold}}</text>
       <text class="stat-label">已售出</text>
     </view>

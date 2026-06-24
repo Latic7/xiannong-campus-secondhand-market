@@ -251,6 +251,12 @@ Page({
     wx.navigateTo({ url: '/pages/list/index?type=my_published' })
   },
 
+  // ── 跳转：我的售出 ────────────────────────
+  onMySold() {
+    if (!this.checkLogin()) return
+    wx.navigateTo({ url: '/pages/list/index?type=my_sold' })
+  },
+
   // ── 跳转：我的收藏 ────────────────────────
   onMyFavorites() {
     if (!this.checkLogin()) return
