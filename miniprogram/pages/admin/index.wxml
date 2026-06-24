@@ -172,6 +172,56 @@
           </view>
         </view>
       </view>
+
+      <!-- 每日趋势 -->
+      <view wx:if="{{trendStats}}" class="stats-card">
+        <view class="stats-card-title">每日趋势</view>
+        <view class="stats-trend-section">
+          <view class="stats-trend-group">
+            <text class="stats-trend-group-title">📦 商品发布</text>
+            <view class="stats-trend-list">
+              <view class="stats-trend-item" wx:for="{{trendStats.productTrend}}" wx:key="date" wx:for-item="pt">
+                <text class="stats-trend-date">{{pt.date}}</text>
+                <text class="stats-trend-value">{{pt.value}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="stats-trend-group">
+            <text class="stats-trend-group-title">📋 成交订单</text>
+            <view class="stats-trend-list">
+              <view class="stats-trend-item" wx:for="{{trendStats.orderTrend}}" wx:key="date" wx:for-item="ot">
+                <text class="stats-trend-date">{{ot.date}}</text>
+                <text class="stats-trend-value">{{ot.value}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="stats-trend-group">
+            <text class="stats-trend-group-title">👤 用户注册</text>
+            <view class="stats-trend-list">
+              <view class="stats-trend-item" wx:for="{{trendStats.userTrend}}" wx:key="date" wx:for-item="ut">
+                <text class="stats-trend-date">{{ut.date}}</text>
+                <text class="stats-trend-value">{{ut.value}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 热门商品类别 -->
+      <view wx:if="{{categoryStats}}" class="stats-card">
+        <view class="stats-card-title">{{categoryStats.description}}（共 {{categoryStats.total}}）</view>
+        <view class="stats-series-list">
+          <view class="stats-series-item" wx:for="{{categoryStats.series}}" wx:key="label">
+            <view class="stats-series-header">
+              <text class="stats-series-label">{{item.label}}</text>
+              <text class="stats-series-value">{{item.value}}（{{item.percentage}}%）</text>
+            </view>
+            <view class="stats-bar-track">
+              <view class="stats-bar-fill" style="width:{{item.percentage}}%"></view>
+            </view>
+          </view>
+        </view>
+      </view>
     </block>
   </view>
 </view>

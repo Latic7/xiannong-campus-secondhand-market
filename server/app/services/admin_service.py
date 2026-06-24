@@ -9,6 +9,8 @@ from app.crud.admin import (
     stats_products as crud_stats_products,
     stats_trades as crud_stats_trades,
     stats_users as crud_stats_users,
+    stats_trends as crud_stats_trends,
+    stats_categories as crud_stats_categories,
 )
 from app.crud.report import get_report as crud_get_report
 from app.services import product_service
@@ -93,3 +95,11 @@ def stats_users(db: Session, start_date: str | None = None, end_date: str | None
 
 def admin_logs(db: Session, page: int = 1, size: int = 20, start_date: str | None = None, end_date: str | None = None) -> dict:
     return list_admin_logs(db, page=page, size=size, start_date=start_date, end_date=end_date)
+
+
+def stats_trends(db: Session, start_date: str | None = None, end_date: str | None = None) -> dict:
+    return crud_stats_trends(db, start_date=start_date, end_date=end_date)
+
+
+def stats_categories(db: Session) -> dict:
+    return crud_stats_categories(db)

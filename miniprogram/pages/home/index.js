@@ -61,7 +61,7 @@ Page({
     try {
       this.setData({ loading: true, errorMsg: '' });
       const [recommendData, latestData] = await Promise.allSettled([
-        fetchProductList({ page: 1, size: 6, sort: 'createdAt_desc' }),
+        fetchProductList({ page: 1, size: 6, sort: 'hot' }),
         fetchProductList({ page: 1, size: 10, sort: 'createdAt_desc' })
       ]);
 

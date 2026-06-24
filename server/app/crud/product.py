@@ -122,6 +122,8 @@ def list_products(
         stmt = stmt.order_by(Product.price.asc())
     elif sort == "price_desc":
         stmt = stmt.order_by(Product.price.desc())
+    elif sort == "hot":
+        stmt = stmt.order_by(Product.favorite_count.desc().nullslast(), Product.created_at.desc())
     else:
         stmt = stmt.order_by(Product.created_at.desc())
 

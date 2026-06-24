@@ -917,6 +917,51 @@ paths:
                       data:
                         $ref: '#/components/schemas/StatsSeriesPayload'
 
+  /api/admin/stats/trends:
+    get:
+      tags: [Admin]
+      summary: Get daily trends (products, trades, users)
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+          description: 起始日期，格式 YYYY-MM-DD
+        - name: endDate
+          in: query
+          schema:
+            type: string
+          description: 结束日期，格式 YYYY-MM-DD
+      responses:
+        '200':
+          description: Daily trend data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StatsTrendPayload'
+
+  /api/admin/stats/categories:
+    get:
+      tags: [Admin]
+      summary: Get product count by category
+      responses:
+        '200':
+          description: Category statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/StatsSeriesPayload'
+
   /api/admin/logs:
     get:
       tags: [Admin]
@@ -1741,3 +1786,30 @@ components:
         reports:
           type: integer
           example: 3
+
+    StatsTrendPayload:
+      type: object
+      description: Daily trend data.
+      properties:
+        productTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatsTrendPoint'
+        orderTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatsTrendPoint'
+        userTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatsTrendPoint'
+
+    StatsTrendPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          example: '2026-06-01'
+        value:
+          type: integer
+          example: 5

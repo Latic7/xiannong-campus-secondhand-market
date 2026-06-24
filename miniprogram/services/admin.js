@@ -47,4 +47,14 @@ module.exports = {
   listAdminLogs(params = {}) {
     return api.get('/api/admin/logs', params)
   },
+
+  /** 每日趋势（商品发布/成交/注册） */
+  statsTrends(params = {}) {
+    return api.get('/api/admin/stats/trends', params)
+  },
+
+  /** 热门商品类别 */
+  statsCategories(params = {}) {
+    return api.get('/api/admin/stats/categories', params)
+  },
 }

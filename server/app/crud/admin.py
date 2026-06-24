@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.models.admin_log import AdminLog
+from app.models.category import Category
 from app.models.order import Order
 from app.models.product import Product
 from app.models.report import Report
@@ -211,3 +212,44 @@ def list_admin_logs(db: Session, page: int = 1, size: int = 20, start_date: str 
 			for row in rows
 		]
 		return {"list": items, "page": {"page": page, "size": size, "total": int(total)}}
+
+
+def stats_trends(db: Session, start_date: str | None = None, end_date: str | None = None) -> dict:
+	"""每日趋势统计：商品发布数、成交订单数、用户注册数。"""
+	from_dt, to_dt = _parse_date_range(start_date, end_date)
+
+	def _daily(model, time_col, label_field=None):
+		date_col = func.date(time_col)
+		stmt = select(date_col, func.count(model.id)).group_by(date_col).order_by(date_col)
+		if from_dt:
+			stmt = stmt.where(time_col >= from_dt)
+		if to_dt:
+			stmt = stmt.where(time_col <= to_dt)
+		rows = db.execute(stmt).all()
+		return [{"date": str(row[0]), "value": int(row[1])} for row in rows]
+
+	return {
+		"productTrend": _daily(Product, Product.created_at),
+		"orderTrend": _daily(Order, Order.created_at),
+		"userTrend": _daily(User, User.created_at),
+	}
+
+
+def stats_categories(db: Session) -> dict:
+	"""热门商品类别：按商品分类统计在售商品数量。"""
+	stmt = (
+		select(Category.name, func.count(Product.id))
+		.outerjoin(Product, Product.category_id == Category.id)
+		.group_by(Category.id, Category.name)
+		.order_by(func.count(Product.id).desc())
+	)
+	rows = db.execute(stmt).all()
+	total = sum(int(row[1]) for row in rows) or 0
+	return {
+		"series": [
+			{"label": str(row[0]), "value": int(row[1]), "percentage": round(row[1] / total * 100, 1) if total > 0 else 0.0}
+			for row in rows
+		],
+		"total": total,
+		"description": "按商品分类统计在售商品分布情况",
+	}

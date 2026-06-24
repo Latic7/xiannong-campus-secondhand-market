@@ -17,6 +17,8 @@ from app.services.admin_service import (
     stats_products as stats_products_service,
     stats_trades as stats_trades_service,
     stats_users as stats_users_service,
+    stats_trends as stats_trends_service,
+    stats_categories as stats_categories_service,
 )
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
@@ -132,6 +134,24 @@ def stats_users(
     _: dict = Depends(get_current_admin),
 ) -> dict:
     return api_ok(stats_users_service(db, start_date=startDate, end_date=endDate))
+
+
+@router.get("/stats/trends")
+def stats_trends(
+    startDate: str | None = Query(None, description="起始日期，格式 YYYY-MM-DD"),
+    endDate: str | None = Query(None, description="结束日期，格式 YYYY-MM-DD"),
+    db: Session = Depends(get_db),
+    _: dict = Depends(get_current_admin),
+) -> dict:
+    return api_ok(stats_trends_service(db, start_date=startDate, end_date=endDate))
+
+
+@router.get("/stats/categories")
+def stats_categories(
+    db: Session = Depends(get_db),
+    _: dict = Depends(get_current_admin),
+) -> dict:
+    return api_ok(stats_categories_service(db))
 
 
 @router.get("/logs")

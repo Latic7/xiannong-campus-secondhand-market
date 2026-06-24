@@ -51,6 +51,8 @@ Page({
     productStats: null,
     tradeStats: null,
     userStats: null,
+    trendStats: null,
+    categoryStats: null,
     statsLoading: false,
   },
 
@@ -291,13 +293,15 @@ Page({
       const params = {}
       if (this.data.statsDateStart) params.startDate = this.data.statsDateStart
       if (this.data.statsDateEnd) params.endDate = this.data.statsDateEnd
-      const [overview, productStats, tradeStats, userStats] = await Promise.all([
+      const [overview, productStats, tradeStats, userStats, trendStats, categoryStats] = await Promise.all([
         adminService.statsOverview(params),
         adminService.statsProducts(params),
         adminService.statsTrades(params),
         adminService.statsUsers(params),
+        adminService.statsTrends(params),
+        adminService.statsCategories(),
       ])
-      this.setData({ overview, productStats, tradeStats, userStats, statsLoading: false })
+      this.setData({ overview, productStats, tradeStats, userStats, trendStats, categoryStats, statsLoading: false })
     } catch (err) {
       this.setData({ statsLoading: false })
       wx.showToast({ title: err.message || '加载报表失败', icon: 'none' })
