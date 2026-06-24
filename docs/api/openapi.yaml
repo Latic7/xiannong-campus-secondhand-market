@@ -809,6 +809,17 @@ paths:
     get:
       tags: [Admin]
       summary: Get operation overview metrics
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+          description: 起始日期，格式 YYYY-MM-DD
+        - name: endDate
+          in: query
+          schema:
+            type: string
+          description: 结束日期，格式 YYYY-MM-DD
       responses:
         '200':
           description: Overview stats
@@ -826,6 +837,17 @@ paths:
     get:
       tags: [Admin]
       summary: Product statistics
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+          description: 起始日期，格式 YYYY-MM-DD
+        - name: endDate
+          in: query
+          schema:
+            type: string
+          description: 结束日期，格式 YYYY-MM-DD
       responses:
         '200':
           description: Product statistics.
@@ -843,6 +865,17 @@ paths:
     get:
       tags: [Admin]
       summary: Trade statistics
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+          description: 起始日期，格式 YYYY-MM-DD
+        - name: endDate
+          in: query
+          schema:
+            type: string
+          description: 结束日期，格式 YYYY-MM-DD
       responses:
         '200':
           description: Trade statistics.
@@ -860,6 +893,17 @@ paths:
     get:
       tags: [Admin]
       summary: User activity and credit statistics
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+          description: 起始日期，格式 YYYY-MM-DD
+        - name: endDate
+          in: query
+          schema:
+            type: string
+          description: 结束日期，格式 YYYY-MM-DD
       responses:
         '200':
           description: User statistics.
@@ -880,6 +924,16 @@ paths:
       parameters:
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
+        - name: startDate
+          in: query
+          schema:
+            type: string
+          description: 起始日期，格式 YYYY-MM-DD
+        - name: endDate
+          in: query
+          schema:
+            type: string
+          description: 结束日期，格式 YYYY-MM-DD
       responses:
         '200':
           description: Admin logs

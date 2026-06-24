@@ -76,4 +76,90 @@
     <loading-state wx:if="{{rptLoading && reports.length > 0}}" count="1" />
   </scroll-view>
   <empty-state wx:elif="{{tabIndex === 1 && !rptLoading && !rptError}}" message="暂无待处理举报" />
+
+  <!-- ── 报表 ──────────────────────────────── -->
+  <view wx:elif="{{tabIndex === 2}}" class="stats-section">
+    <!-- 日期筛选 -->
+    <view class="stats-date-bar">
+      <input class="stats-date-input" type="text" placeholder="起始日期" value="{{statsDateStart}}" bindinput="onStatsDateStartInput" />
+      <text class="stats-date-divider">至</text>
+      <input class="stats-date-input" type="text" placeholder="结束日期" value="{{statsDateEnd}}" bindinput="onStatsDateEndInput" />
+      <button class="stats-query-btn" size="mini" bindtap="loadStats">查询</button>
+    </view>
+
+    <loading-state wx:if="{{statsLoading}}" count="4" />
+
+    <block wx:else>
+      <!-- 总览卡片 -->
+      <view wx:if="{{overview}}" class="stats-card">
+        <view class="stats-card-title">平台总览</view>
+        <view class="stats-overview-grid">
+          <view class="stats-overview-item">
+            <text class="stats-overview-num">{{overview.users}}</text>
+            <text class="stats-overview-label">用户</text>
+          </view>
+          <view class="stats-overview-item">
+            <text class="stats-overview-num">{{overview.products}}</text>
+            <text class="stats-overview-label">商品</text>
+          </view>
+          <view class="stats-overview-item">
+            <text class="stats-overview-num">{{overview.orders}}</text>
+            <text class="stats-overview-label">订单</text>
+          </view>
+          <view class="stats-overview-item">
+            <text class="stats-overview-num">{{overview.reports}}</text>
+            <text class="stats-overview-label">举报</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 商品分布 -->
+      <view wx:if="{{productStats}}" class="stats-card">
+        <view class="stats-card-title">{{productStats.description}}（共 {{productStats.total}}）</view>
+        <view class="stats-series-list">
+          <view class="stats-series-item" wx:for="{{productStats.series}}" wx:key="label">
+            <view class="stats-series-header">
+              <text class="stats-series-label">{{item.label}}</text>
+              <text class="stats-series-value">{{item.value}}（{{item.percentage}}%）</text>
+            </view>
+            <view class="stats-bar-track">
+              <view class="stats-bar-fill" style="width:{{item.percentage}}%"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 交易分布 -->
+      <view wx:if="{{tradeStats}}" class="stats-card">
+        <view class="stats-card-title">{{tradeStats.description}}（共 {{tradeStats.total}}）</view>
+        <view class="stats-series-list">
+          <view class="stats-series-item" wx:for="{{tradeStats.series}}" wx:key="label">
+            <view class="stats-series-header">
+              <text class="stats-series-label">{{item.label}}</text>
+              <text class="stats-series-value">{{item.value}}（{{item.percentage}}%）</text>
+            </view>
+            <view class="stats-bar-track">
+              <view class="stats-bar-fill" style="width:{{item.percentage}}%"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 用户分布 -->
+      <view wx:if="{{userStats}}" class="stats-card">
+        <view class="stats-card-title">{{userStats.description}}（共 {{userStats.total}}）</view>
+        <view class="stats-series-list">
+          <view class="stats-series-item" wx:for="{{userStats.series}}" wx:key="label">
+            <view class="stats-series-header">
+              <text class="stats-series-label">{{item.label}}</text>
+              <text class="stats-series-value">{{item.value}}（{{item.percentage}}%）</text>
+            </view>
+            <view class="stats-bar-track">
+              <view class="stats-bar-fill" style="width:{{item.percentage}}%"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </block>
+  </view>
 </view>

@@ -95,41 +95,51 @@ def handle_report(
 
 @router.get("/stats/overview")
 def stats_overview(
+    startDate: str | None = Query(None, description="起始日期，格式 YYYY-MM-DD"),
+    endDate: str | None = Query(None, description="结束日期，格式 YYYY-MM-DD"),
     db: Session = Depends(get_db),
     _: dict = Depends(get_current_admin),
 ) -> dict:
-    return api_ok(stats_overview_service(db))
+    return api_ok(stats_overview_service(db, start_date=startDate, end_date=endDate))
 
 
 @router.get("/stats/products")
 def stats_products(
+    startDate: str | None = Query(None, description="起始日期，格式 YYYY-MM-DD"),
+    endDate: str | None = Query(None, description="结束日期，格式 YYYY-MM-DD"),
     db: Session = Depends(get_db),
     _: dict = Depends(get_current_admin),
 ) -> dict:
-    return api_ok(stats_products_service(db))
+    return api_ok(stats_products_service(db, start_date=startDate, end_date=endDate))
 
 
 @router.get("/stats/trades")
 def stats_trades(
+    startDate: str | None = Query(None, description="起始日期，格式 YYYY-MM-DD"),
+    endDate: str | None = Query(None, description="结束日期，格式 YYYY-MM-DD"),
     db: Session = Depends(get_db),
     _: dict = Depends(get_current_admin),
 ) -> dict:
-    return api_ok(stats_trades_service(db))
+    return api_ok(stats_trades_service(db, start_date=startDate, end_date=endDate))
 
 
 @router.get("/stats/users")
 def stats_users(
+    startDate: str | None = Query(None, description="起始日期，格式 YYYY-MM-DD"),
+    endDate: str | None = Query(None, description="结束日期，格式 YYYY-MM-DD"),
     db: Session = Depends(get_db),
     _: dict = Depends(get_current_admin),
 ) -> dict:
-    return api_ok(stats_users_service(db))
+    return api_ok(stats_users_service(db, start_date=startDate, end_date=endDate))
 
 
 @router.get("/logs")
 def admin_logs(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    startDate: str | None = Query(None, description="起始日期，格式 YYYY-MM-DD"),
+    endDate: str | None = Query(None, description="结束日期，格式 YYYY-MM-DD"),
     db: Session = Depends(get_db),
     _: dict = Depends(get_current_admin),
 ) -> dict:
-    return api_ok(admin_logs_service(db, page=page, size=size))
+    return api_ok(admin_logs_service(db, page=page, size=size, start_date=startDate, end_date=endDate))

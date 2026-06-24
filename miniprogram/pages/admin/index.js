@@ -16,6 +16,7 @@ const REPORT_ACTIONS = [
 const TAB_OPTIONS = [
   { key: 'products', label: '商品审核' },
   { key: 'reports', label: '举报审核' },
+  { key: 'stats', label: '报表' },
 ]
 
 Page({
@@ -40,6 +41,14 @@ Page({
     // 待处理计数
     pendingReports: 0,
     pendingProducts: 0,
+    // ── 报表 ──
+    statsDateStart: '',
+    statsDateEnd: '',
+    overview: null,
+    productStats: null,
+    tradeStats: null,
+    userStats: null,
+    statsLoading: false,
   },
 
   onLoad() {
@@ -63,6 +72,7 @@ Page({
     const tab = TAB_OPTIONS[this.data.tabIndex]?.key
     if (tab === 'products') this.loadProducts()
     else if (tab === 'reports') this.loadReports()
+    else if (tab === 'stats') this.loadStats()
   },
 
   async loadCounts() {
@@ -246,5 +256,32 @@ Page({
   onRptScrollBottom() {
     if (!this.data.rptHasMore || this.data.rptLoading) return
     this.loadReports({ append: true })
+  },
+
+  // ── 报表 ──────────────────────────────────
+  onStatsDateStartInput(e) {
+    this.setData({ statsDateStart: e.detail.value })
+  },
+  onStatsDateEndInput(e) {
+    this.setData({ statsDateEnd: e.detail.value })
+  },
+
+  async loadStats() {
+    this.setData({ statsLoading: true })
+    try {
+      const params = {}
+      if (this.data.statsDateStart) params.startDate = this.data.statsDateStart
+      if (this.data.statsDateEnd) params.endDate = this.data.statsDateEnd
+      const [overview, productStats, tradeStats, userStats] = await Promise.all([
+        adminService.statsOverview(params),
+        adminService.statsProducts(params),
+        adminService.statsTrades(params),
+        adminService.statsUsers(params),
+      ])
+      this.setData({ overview, productStats, tradeStats, userStats, statsLoading: false })
+    } catch (err) {
+      this.setData({ statsLoading: false })
+      wx.showToast({ title: err.message || '加载报表失败', icon: 'none' })
+    }
   },
 })

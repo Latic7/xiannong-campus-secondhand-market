@@ -73,21 +73,21 @@ def handle_report(db: Session, report_id: int, payload) -> dict:
     return result
 
 
-def stats_overview(db: Session) -> dict:
-    return crud_stats_overview()
+def stats_overview(db: Session, start_date: str | None = None, end_date: str | None = None) -> dict:
+    return crud_stats_overview(db, start_date=start_date, end_date=end_date)
 
 
-def stats_products(db: Session) -> dict:
-    return crud_stats_products()
+def stats_products(db: Session, start_date: str | None = None, end_date: str | None = None) -> dict:
+    return crud_stats_products(db, start_date=start_date, end_date=end_date)
 
 
-def stats_trades(db: Session) -> dict:
-    return crud_stats_trades()
+def stats_trades(db: Session, start_date: str | None = None, end_date: str | None = None) -> dict:
+    return crud_stats_trades(db, start_date=start_date, end_date=end_date)
 
 
-def stats_users(db: Session) -> dict:
-    return crud_stats_users()
+def stats_users(db: Session, start_date: str | None = None, end_date: str | None = None) -> dict:
+    return crud_stats_users(db, start_date=start_date, end_date=end_date)
 
 
-def admin_logs(db: Session, page: int = 1, size: int = 20) -> dict:
-    return list_admin_logs(page=page, size=size)
+def admin_logs(db: Session, page: int = 1, size: int = 20, start_date: str | None = None, end_date: str | None = None) -> dict:
+    return list_admin_logs(db, page=page, size=size, start_date=start_date, end_date=end_date)
