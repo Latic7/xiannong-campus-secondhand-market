@@ -123,7 +123,7 @@ Page({
     const orderId = e.currentTarget.dataset.id
     wx.showModal({
       title: '确认交易',
-      content: '确定选择此买家进行交易？其他买家的预约将被自动取消。',
+      content: '确认将该商品售予当前买家？\n\n点击确认后，其他买家的预约将被自动取消，商品也将不再能被下架。请确认您已与买家沟通无误。',
       success: async (res) => {
         if (res.confirm) {
           try {
@@ -146,7 +146,7 @@ Page({
     const orderId = e.currentTarget.dataset.id
     wx.showModal({
       title: '取消订单',
-      content: '确定取消此订单？',
+      content: '确定取消此订单？\n\n该操作不可逆，取消后无法恢复。',
       success: async (res) => {
         if (res.confirm) {
           try {
@@ -169,7 +169,7 @@ Page({
     const orderId = e.currentTarget.dataset.id
     wx.showModal({
       title: '确认完成',
-      content: '确认收货并完成交易？',
+      content: '请确认您已收到商品且无问题后再点击确认。\n\n点击后交易将被标记为已完成，卖家将获得信誉分奖励。此后将无法撤销此操作。',
       success: async (res) => {
         if (res.confirm) {
           try {
