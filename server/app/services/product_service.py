@@ -43,9 +43,9 @@ def list_products(
     page = max(page, 1)
     size = min(max(size, 1), 100)
     # 如果前端传了 status_list 则用指定的状态，否则走默认逻辑
-    # 默认：公开列表只显示已发布或已售出商品；owner 自己的列表显示所有状态
+    # 默认：公开列表显示已发布、已售出、已下架商品；owner 自己的列表显示所有状态
     if status_list is None:
-        statuses = [ProductStatus.PUBLISHED.value, ProductStatus.SOLD.value] if owner_id is None else None
+        statuses = [ProductStatus.PUBLISHED.value, ProductStatus.SOLD.value, ProductStatus.REMOVED.value] if owner_id is None else None
     else:
         statuses = status_list
     items, total = product_crud.list_products(db, page, size, keyword, sort, category_ids, status=statuses, owner_id=owner_id)
@@ -81,10 +81,12 @@ def update_product(db: Session, product_id: int, payload: ProductUpdateRequest, 
         raise StateConflictError("sold products cannot be changed", {"productId": product_id})
     if changes.get("status") == ProductStatus.PUBLISHED.value:
         raise ForbiddenError("product publishing requires administrator review", {"productId": product_id})
-    if ("price" in changes or changes.get("status") == ProductStatus.REMOVED.value) and order_crud.get_active_order_for_product(
-        db, product_id
-    ):
-        raise StateConflictError("active order locks product price and availability", {"productId": product_id})
+    # 修改价格时仍受任何活跃订单（RESERVED/CONFIRMED）限制
+    if "price" in changes and order_crud.get_active_order_for_product(db, product_id):
+        raise StateConflictError("active order locks product price", {"productId": product_id})
+    # 下架时仅受已确认订单（CONFIRMED）限制，允许已预约（RESERVED）时下架
+    if changes.get("status") == ProductStatus.REMOVED.value and order_crud.has_confirmed_order_for_product(db, product_id):
+        raise StateConflictError("confirmed order prevents product unlisting", {"productId": product_id})
 
     allowed_targets = {
         ProductStatus.DRAFT.value: {ProductStatus.PENDING.value, ProductStatus.REMOVED.value},
@@ -109,8 +111,9 @@ def remove_product(db: Session, product_id: int, actor: CurrentActor) -> dict:
         return {"id": product_id, "deleted": True, "status": product.status}
     if product.status == ProductStatus.SOLD.value:
         raise StateConflictError("sold products cannot be unlisted", {"productId": product_id})
-    if order_crud.get_active_order_for_product(db, product_id):
-        raise StateConflictError("active order prevents product unlisting", {"productId": product_id})
+    # 仅已确认订单（CONFIRMED）阻止下架，已预约（RESERVED）允许下架
+    if order_crud.has_confirmed_order_for_product(db, product_id):
+        raise StateConflictError("confirmed order prevents product unlisting", {"productId": product_id})
     product_crud.update_product(db, product, {"status": ProductStatus.REMOVED.value})
     db.commit()
     return {"id": product_id, "deleted": True, "status": product.status}

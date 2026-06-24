@@ -372,3 +372,18 @@ page {
 .action-btn-chat::after {
   border: none;
 }
+
+.action-btn-unlist {
+  flex: 1;
+  height: 84rpx;
+  line-height: 84rpx;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 22rpx;
+  background: #ff3b30;
+}
+.action-btn-unlist::after {
+  border: none;
+}

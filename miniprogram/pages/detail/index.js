@@ -27,6 +27,7 @@ Page({
     isOwner: false,
     isLoggedIn: false,
     activeOrderId: null,
+    canUnlist: false,               // 是否显示「下架商品」按钮
     // ── 下单状态 ──
     orderBtnText: '立即购买',       // 按钮文案：立即购买 / 已预约 / 交易进行中 / 已售出
     orderBtnDisabled: false,        // 按钮是否禁用
@@ -57,11 +58,14 @@ Page({
       const raw = await productService.getDetail(productId)
       const product = this.mapBackendProduct(raw)
       const formatted = this.formatProduct(product)
+      const isOwner = this.checkIsOwner(formatted)
+      const st = normalizeStatus(formatted.status)
       this.setData({
         product: formatted,
         images: formatted.images || [],
         loading: false,
-        isOwner: this.checkIsOwner(formatted),
+        isOwner,
+        canUnlist: isOwner && ['PUBLISHED', 'PENDING', 'DRAFT'].includes(st),
         isLoggedIn: isLoggedIn(),
       })
       // 重置按钮状态
@@ -257,6 +261,29 @@ Page({
           wx.showToast({ title: '举报已提交', icon: 'success' })
         } catch (e) {
           wx.showToast({ title: e.message || '举报失败', icon: 'none' })
+        }
+      },
+    })
+  },
+
+  // ── 下架商品 ──────────────────────────────
+  onUnlistProduct() {
+    wx.showModal({
+      title: '确认下架',
+      content: '下架后商品将显示为"已下架"，其他用户将无法购买。确定要下架吗？',
+      success: async (res) => {
+        if (!res.confirm) return
+        try {
+          wx.showLoading({ title: '下架中...' })
+          // 使用 DELETE 接口（后端 remove_product）
+          await productService.remove(this.data.productId)
+          wx.hideLoading()
+          wx.showToast({ title: '已下架', icon: 'success' })
+          // 刷新页面状态
+          this.loadProduct(this.data.productId)
+        } catch (e) {
+          wx.hideLoading()
+          wx.showToast({ title: e.message || '下架失败', icon: 'none' })
         }
       },
     })

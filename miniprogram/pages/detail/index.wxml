@@ -125,8 +125,13 @@
     <text class="action-label">举报</text>
   </view>
 
+  <!-- 下架商品（仅卖家本人且商品可下架时显示） -->
+  <button wx:if="{{canUnlist}}" class="action-btn-unlist" bindtap="onUnlistProduct">
+    下架商品
+  </button>
+
   <!-- 给卖家留言（有活跃订单时才显示） -->
-  <button wx:if="{{activeOrderId}}" class="action-btn-chat" bindtap="onContactSellerChat">
+  <button wx:elif="{{activeOrderId}}" class="action-btn-chat" bindtap="onContactSellerChat">
     给卖家留言
   </button>
 

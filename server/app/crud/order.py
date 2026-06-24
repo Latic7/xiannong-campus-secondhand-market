@@ -128,6 +128,15 @@ def get_active_order_for_product(db: Session, product_id: int) -> Order | None:
     )
 
 
+def has_confirmed_order_for_product(db: Session, product_id: int) -> bool:
+    """检查商品是否存在 CONFIRMED（已确认）订单，用于判断能否下架。"""
+    return db.scalar(
+        select(Order.id)
+        .where(Order.product_id == product_id, Order.status == "CONFIRMED")
+        .limit(1)
+    ) is not None
+
+
 def get_active_order_for_buyer_and_product(
     db: Session, buyer_id: int, product_id: int
 ) -> Order | None:

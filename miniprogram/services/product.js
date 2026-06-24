@@ -26,6 +26,11 @@ module.exports = {
     return api.put('/api/products/' + productId, data)
   },
 
+  /** 下架/删除商品 */
+  remove(productId) {
+    return api.del('/api/products/' + productId)
+  },
+
   /**
    * 上传商品图片（微信云托管对象存储方式）
    * 1. 用 wx.cloud.uploadFile 上传到云存储
