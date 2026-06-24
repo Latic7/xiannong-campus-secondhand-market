@@ -3,9 +3,10 @@ page {
 }
 
 .page-body {
+  position: relative;
+  background: rgba(245, 245, 247, 0.2);
   min-height: 100vh;
   padding-bottom: 150rpx;
-  background: var(--color-bg);
 }
 
 .user-header {
@@ -28,6 +29,7 @@ page {
   border-top: 6rpx solid rgba(11, 107, 67, 0.18);
 }
 
+/* ── 头像区域 ─────────────────────────────── */
 .avatar-section {
   position: relative;
   width: 116rpx;
@@ -44,6 +46,30 @@ page {
   height: 100%;
   border-radius: 50%;
   background: #ededf2;
+}
+
+/* 生成的几何头像（5×5 identicon） */
+.identicon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3rpx;
+  padding: 14rpx;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.identicon-row {
+  display: flex;
+  gap: 3rpx;
+}
+
+.identicon-cell {
+  width: 15rpx;
+  height: 15rpx;
+  border-radius: 3rpx;
+  flex-shrink: 0;
 }
 
 .avatar-placeholder {
@@ -77,6 +103,12 @@ page {
   gap: 8rpx;
 }
 
+.nickname-row {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+}
+
 .user-nickname,
 .login-prompt {
   color: var(--color-text);
@@ -85,6 +117,29 @@ page {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.banned-badge {
+  display: inline-block;
+  margin-left: 10rpx;
+  padding: 4rpx 14rpx;
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 600;
+  background: #ff3b30;
+  border-radius: 999rpx;
+  vertical-align: middle;
+}
+
+.admin-badge {
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  line-height: 1.4;
 }
 
 .login-hint {
@@ -185,6 +240,12 @@ page {
   border-bottom: 0;
 }
 
+.menu-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
 .menu-left {
   display: flex;
   align-items: center;
@@ -203,6 +264,25 @@ page {
   color: var(--color-text);
   font-size: 28rpx;
   font-weight: 500;
+}
+
+.menu-right {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.unread-badge {
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 20rpx;
+  font-weight: 700;
+  line-height: 32rpx;
+  text-align: center;
+  border-radius: 16rpx;
 }
 
 .menu-arrow {

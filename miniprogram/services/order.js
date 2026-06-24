@@ -6,6 +6,11 @@ const api = require('../utils/api')
 
 module.exports = {
 
+  /** 我的订单列表 */
+  list(params = {}) {
+    return api.get('/api/orders', params)
+  },
+
   /** 创建订单 */
   create(data) {
     return api.post('/api/orders', data)
@@ -29,5 +34,15 @@ module.exports = {
   /** 完成订单 */
   complete(orderId) {
     return api.post('/api/orders/' + orderId + '/complete')
+  },
+
+  /** 获取订单消息列表 */
+  getMessages(orderId, params = {}) {
+    return api.get('/api/orders/' + orderId + '/messages', params)
+  },
+
+  /** 发送订单消息 */
+  sendMessage(orderId, data) {
+    return api.post('/api/orders/' + orderId + '/messages', data)
   },
 }

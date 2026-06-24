@@ -1,7 +1,5 @@
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 <view class="container">
-  <!-- 背景图 -->
-  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
-
   <!-- 页面标题（我的发布 / 我的收藏） -->
   <view class="page-title-bar" wx:if="{{listType}}">
     <text class="page-title-text">{{pageTitle}}</text>
@@ -27,6 +25,8 @@
           wx:for="{{activeTags}}"
           wx:key="key"
           data-key="{{item.key}}"
+          data-categoryid="{{item.categoryId}}"
+          data-statusvalue="{{item.statusValue}}"
           bindtap="onRemoveTag"
         >
           <text class="tag-prefix">{{item.prefix}}：</text>
@@ -44,7 +44,7 @@
   <scroll-view class="category-scroll" scroll-x>
     <view class="category-list">
       <view
-        class="category-item {{item.id === categoryId ? 'active' : ''}}"
+        class="category-item {{selectedCategorySet[item.id] ? 'active' : ''}}"
         wx:for="{{categories}}"
         wx:key="id"
         data-id="{{item.id}}"
@@ -58,15 +58,18 @@
   <!-- 初始加载骨架屏 -->
   <loading-state wx:if="{{loading && products.length === 0}}" count="4" />
 
+  <!-- 错误态 -->
+  <error-tip wx:elif="{{!loading && errorMsg && products.length === 0}}" message="{{errorMsg}}" bind:retry="onRetry" />
+
   <!-- 商品列表 -->
-  <view class="product-list" wx:if="{{products.length > 0}}">
+  <view class="product-list" wx:elif="{{products.length > 0}}">
     <block wx:for="{{products}}" wx:key="id">
       <item-card item="{{item}}" bind:tap="onCardTap" />
     </block>
   </view>
 
   <!-- 空状态 -->
-  <empty-state wx:if="{{!loading && products.length === 0}}" message="暂无商品" />
+  <empty-state wx:elif="{{!loading && !errorMsg && products.length === 0}}" message="暂无商品" />
 
   <!-- 底部加载提示 -->
   <view class="bottom-tip" wx:if="{{products.length > 0}}">
@@ -83,19 +86,6 @@
   <view class="filter-panel {{showFilter ? 'active' : ''}}" catchtap="noop">
     <view class="filter-section">
       <view class="filter-label">价格区间</view>
-      <view class="price-tags">
-        <view
-          class="price-tag {{selectedPriceIndex === index ? 'active' : ''}}"
-          wx:for="{{priceRanges}}"
-          wx:key="index"
-          data-min="{{item.min}}"
-          data-max="{{item.max}}"
-          data-index="{{index}}"
-          bindtap="onPriceRangeChange"
-        >
-          <text>{{item.label}}</text>
-        </view>
-      </view>
       <view class="custom-price-row">
         <input
           class="custom-price-input"
@@ -114,6 +104,20 @@
         />
         <view class="custom-price-confirm" bindtap="onCustomPriceConfirm">
           <text>确定</text>
+        </view>
+      </view>
+    </view>
+    <view class="filter-section">
+      <view class="filter-label">商品状态</view>
+      <view class="status-tags">
+        <view
+          class="status-tag {{statusActiveSet[item.value] ? 'active' : ''}}"
+          wx:for="{{statusOptions}}"
+          wx:key="value"
+          data-value="{{item.value}}"
+          bindtap="onStatusToggle"
+        >
+          <text>{{item.label}}</text>
         </view>
       </view>
     </view>

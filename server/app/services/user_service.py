@@ -52,8 +52,8 @@ class UserService:
             "nickname": user.nickname,
             "avatar": user.avatar,
             "score": user.score,
-            "status": user.status if user.status else UserStatus.ACTIVE.value,
-            "is_admin": user.is_admin,
+            "status": user.status if user.status else "active",  # 直接返回数据库值（小写）
+            "isAdmin": user.is_admin,  # 改为 isAdmin（驼峰命名，与 OpenAPI 一致）
             "college": user.college,
             "contact": user.contact,
             "favorites": favorites_count,
@@ -63,7 +63,7 @@ class UserService:
     
     # ========== 用户创建 ==========
     
-    def create_or_get_user(self, openid: str, is_admin: bool = False) -> User:  # 修改：添加 is_admin 参数
+    def create_or_get_user(self, openid: str, is_admin: bool = False) -> User:
         """创建新用户或返回已有用户"""
         user = self.get_user_by_openid(openid)
         
@@ -76,8 +76,8 @@ class UserService:
                 nickname=default_nickname,
                 avatar="",
                 score=100,
-                status=UserStatus.ACTIVE.value,
-                is_admin=is_admin,  # 新增
+                status="active",  # 数据库存储小写
+                is_admin=is_admin,
             )
             self.db.add(user)
             self.db.commit()
@@ -143,6 +143,8 @@ class UserService:
         添加收藏
         返回: 是否新增成功（如果已存在则返回 False）
         """
+        from app.models.product import Product
+
         if self.is_favorited(user_id, product_id):
             return False
         
@@ -151,6 +153,10 @@ class UserService:
             product_id=product_id
         )
         self.db.add(favorite)
+        # 更新商品收藏数
+        self.db.query(Product).filter(Product.id == product_id).update(
+            {Product.favorite_count: Product.favorite_count + 1}
+        )
         self.db.commit()
         return True
     
@@ -159,6 +165,8 @@ class UserService:
         取消收藏
         返回: 是否删除成功
         """
+        from app.models.product import Product
+
         favorite = self.db.query(Favorite).filter(
             Favorite.user_id == user_id,
             Favorite.product_id == product_id
@@ -168,6 +176,12 @@ class UserService:
             return False
         
         self.db.delete(favorite)
+        # 更新商品收藏数（不低于 0）
+        self.db.query(Product).filter(
+            Product.id == product_id, Product.favorite_count > 0
+        ).update(
+            {Product.favorite_count: Product.favorite_count - 1}
+        )
         self.db.commit()
         return True
     
@@ -178,7 +192,7 @@ class UserService:
         size: int = 20,
         keyword: str | None = None,
         sort: str | None = None,
-        category_id: int | None = None,
+        category_ids: list[int] | None = None,
     ) -> Tuple[list, int]:
         """
         获取收藏列表（分页 + 筛选），返回完整商品信息，对齐 OpenAPI ProductListPayload。
@@ -203,8 +217,8 @@ class UserService:
             query = query.filter(
                 Product.title.ilike(kw) | Product.description.ilike(kw)
             )
-        if category_id is not None:
-            query = query.filter(Product.category_id == category_id)
+        if category_ids:
+            query = query.filter(Product.category_id.in_(category_ids))
 
         # 统计总数
         total = query.count()
@@ -283,5 +297,5 @@ class UserService:
             "id": user.id,
             "openid": user.openid,
             "nickname": user.nickname,
-            "is_admin": user.is_admin,  # 新增
+            "isAdmin": user.is_admin,  # 改为 isAdmin
         }

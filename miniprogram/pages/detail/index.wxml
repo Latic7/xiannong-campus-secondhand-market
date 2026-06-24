@@ -1,3 +1,5 @@
+<image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
+
 <!-- 加载中 -->
 <view wx:if="{{loading}}" class="page-status">
   <view class="loading-spinner"></view>
@@ -13,9 +15,6 @@
 
 <!-- 商品详情 -->
 <view wx:elif="{{product}}" class="page-body">
-  <!-- 背景图 -->
-  <image class="page-bg" src="/assets/images/Background.png" mode="aspectFill" />
-
   <!-- 图片轮播 -->
   <view class="image-section">
     <swiper
@@ -86,6 +85,7 @@
   <!-- 卖家信息 -->
   <view class="seller-section">
     <view class="section-title">卖家信息</view>
+    <view wx:if="{{sellerBanned}}" class="seller-banned-banner">该商家已被封禁</view>
     <view class="seller-card">
       <image class="seller-avatar" src="{{product.seller.avatar}}" mode="aspectFill" />
       <view class="seller-info">
@@ -126,11 +126,32 @@
     <text class="action-label">举报</text>
   </view>
 
-  <!-- 下单（非自己的商品才显示） -->
-  <button wx:if="{{!isOwner}}" class="action-btn-primary" bindtap="onPlaceOrder">
-    立即购买
+  <!-- 下架商品 -->
+  <button wx:if="{{canUnlist}}" class="action-btn-unlist" bindtap="onUnlistProduct">
+    下架商品
   </button>
-  <button wx:else class="action-btn-disabled" disabled>
-    我的商品
+  <button wx:elif="{{unlistBlockedReason}}" class="action-btn-unlist-disabled" bindtap="onUnlistProduct">
+    下架商品
+  </button>
+
+  <!-- 与商家沟通（有活跃订单且商品未下架时才显示） -->
+  <button wx:elif="{{activeOrderId && product.status !== 'REMOVED'}}" class="action-btn-chat" bindtap="onContactSellerChat">
+    与商家沟通详细事宜
+  </button>
+  <button wx:elif="{{activeOrderId && product.status === 'REMOVED'}}" class="action-btn-disabled" bindtap="onContactSellerChat">
+    商品已下架
+  </button>
+
+  <!-- 未登录时显示请先登录 -->
+  <button wx:elif="{{!isLoggedIn}}" class="action-btn-disabled" bindtap="onPlaceOrder">
+    请先登录后购买
+  </button>
+
+  <!-- 下单按钮（文案与状态由 JS 控制） -->
+  <button wx:elif="{{orderBtnDisabled}}" class="action-btn-disabled" disabled>
+    {{orderBtnText}}
+  </button>
+  <button wx:else class="action-btn-primary" bindtap="onPlaceOrder">
+    {{orderBtnText}}
   </button>
 </view>

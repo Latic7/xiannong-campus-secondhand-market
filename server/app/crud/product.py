@@ -29,6 +29,8 @@ def _owner_to_seller_dict(owner: User | None) -> dict:
         "nickname": owner.nickname or "未知用户",
         "avatar": owner.avatar or "",
         "reputation": owner.score if owner.score is not None else 100,
+        "contact": owner.contact or "",
+        "status": owner.status or "",
     }
 
 
@@ -94,7 +96,7 @@ def list_products(
     size: int,
     keyword: str | None = None,
     sort: str | None = None,
-    category_id: int | None = None,
+    category_ids: list[int] | None = None,
     status: str | list[str] | None = None,
     owner_id: int | None = None,
 ) -> tuple[list[dict], int]:
@@ -105,8 +107,8 @@ def list_products(
         stmt = stmt.where(
             Product.title.ilike(kw) | Product.description.ilike(kw)
         )
-    if category_id is not None:
-        stmt = stmt.where(Product.category_id == category_id)
+    if category_ids:
+        stmt = stmt.where(Product.category_id.in_(category_ids))
     if status is not None:
         if isinstance(status, list):
             stmt = stmt.where(Product.status.in_(status))
@@ -121,6 +123,8 @@ def list_products(
         stmt = stmt.order_by(Product.price.asc())
     elif sort == "price_desc":
         stmt = stmt.order_by(Product.price.desc())
+    elif sort == "hot":
+        stmt = stmt.order_by(Product.favorite_count.desc(), Product.created_at.desc())
     else:
         stmt = stmt.order_by(Product.created_at.desc())
 

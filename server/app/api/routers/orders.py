@@ -1,13 +1,25 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps.auth import CurrentActor, get_current_actor
 from app.core.response import api_ok
 from app.core.database import get_db
-from app.schemas.orders import OrderCreateRequest, OrderReviewRequest
+from app.schemas.orders import OrderCreateRequest, OrderMessageCreateRequest, OrderReviewRequest
 from app.services import order_service
 
 router = APIRouter(prefix="/api/orders", tags=["Order"])
+
+
+@router.get("")
+def list_orders(
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    role: str | None = Query(None, description="buyer, seller, or omitted for all related orders"),
+    status: str | None = None,
+    db: Session = Depends(get_db),
+    actor: CurrentActor = Depends(get_current_actor),
+) -> dict:
+    return api_ok(order_service.list_orders(db, actor, page=page, size=size, role=role, status=status))
 
 
 @router.post("")
@@ -63,3 +75,24 @@ def create_review(
     actor: CurrentActor = Depends(get_current_actor),
 ) -> dict:
     return api_ok(order_service.create_review(db, order_id, payload, actor))
+
+
+@router.get("/{order_id}/messages")
+def list_messages(
+    order_id: int,
+    page: int = Query(1, ge=1),
+    size: int = Query(50, ge=1, le=100),
+    db: Session = Depends(get_db),
+    actor: CurrentActor = Depends(get_current_actor),
+) -> dict:
+    return api_ok(order_service.list_messages(db, order_id, actor, page, size))
+
+
+@router.post("/{order_id}/messages")
+def create_message(
+    order_id: int,
+    payload: OrderMessageCreateRequest,
+    db: Session = Depends(get_db),
+    actor: CurrentActor = Depends(get_current_actor),
+) -> dict:
+    return api_ok(order_service.create_message(db, order_id, payload, actor))

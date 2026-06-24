@@ -18,11 +18,16 @@
       </block>
       <block wx:else>
         <!-- 常规tab -->
-        <image
-          class="tab-icon-img"
-          src="{{selected === index ? item.iconPathActive : item.iconPath}}"
-          mode="aspectFit"
-        />
+        <view class="tab-icon-wrap">
+          <image
+            class="tab-icon-img"
+            src="{{selected === index ? item.iconPathActive : item.iconPath}}"
+            mode="aspectFit"
+          />
+          <view wx:if="{{index === 2 && badgeCount > 0}}" class="tab-badge">
+            <text class="tab-badge-text">{{badgeCount > 99 ? '99+' : badgeCount}}</text>
+          </view>
+        </view>
         <text class="tab-text">{{item.text}}</text>
       </block>
     </view>

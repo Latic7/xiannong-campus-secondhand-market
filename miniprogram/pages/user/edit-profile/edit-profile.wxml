@@ -1,0 +1,69 @@
+<view class="page-body">
+
+  <!-- ── 基本信息 ──────────────────────────── -->
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">基本信息</text>
+    </view>
+
+    <!-- 昵称 -->
+    <view class="field-group">
+      <view class="field-label">
+        <text>昵称</text>
+        <text class="field-counter">{{nicknameCount}}/{{20}}</text>
+      </view>
+      <input
+        class="input-field"
+        placeholder="请输入昵称"
+        value="{{nickname}}"
+        maxlength="20"
+        bindinput="onNicknameInput"
+      />
+    </view>
+
+    <!-- 学院 -->
+    <view class="field-group">
+      <view class="field-label">
+        <text>学院</text>
+        <text class="field-counter">{{collegeCount}}/{{30}}</text>
+      </view>
+      <input
+        class="input-field"
+        placeholder="请输入所在学院（选填）"
+        value="{{college}}"
+        maxlength="30"
+        bindinput="onCollegeInput"
+      />
+    </view>
+
+    <!-- 手机号 -->
+    <view class="field-group field-group-last">
+      <view class="field-label">
+        <text>手机号</text>
+        <text class="field-counter">{{phoneCount}}/{{11}}</text>
+      </view>
+      <input
+        class="input-field {{phoneError ? 'input-error' : ''}}"
+        type="number"
+        placeholder="请输入手机号（交易联系方式）"
+        value="{{phone}}"
+        maxlength="11"
+        bindinput="onPhoneInput"
+      />
+      <view wx:if="{{phoneError}}" class="field-error">{{phoneError}}</view>
+    </view>
+  </view>
+
+  <!-- ── 保存按钮 ──────────────────────────── -->
+  <view class="save-section">
+    <button
+      class="save-btn"
+      loading="{{saving}}"
+      disabled="{{saving || uploading}}"
+      bindtap="onSave"
+    >
+      保存
+    </button>
+  </view>
+
+</view>

@@ -6,7 +6,7 @@
 const { getAccessToken, getRefreshToken, saveAuth, clearAuth } = require('./storage')
 
 // ── 配置（生产环境需替换为实际域名）───────────
-const BASE_URL = 'http://localhost:8000'
+const BASE_URL = 'https://xiannong-backend-272923-6-1425174109.sh.run.tcloudbase.com'
 const TIMEOUT = 15000
 
 // ── 请求计数器（避免并发刷新 token）───────────
@@ -170,6 +170,10 @@ function del(url) {
   return request('DELETE', url)
 }
 
+function patch(url, data) {
+  return request('PATCH', url, data)
+}
+
 module.exports = {
   BASE_URL,
   setAuthExpiredHandler,
@@ -179,4 +183,5 @@ module.exports = {
   post,
   put,
   del,
+  patch,
 }

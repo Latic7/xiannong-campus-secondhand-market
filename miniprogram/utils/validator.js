@@ -33,7 +33,7 @@ function validateImages(images) {
 }
 
 function validatePhone(value) {
-  if (!value) return { valid: false, message: '请输入手机号' }
+  if (!value) return { valid: true } // 允许为空
   if (!/^1[3-9]\d{9}$/.test(value)) return { valid: false, message: '请输入正确的手机号' }
   return { valid: true }
 }

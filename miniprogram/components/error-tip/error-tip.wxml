@@ -1,1 +1,5 @@
-<view>error-tip placeholder</view>
+<view class="error-container">
+  <image class="error-icon-img" src="/assets/icons/warning.svg" mode="aspectFit" />
+  <text class="error-message">{{message}}</text>
+  <button class="error-button" bindtap="onRetry">{{buttonText}}</button>
+</view>

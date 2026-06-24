@@ -3,7 +3,7 @@
 //  根据商品 ID 加载并展示商品完整信息
 // ──────────────────────────────────────────────
 const { isLoggedIn, getUserInfo } = require('../../utils/storage')
-const { PRODUCT_STATUS } = require('../../utils/constants')
+const { PRODUCT_STATUS, getStatusMeta, normalizeStatus } = require('../../utils/constants')
 const productService = require('../../services/product')
 const orderService = require('../../services/order')
 const reportService = require('../../services/report')
@@ -26,6 +26,13 @@ Page({
     favoriting: false,
     isOwner: false,
     isLoggedIn: false,
+    activeOrderId: null,
+    canUnlist: false,               // 是否可下架（true=显示红色可点击按钮）
+    unlistBlockedReason: '',        // 不可下架的原因提示文案
+    sellerBanned: false,            // 卖家是否被封禁
+    // ── 下单状态 ──
+    orderBtnText: '立即购买',       // 按钮文案：立即购买 / 已预约 / 交易进行中 / 已售出
+    orderBtnDisabled: false,        // 按钮是否禁用
   },
 
   onLoad(options) {
@@ -53,15 +60,36 @@ Page({
       const raw = await productService.getDetail(productId)
       const product = this.mapBackendProduct(raw)
       const formatted = this.formatProduct(product)
+      const isOwner = this.checkIsOwner(formatted)
+      const st = normalizeStatus(formatted.status)
+      let canUnlist = false
+      let unlistBlockedReason = ''
+      if (isOwner) {
+        if (st === 'SOLD') {
+          unlistBlockedReason = '商品已售出，不可下架'
+        } else if (['PUBLISHED', 'PENDING', 'DRAFT'].includes(st)) {
+          canUnlist = true
+        }
+      }
+      const sellerBanned = (formatted.seller?.status || '').toUpperCase() === 'BANNED'
       this.setData({
         product: formatted,
+        sellerBanned,
         images: formatted.images || [],
         loading: false,
-        isOwner: this.checkIsOwner(formatted),
+        isOwner,
+        canUnlist,
+        unlistBlockedReason,
         isLoggedIn: isLoggedIn(),
       })
+      // 重置按钮状态
+      this.updateOrderBtnState(formatted)
       if (isLoggedIn()) {
         this.checkFavoriteStatus(productId)
+        // 异步检测当前用户对该商品是否有活跃订单
+        this.checkActiveOrder(productId)
+      } else {
+        this.setData({ activeOrderId: null })
       }
     } catch (err) {
       this.setData({ loading: false, errorMsg: err.message || '加载失败，请重试' })
@@ -81,7 +109,7 @@ Page({
       categoryId: raw.categoryId,
       condition: raw.condition || 'used_good',
       campus: raw.campus || '',
-      status: raw.status || 'published',
+      status: normalizeStatus(raw.status || 'PENDING'),
       viewCount: raw.viewCount || 0,
       favoriteCount: raw.favoriteCount || 0,
       seller: raw.seller || {
@@ -99,7 +127,7 @@ Page({
 
   // ── 格式化 ────────────────────────────────
   formatProduct(product) {
-    const st = PRODUCT_STATUS[product.status] || {}
+    const st = getStatusMeta(PRODUCT_STATUS, product.status)
     const condMap = { brand_new: '全新', used_like_new: '几乎全新', used_good: '良好', used_fair: '一般' }
     const fmtPrice = (p) => p == null ? '面议' : '¥' + Number(p).toFixed(2).replace(/\.00$/, '')
     const fmtTime = (t) => {
@@ -131,10 +159,54 @@ Page({
       const res = await userService.getFavorites(1, 100)
       const favList = res.list || []
       this.setData({
-        isFavorited: favList.some(f => f.productId === Number(productId)),
+        isFavorited: favList.some(f => Number(f.productId || f.id) === Number(productId)),
       })
     } catch (e) {
       // 静默失败
+    }
+  },
+
+  // ── 检查当前用户对该商品是否有活跃订单 ──
+  async checkActiveOrder(productId) {
+    try {
+      const res = await orderService.list({ page: 1, size: 100 })
+      const orders = res.list || []
+      const activeOrder = orders.find(
+        o => Number(o.productId) === Number(productId) && ['RESERVED', 'CONFIRMED'].includes(o.status)
+      )
+      if (activeOrder) {
+        const isConfirmed = activeOrder.status === 'CONFIRMED'
+        this.setData({
+          orderBtnText: isConfirmed ? '交易进行中' : '已预约',
+          orderBtnDisabled: true,
+          activeOrderId: activeOrder.id,
+        })
+        // 有已确认订单时，更新下架按钮状态
+        if (isConfirmed) {
+          this.setData({
+            canUnlist: false,
+            unlistBlockedReason: '商品已进入交易确认阶段，不可下架',
+          })
+        }
+      }
+    } catch (e) {
+      // 静默失败，不影响页面正常使用
+    }
+  },
+
+  // ── 根据商品状态更新按钮文案 ────────────────
+  updateOrderBtnState(product) {
+    const status = normalizeStatus(product.status)
+    if (status === 'SOLD') {
+      this.setData({ orderBtnText: '已售出', orderBtnDisabled: true })
+    } else if (this.checkIsOwner(product)) {
+      this.setData({ orderBtnText: '我的商品', orderBtnDisabled: true })
+    } else if (status !== 'PUBLISHED') {
+      this.setData({ orderBtnText: '暂不可购买', orderBtnDisabled: true })
+    } else if (this.data.sellerBanned) {
+      this.setData({ orderBtnText: '商家已被封禁', orderBtnDisabled: true })
+    } else {
+      this.setData({ orderBtnText: '立即购买', orderBtnDisabled: false })
     }
   },
 
@@ -158,7 +230,8 @@ Page({
         await productService.addFavorite(productId)
       }
       this.setData({ isFavorited: !isFavorited })
-      wx.showToast({ title: isFavorited ? '已取消收藏' : '已收藏', icon: 'success' })
+      // 重新加载商品信息以更新收藏数
+      this.loadProduct(this.data.productId)
     } catch (e) {
       wx.showToast({ title: e.message || '操作失败', icon: 'none' })
     } finally { this.setData({ favoriting: false }) }
@@ -168,8 +241,10 @@ Page({
   onPlaceOrder() {
     if (!this.data.isLoggedIn) { wx.showToast({ title: '请先登录', icon: 'none' }); return }
     if (this.data.isOwner) { wx.showToast({ title: '不能购买自己的商品', icon: 'none' }); return }
+    if (this.data.orderBtnDisabled) { return }
     const p = this.data.product
-    if (!p || p.status !== 'published') { wx.showToast({ title: '该商品暂不可购买', icon: 'none' }); return }
+    if (!p || normalizeStatus(p.status) !== 'PUBLISHED') { wx.showToast({ title: '该商品暂不可购买', icon: 'none' }); return }
+    if ((p.seller?.status || '').toUpperCase() === 'BANNED') { wx.showToast({ title: '商家已被封禁，无法购买', icon: 'none' }); return }
     wx.showModal({
       title: '确认下单',
       content: `确认购买「${p.title}」？\n价格：${p.priceText}`,
@@ -177,14 +252,20 @@ Page({
         if (res.confirm) {
           try {
             wx.showLoading({ title: '下单中...' })
-            await orderService.create({ productId: Number(this.data.productId) })
+            const newOrder = await orderService.create({ productId: Number(this.data.productId) })
             wx.hideLoading()
             wx.showToast({ title: '下单成功', icon: 'success' })
-            // 刷新详情
-            this.loadProduct(this.data.productId)
+            // 立即刷新订单状态，显示聊天按钮
+            this.setData({ activeOrderId: newOrder.id })
+            this.checkActiveOrder(this.data.productId)
           } catch (e) {
             wx.hideLoading()
-            wx.showToast({ title: e.message || '下单失败', icon: 'none' })
+            if (e.message && e.message.includes('you already have an active order')) {
+              wx.showToast({ title: '您已预约过该商品', icon: 'none' })
+              this.setData({ orderBtnText: '已预约', orderBtnDisabled: true })
+            } else {
+              wx.showToast({ title: e.message || '下单失败', icon: 'none' })
+            }
           }
         }
       },
@@ -196,16 +277,52 @@ Page({
     if (!this.data.isLoggedIn) { wx.showToast({ title: '请先登录', icon: 'none' }); return }
     wx.showActionSheet({
       itemList: ['信息不实', '违规商品', '侵权内容', '其他原因'],
-      success: async (res) => {
+      success: (res) => {
         const reasons = ['信息不实', '违规商品', '侵权内容', '其他原因']
+        const reason = reasons[res.tapIndex]
+        wx.showModal({
+          title: '确认举报',
+          content: `您确定要举报该商品为"${reason}"吗？\n\n举报后管理员将进行审核，若核实违规，卖家将被扣除信誉分，严重者将被封禁。请确保您的举报真实有效。`,
+          success: async (modal) => {
+            if (!modal.confirm) return
+            try {
+              await reportService.create({
+                targetType: 'PRODUCT',
+                productId: Number(this.data.productId),
+                reason,
+              })
+              wx.showToast({ title: '举报已提交', icon: 'success' })
+            } catch (e) {
+              wx.showToast({ title: e.message || '举报失败', icon: 'none' })
+            }
+          },
+        })
+      },
+    })
+  },
+
+  // ── 下架商品 ──────────────────────────────
+  onUnlistProduct() {
+    const { unlistBlockedReason } = this.data
+    // 如果不可下架（已售出/已确认），直接提示原因
+    if (unlistBlockedReason) {
+      wx.showToast({ title: unlistBlockedReason, icon: 'none' })
+      return
+    }
+    wx.showModal({
+      title: '确认下架',
+      content: '下架后商品将显示为"已下架"，其他用户将无法购买。确定要下架吗？',
+      success: async (res) => {
+        if (!res.confirm) return
         try {
-          await reportService.create({
-            productId: Number(this.data.productId),
-            reason: reasons[res.tapIndex],
-          })
-          wx.showToast({ title: '举报已提交', icon: 'success' })
+          wx.showLoading({ title: '下架中...' })
+          await productService.remove(this.data.productId)
+          wx.hideLoading()
+          wx.showToast({ title: '已下架', icon: 'success' })
+          this.loadProduct(this.data.productId)
         } catch (e) {
-          wx.showToast({ title: e.message || '举报失败', icon: 'none' })
+          wx.hideLoading()
+          wx.showToast({ title: '下架失败，请稍后重试', icon: 'none' })
         }
       },
     })
@@ -214,8 +331,38 @@ Page({
   // ── 联系卖家 ──────────────────────────────
   onContactSeller() {
     if (this.data.isOwner) { wx.showToast({ title: '这是您自己的商品', icon: 'none' }); return }
-    // TODO: 跳转聊天页
-    wx.showToast({ title: '聊天功能开发中', icon: 'none' })
+    const seller = this.data.product?.seller
+    const contact = seller?.contact
+    if (contact) {
+      wx.showModal({
+        title: '卖家联系方式',
+        content: `手机号：${contact}\n\n您可复制该号码到微信或电话联系卖家`,
+        confirmText: '复制号码',
+        success(res) {
+          if (res.confirm) {
+            wx.setClipboardData({ data: contact })
+          }
+        }
+      })
+    } else {
+      wx.showToast({ title: '卖家暂未填写联系方式', icon: 'none' })
+    }
+  },
+
+  // ── 通过聊天联系卖家（跳转到订单聊天页）──
+  onContactSellerChat() {
+    const orderId = this.data.activeOrderId
+    if (!orderId) {
+      wx.showToast({ title: '请先下单后再使用聊天功能', icon: 'none' })
+      return
+    }
+    // 商品已下架时阻止进入聊天
+    const st = this.data.product?.status || ''
+    if (st === 'REMOVED') {
+      wx.showToast({ title: '商品已下架，无法继续沟通', icon: 'none' })
+      return
+    }
+    wx.navigateTo({ url: `/pages/order-chat/index?orderId=${orderId}` })
   },
 
   onShareAppMessage() {

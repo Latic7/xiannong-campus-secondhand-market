@@ -100,14 +100,40 @@ class BackendBRulesTest(unittest.TestCase):
     def test_active_order_locks_product_and_duplicate_order_conflicts(self) -> None:
         self.create_order()
 
-        duplicate = self.client.post("/api/orders", headers=auth_header(3), json={"productId": 1001})
+        # Different buyer can now also reserve (multi-buyer support)
+        second = self.client.post("/api/orders", headers=auth_header(3), json={"productId": 1001})
+        self.assertEqual(second.status_code, 200, second.text)
+        self.assertEqual(second.json()["data"]["status"], "RESERVED")
+
+        # Same buyer cannot reserve twice
+        duplicate = self.client.post("/api/orders", headers=auth_header(2), json={"productId": 1001})
         self.assert_error(duplicate, 409, 4091)
 
+        # Product locks still work because there IS an active order (RESERVED)
         price = self.client.put("/api/products/1001", headers=auth_header(1), json={"price": 20})
         self.assert_error(price, 409, 4090)
 
         unlist = self.client.delete("/api/products/1001", headers=auth_header(1))
         self.assert_error(unlist, 409, 4090)
+
+    def test_seller_confirm_cancels_competing_orders(self) -> None:
+        order1 = self.create_order()  # user 2
+        # user 3 also reserves
+        order2 = self.client.post(
+            "/api/orders", headers=auth_header(3), json={"productId": 1001}
+        ).json()["data"]
+        self.assertEqual(order2["status"], "RESERVED")
+
+        # seller (user 1) confirms order2
+        confirmed = self.confirm_order(order2["id"])
+        self.assertEqual(confirmed["status"], "CONFIRMED")
+        self.assertGreaterEqual(confirmed.get("cancelledCount", 0), 1)
+
+        # order1 should now be CANCELLED
+        detail = self.client.get(
+            f"/api/orders/{order1['id']}", headers=auth_header(2)
+        ).json()["data"]
+        self.assertEqual(detail["status"], "CANCELLED")
 
     def test_order_actor_rules_and_idempotency(self) -> None:
         order = self.create_order()

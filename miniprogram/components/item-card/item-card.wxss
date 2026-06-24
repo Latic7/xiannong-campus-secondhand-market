@@ -28,6 +28,26 @@
 .product-image {
   width: 100%;
   height: 100%;
+  transition: filter 0.3s ease;
+}
+
+.product-image.img-grayscale {
+  filter: grayscale(100%);
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ededf2;
+}
+
+.placeholder-icon {
+  width: 62rpx;
+  height: 62rpx;
+  opacity: 0.34;
 }
 
 .status-tag {
@@ -56,8 +76,16 @@
   background: rgba(255, 159, 10, 0.92);
 }
 
+.status-pending {
+  background: rgba(255, 159, 10, 0.92);
+}
+
+.status-removed {
+  background: rgba(99, 99, 102, 0.88);
+}
+
 .status-sold {
-  background: rgba(142, 142, 147, 0.92);
+  background: rgba(255, 59, 48, 0.88);
 }
 
 .status-default {
@@ -101,4 +129,9 @@
   font-size: 34rpx;
   font-weight: 800;
   line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.price.img-grayscale {
+  color: #999;
 }

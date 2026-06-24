@@ -4,35 +4,49 @@
 //  后端状态枚举变更时只需改这一处
 // ──────────────────────────────────────────────
 
+// ── 微信云托管环境配置 ─────────────────────────
+// 在云托管控制台 → 环境概览 中查看环境ID
+const CLOUD_ENV = 'xiannong-prod-d2gldqk278f8b5fee'
+
 // ── 商品状态 ───────────────────────────────────
 const PRODUCT_STATUS = {
-  draft: { label: '草稿', color: '#999' },
-  pending: { label: '待审核', color: '#f0ad4e' },
-  published: { label: '已发布', color: '#5cb85c' },
-  removed: { label: '已下架', color: '#999' },
-  sold: { label: '已售出', color: '#337ab7' },
+  DRAFT: { label: '草稿', color: '#999' },
+  PENDING: { label: '待审核', color: '#f0ad4e' },
+  PUBLISHED: { label: '已发布', color: '#5cb85c' },
+  REMOVED: { label: '已下架', color: '#999' },
+  REJECTED: { label: '审核未通过', color: '#999' },
+  SOLD: { label: '已售出', color: '#ff3b30' },
 }
 
 // ── 订单状态 ───────────────────────────────────
 const ORDER_STATUS = {
-  created: { label: '待确认', color: '#f0ad4e' },
-  reserved: { label: '已预订', color: '#5bc0de' },
-  confirmed: { label: '已确认', color: '#5cb85c' },
-  completed: { label: '已完成', color: '#337ab7' },
-  cancelled: { label: '已取消', color: '#999' },
+  CREATED: { label: '待确认', color: '#f0ad4e' },
+  RESERVED: { label: '已预订', color: '#5bc0de' },
+  CONFIRMED: { label: '已确认', color: '#5cb85c' },
+  COMPLETED: { label: '已完成', color: '#337ab7' },
+  CANCELLED: { label: '已取消', color: '#999' },
 }
 
 // ── 举报状态 ───────────────────────────────────
 const REPORT_STATUS = {
-  open: { label: '处理中', color: '#f0ad4e' },
-  rejected: { label: '已驳回', color: '#999' },
-  handled: { label: '已处理', color: '#5cb85c' },
+  OPEN: { label: '处理中', color: '#f0ad4e' },
+  REJECTED: { label: '已驳回', color: '#999' },
+  HANDLED: { label: '已处理', color: '#5cb85c' },
 }
 
 // ── 用户状态 ───────────────────────────────────
 const USER_STATUS = {
-  active: { label: '正常', color: '#5cb85c' },
-  banned: { label: '已封禁', color: '#d9534f' },
+  ACTIVE: { label: '正常', color: '#5cb85c' },
+  BANNED: { label: '已封禁', color: '#d9534f' },
+}
+
+function normalizeStatus(status) {
+  return String(status || '').toUpperCase()
+}
+
+function getStatusMeta(map, status, fallbackLabel = '未知') {
+  const key = normalizeStatus(status)
+  return map[key] || { label: status || fallbackLabel, color: '#999' }
 }
 
 // ── 排序选项 ───────────────────────────────────
@@ -60,6 +74,7 @@ const STORAGE_KEYS = {
 }
 
 module.exports = {
+  CLOUD_ENV,
   PRODUCT_STATUS,
   ORDER_STATUS,
   REPORT_STATUS,
@@ -70,4 +85,6 @@ module.exports = {
   IMAGE_MAX_COUNT,
   IMAGE_MAX_SIZE,
   STORAGE_KEYS,
+  normalizeStatus,
+  getStatusMeta,
 }

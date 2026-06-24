@@ -12,6 +12,7 @@ class ProductStatus(StrEnum):
     PUBLISHED = "PUBLISHED"
     REMOVED = "REMOVED"
     SOLD = "SOLD"
+    REJECTED = "REJECTED"
 
 
 class OrderStatus(StrEnum):

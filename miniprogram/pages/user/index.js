@@ -3,11 +3,13 @@
 //  微信登录、用户资料、信誉分、收藏入口、发布入口
 // ──────────────────────────────────────────────
 const {
-  isLoggedIn, getUserInfo, saveAuth, clearAuth, setUserInfo,
+  isLoggedIn, getUserInfo, clearAuth, setUserInfo,
 } = require('../../utils/storage')
 const authService = require('../../services/auth')
 const userService = require('../../services/user')
-const { setAuthExpiredHandler } = require('../../utils/api')
+const { generateAvatar } = require('../../utils/avatar')
+const orderService = require('../../services/order')
+const orderUnread = require('../../utils/orderUnread')
 
 Page({
   data: {
@@ -22,22 +24,19 @@ Page({
 
     loading: true,
     loginLoading: false,
+    unreadOrders: 0,
+    reportsAgainstMe: 0,
+    adminPendingTotal: 0,
   },
 
-  onLoad() {
-    // 注册全局登录过期回调
-    setAuthExpiredHandler(() => {
-      clearAuth()
-      this.refreshUserState()
-      wx.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
-    })
-  },
+  onLoad() {},
 
   onShow() {
     // 同步底部导航栏选中状态（避免 getCurrentPages 时序问题）
     const tabBar = this.getTabBar();
     if (tabBar) {
       tabBar.setData({ selected: 2 });
+      tabBar.refreshBadge();
     }
 
     // 每次显示时刷新登录态和用户信息
@@ -59,6 +58,12 @@ Page({
       })
       // 异步从服务器拉取最新资料和统计
       this.fetchUserProfile()
+      // 异步拉取未读消息数
+      this.fetchUnreadCount()
+      // 异步拉取被举报数
+      this.fetchReportsAgainstMe()
+      // 异步拉取待审核总数（管理员可见）
+      this.fetchAdminPendingCount()
     } else {
       this.setData({
         isLoggedIn: false,
@@ -80,6 +85,10 @@ Page({
         nickname: profile.nickname,
         avatar: profile.avatar,
         reputation: profile.score,
+        isAdmin: profile.isAdmin || profile.is_admin || false,
+        status: (profile.status || '').toUpperCase(),
+        college: profile.college || '',
+        contact: profile.contact || '',
       }
       setUserInfo(updated)
       this.setData({
@@ -101,20 +110,85 @@ Page({
     }
   },
 
+  // ── 获取未读消息数 ──────────────────────────
+  async fetchUnreadCount() {
+    try {
+      const data = await orderService.list({ page: 1, size: 100 })
+      const orders = data.list || []
+      const userInfo = getUserInfo()
+      const userId = userInfo ? userInfo.id : null
+      if (userId) {
+        const count = orderUnread.totalUnread(orders, userId)
+        this.setData({ unreadOrders: count })
+      }
+    } catch (err) {
+      // 静默失败，不影响页面
+      console.warn('获取未读消息数失败:', err.message)
+    }
+  },
+
+  // ── 获取管理后台待审核总数 ────────────────
+  async fetchAdminPendingCount() {
+    try {
+      const adminService = require('../../services/admin')
+      const [reportRes, productRes] = await Promise.all([
+        adminService.listReports({ status: 'OPEN', size: 1 }),
+        adminService.listPendingProducts({ size: 1 }),
+      ])
+      const reports = reportRes?.page?.total || 0
+      const products = productRes?.page?.total || 0
+      this.setData({ adminPendingTotal: reports + products })
+    } catch (e) {
+      console.warn('获取待审核数失败:', e.message)
+    }
+  },
+
+  // ── 强制刷新所有数据（供外部调用）──────────
+  forceRefresh() {
+    if (!this.data.isLoggedIn) return
+    this.fetchUserProfile()
+    this.fetchUnreadCount()
+    this.fetchReportsAgainstMe()
+    this.fetchAdminPendingCount()
+  },
+
+  // ── 获取被举报数（仅显示未读的） ─────────
+  async fetchReportsAgainstMe() {
+    try {
+      const reportService = require('../../services/report')
+      const data = await reportService.listAgainstMe({ size: 1, seenByTarget: 'NOT_SEEN' })
+      this.setData({ reportsAgainstMe: data?.page?.total || 0 })
+    } catch (err) {
+      // 静默失败
+    }
+  },
+
   // ── 格式化用户展示数据 ────────────────────
   formatUser(u) {
     if (!u) {
       return {
         nickname: '点击登录',
         avatar: '',
+        avatarBgColor: '',
+        avatarCellColor: '',
+        avatarCells: [],
         reputation: 0,
         userId: '',
+        isAdmin: false,
+        isBanned: false,
       }
     }
+    // 始终使用根据用户 ID 生成的 GitHub 风格头像
+    const gen = generateAvatar(u.id || u.userId)
     return {
       ...u,
-      avatar: u.avatar || '',
+      avatar: '',
+      avatarBgColor: gen.bgColor,
+      avatarCellColor: gen.cellColor,
+      avatarCells: gen.cells,
       reputation: u.reputation != null ? u.reputation : 100,
+      isAdmin: !!(u.isAdmin || u.is_admin),
+      isBanned: (u.status || '').toUpperCase() === 'BANNED',
       reputationText: this.getReputationLabel(u.reputation),
       reputationColor: this.getReputationColor(u.reputation),
     }
@@ -180,6 +254,12 @@ Page({
     wx.navigateTo({ url: '/pages/list/index?type=my_published' })
   },
 
+  // ── 跳转：我的售出 ────────────────────────
+  onMySold() {
+    if (!this.checkLogin()) return
+    wx.navigateTo({ url: '/pages/list/index?type=my_sold' })
+  },
+
   // ── 跳转：我的收藏 ────────────────────────
   onMyFavorites() {
     if (!this.checkLogin()) return
@@ -189,7 +269,13 @@ Page({
   // ── 跳转：我的订单 ────────────────────────
   onMyOrders() {
     if (!this.checkLogin()) return
-    wx.showToast({ title: '订单功能开发中', icon: 'none' })
+    wx.navigateTo({ url: '/pages/orders/index' })
+  },
+
+  // ── 跳转：我的举报 ────────────────────────
+  onMyReports() {
+    if (!this.checkLogin()) return
+    wx.navigateTo({ url: '/pages/reports/index' })
   },
 
   // ── 跳转：关于我们 ────────────────────────
@@ -201,6 +287,12 @@ Page({
     })
   },
 
+  // ── 跳转：管理后台 ────────────────────────
+  onAdmin() {
+    if (!this.checkLogin()) return
+    wx.navigateTo({ url: '/pages/admin/index' })
+  },
+
   // ── 登录校验 ──────────────────────────────
   checkLogin() {
     if (!this.data.isLoggedIn) {
@@ -210,10 +302,19 @@ Page({
     return true
   },
 
+  // ── 头像点击（登录→编辑资料，未登录→登录）──
+  onTapAvatar() {
+    if (this.data.isLoggedIn) {
+      this.onEditProfile()
+    } else {
+      this.onLogin()
+    }
+  },
+
   // ── 编辑个人资料 ──────────────────────────
   onEditProfile() {
     if (!this.checkLogin()) return
-    wx.showToast({ title: '编辑资料功能开发中', icon: 'none' })
+    wx.navigateTo({ url: '/pages/user/edit-profile/edit-profile' })
   },
 })
 

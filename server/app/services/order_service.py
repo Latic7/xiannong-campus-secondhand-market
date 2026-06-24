@@ -11,7 +11,8 @@ from app.core.exceptions import DuplicateConflictError, ForbiddenError, Resource
 from app.core.status import OrderStatus, ProductStatus
 from app.crud import order as order_crud
 from app.crud import product as product_crud
-from app.schemas.orders import OrderCreateRequest, OrderReviewRequest
+from app.models.user import User
+from app.schemas.orders import OrderCreateRequest, OrderMessageCreateRequest, OrderReviewRequest
 
 
 _product_order_locks: defaultdict[int, Lock] = defaultdict(Lock)
@@ -41,8 +42,13 @@ def create_order(db: Session, payload: OrderCreateRequest, actor: CurrentActor) 
                 raise StateConflictError("product owner cannot buy own product", {"productId": payload.productId})
             if product.status != ProductStatus.PUBLISHED.value:
                 raise StateConflictError("product is not available for ordering", {"productId": payload.productId})
-            if order_crud.get_active_order_for_product(db, payload.productId):
-                raise DuplicateConflictError("product already has an active order", {"productId": payload.productId})
+            if order_crud.get_active_order_for_buyer_and_product(
+                db, actor.user_id, payload.productId
+            ):
+                raise DuplicateConflictError(
+                    "you already have an active order for this product",
+                    {"productId": payload.productId},
+                )
             order = order_crud.create_order(db, product.id, actor.user_id, product.owner_id, product.price, payload.remark)
             db.commit()
             db.refresh(order)
@@ -55,7 +61,33 @@ def create_order(db: Session, payload: OrderCreateRequest, actor: CurrentActor) 
 def get_order(db: Session, order_id: int, actor: CurrentActor) -> dict:
     order = _require_order(db, order_id)
     _require_related(order, actor)
-    return order_crud.serialize_order(order)
+    return order_crud.serialize_order_with_product(db, order)
+
+
+def list_orders(
+    db: Session,
+    actor: CurrentActor,
+    page: int = 1,
+    size: int = 20,
+    role: str | None = None,
+    status: str | None = None,
+) -> dict:
+    page = max(page, 1)
+    size = min(max(size, 1), 100)
+    normalized_role = role if role in {"buyer", "seller"} else None
+    items, total = order_crud.list_orders(
+        db,
+        actor.user_id,
+        page=page,
+        size=size,
+        role=normalized_role,
+        status=status,
+    )
+    return {
+        "list": items,
+        "page": {"page": page, "size": size, "total": total},
+        "filters": {"role": normalized_role or "all", "status": status},
+    }
 
 
 def seller_confirm(db: Session, order_id: int, actor: CurrentActor) -> dict:
@@ -66,9 +98,15 @@ def seller_confirm(db: Session, order_id: int, actor: CurrentActor) -> dict:
         return {"id": order_id, "status": order.status}
     if order.status != OrderStatus.RESERVED.value:
         raise StateConflictError("order cannot be confirmed from current status", {"orderId": order_id, "status": order.status})
+    # Cancel all other RESERVED orders for the same product
+    competing = order_crud.get_reserved_orders_for_product(
+        db, order.product_id, exclude_id=order_id, for_update=True
+    )
+    cancelled_count = order_crud.cancel_orders_batch(db, competing)
+
     order_crud.update_order_status(db, order, OrderStatus.CONFIRMED.value)
     db.commit()
-    return {"id": order_id, "status": order.status}
+    return {"id": order_id, "status": order.status, "cancelledCount": cancelled_count}
 
 
 def cancel_order(db: Session, order_id: int, actor: CurrentActor) -> dict:
@@ -94,6 +132,10 @@ def complete_order(db: Session, order_id: int, actor: CurrentActor) -> dict:
     product = product_crud.get_product(db, order.product_id, for_update=True)
     if product is None:
         raise ResourceNotFoundError("product not found", {"productId": order.product_id})
+    # 给卖家加 5 点信誉分
+    seller = db.get(User, order.seller_id)
+    if seller:
+        seller.score = max(0, min(100, (seller.score or 100) + 5))
     order_crud.update_order_status(db, order, OrderStatus.COMPLETED.value)
     product_crud.update_product(db, product, {"status": ProductStatus.SOLD.value})
     db.commit()
@@ -116,3 +158,32 @@ def create_review(db: Session, order_id: int, payload: OrderReviewRequest, actor
     except IntegrityError as exc:
         db.rollback()
         raise DuplicateConflictError("order already reviewed", {"orderId": order_id}) from exc
+
+
+def create_message(
+    db: Session, order_id: int, payload: OrderMessageCreateRequest, actor: CurrentActor
+) -> dict:
+    order = _require_order(db, order_id)
+    _require_related(order, actor)
+    # Only allow messaging on active orders (RESERVED or CONFIRMED)
+    if order.status not in {OrderStatus.RESERVED.value, OrderStatus.CONFIRMED.value}:
+        raise StateConflictError(
+            "can only message on active orders",
+            {"orderId": order_id, "status": order.status},
+        )
+    msg = order_crud.create_message(db, order_id, actor.user_id, payload.content)
+    db.commit()
+    db.refresh(msg)
+    return order_crud.serialize_message(msg)
+
+
+def list_messages(
+    db: Session, order_id: int, actor: CurrentActor, page: int = 1, size: int = 50
+) -> dict:
+    order = _require_order(db, order_id)
+    _require_related(order, actor)
+    items, total = order_crud.list_messages_for_order(db, order_id, page, size)
+    return {
+        "list": [order_crud.serialize_message(m) for m in items],
+        "page": {"page": page, "size": size, "total": total},
+    }

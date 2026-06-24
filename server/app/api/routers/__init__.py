@@ -5,6 +5,7 @@ from .orders import router as orders_router
 from .products import router as products_router
 from .reports import router as reports_router
 from .users import router as users_router
+from .ws import router as ws_router
 
 ROUTERS = [
     auth_router,
@@ -14,4 +15,5 @@ ROUTERS = [
     orders_router,
     reports_router,
     admin_router,
+    ws_router,
 ]

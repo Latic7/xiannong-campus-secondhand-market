@@ -1,10 +1,11 @@
+import json
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Header, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-import httpx
 import jwt
 
 from app.core.response import api_error, api_ok
@@ -25,19 +26,18 @@ def _issue_token(payload: dict, expires_seconds: int) -> str:
 
 
 def _wechat_code_to_session(code: str) -> dict:
-    """调用微信接口，用 code 换取 openid"""
-    response = httpx.get(
-        "https://api.weixin.qq.com/sns/jscode2session",
-        params={
-            "appid": settings.WECHAT_APP_ID,
-            "secret": settings.WECHAT_APP_SECRET,
-            "js_code": code,
-            "grant_type": "authorization_code",
-        },
-        timeout=8.0,
+    """调用微信接口，用 code 换取 openid（改用 urllib，兼容性更好）"""
+    url = (
+        f"https://api.weixin.qq.com/sns/jscode2session"
+        f"?appid={settings.WECHAT_APP_ID}"
+        f"&secret={settings.WECHAT_APP_SECRET}"
+        f"&js_code={code}"
+        f"&grant_type=authorization_code"
     )
-    response.raise_for_status()
-    return response.json()
+    req = urllib.request.Request(url, method="GET")
+    # 设置较长的超时时间（云托管冷启动 + DNS 解析可能需要更长时间）
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return json.loads(resp.read().decode("utf-8"))
 
 
 def _json_error(status_code: int, code: int, message: str, data=None) -> JSONResponse:
@@ -80,7 +80,72 @@ def _get_current_user_from_token(
 @router.post("/wx-login")
 def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
     """微信授权登录"""
-    # 检查微信配置
+    try:
+        return _do_wx_login(payload, db)
+    except Exception as exc:
+        # 全局兜底：防止任何未捕获异常导致 502
+        import traceback
+        traceback.print_exc()
+        return _json_error(
+            status_code=500,
+            code=10999,
+            message=f"login internal error: {exc}",
+        )
+
+
+def _do_wx_login(payload: WxLoginRequest, db: Session):
+    # ========== 临时测试用（正式环境请删除）==========
+    if payload.code.startswith("test_code"):
+        openid = f"test_openid_{payload.code}"
+        
+        is_admin = False
+        if payload.admin_secret and payload.admin_secret in settings.ADMIN_CREATION_SECRETS:
+            is_admin = True
+        
+        user_service = UserService(db)
+        user = user_service.create_or_get_user(openid, is_admin=is_admin)
+        
+        profile = {
+            "id": user.id,
+            "nickname": user.nickname,
+            "avatar": user.avatar,
+            "score": user.score,
+            "status": user.status if user.status else "active",
+            "isAdmin": user.is_admin,
+        }
+        
+        access_token = _issue_token(
+            {
+                "sub": openid,
+                "uid": user.id,
+                "nickname": user.nickname,
+                "isAdmin": user.is_admin,
+                "typ": "access",
+            },
+            settings.JWT_EXPIRES_SECONDS,
+        )
+        refresh_token = _issue_token(
+            {
+                "sub": openid,
+                "uid": user.id,
+                "nickname": user.nickname,
+                "isAdmin": user.is_admin,
+                "typ": "refresh",
+            },
+            settings.JWT_REFRESH_EXPIRES_SECONDS,
+        )
+        
+        return api_ok(
+            {
+                "accessToken": access_token,
+                "refreshToken": refresh_token,
+                "expiresIn": settings.JWT_EXPIRES_SECONDS,
+                "user": profile,
+            }
+        )
+    # ========== 测试代码结束 ==========
+    
+    # 正式微信登录
     if not settings.WECHAT_APP_ID or not settings.WECHAT_APP_SECRET:
         return _json_error(
             status_code=500,
@@ -88,17 +153,15 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             message="server wechat config missing",
         )
 
-    # 调用微信接口
     try:
         wx_result = _wechat_code_to_session(payload.code)
-    except httpx.HTTPError:
+    except Exception:
         return _json_error(
             status_code=502,
             code=10011,
             message="wechat service unavailable",
         )
 
-    # 检查微信返回结果
     if wx_result.get("errcode"):
         return _json_error(
             status_code=401,
@@ -115,32 +178,30 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             message="wechat openid missing",
         )
 
-    # 判断是否应该设置为管理员（新增代码）
+    # 判断是否应该设置为管理员
     is_admin = False
     if payload.admin_secret and payload.admin_secret in settings.ADMIN_CREATION_SECRETS:
         is_admin = True
 
-    # 使用 service 层创建或获取用户（修改：传入 is_admin）
     user_service = UserService(db)
     user = user_service.create_or_get_user(openid, is_admin=is_admin)
 
-    # 构建用户资料（修改：添加 is_admin）
+    # 构建用户资料
     profile = {
         "id": user.id,
         "nickname": user.nickname,
         "avatar": user.avatar,
         "score": user.score,
-        "status": user.status if user.status else UserStatus.ACTIVE.value,
-        "is_admin": user.is_admin,  # 新增
+        "status": user.status if user.status else "active",
+        "isAdmin": user.is_admin,
     }
 
-    # 签发 token（修改：添加 is_admin）
     access_token = _issue_token(
         {
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
-            "is_admin": user.is_admin,  # 新增
+            "isAdmin": user.is_admin,
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -150,7 +211,7 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
             "sub": openid,
             "uid": user.id,
             "nickname": user.nickname,
-            "is_admin": user.is_admin,  # 新增
+            "isAdmin": user.is_admin,
             "typ": "refresh",
         },
         settings.JWT_REFRESH_EXPIRES_SECONDS,
@@ -167,31 +228,27 @@ def wx_login(payload: WxLoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/refresh")
-def refresh_token(payload: TokenRefreshRequest):
-    """刷新 access token"""
+def refresh_token(payload: TokenRefreshRequest, db: Session = Depends(get_db)):
     try:
         token_data = jwt.decode(payload.refreshToken, settings.JWT_SECRET, algorithms=["HS256"])
     except jwt.PyJWTError:
-        return _json_error(
-            status_code=401,
-            code=10020,
-            message="refresh token invalid",
-        )
+        return _json_error(401, 10020, "refresh token invalid")
 
     if token_data.get("typ") != "refresh":
-        return _json_error(
-            status_code=401,
-            code=10021,
-            message="token type mismatch",
-        )
+        return _json_error(401, 10021, "token type mismatch")
 
-    # 修改：保留 is_admin 字段
+    # 新增：查库获取用户最新信息
+    user_service = UserService(db)
+    user = user_service.get_user_by_id(token_data.get("uid"))
+    if not user:
+        return _json_error(404, 10033, "user not found")
+
     new_access_token = _issue_token(
         {
             "sub": token_data.get("sub"),
-            "uid": token_data.get("uid"),
-            "nickname": token_data.get("nickname", ""),
-            "is_admin": token_data.get("is_admin", False),  # 新增
+            "uid": user.id,
+            "nickname": user.nickname,
+            "isAdmin": user.is_admin,
             "typ": "access",
         },
         settings.JWT_EXPIRES_SECONDS,
@@ -202,6 +259,14 @@ def refresh_token(payload: TokenRefreshRequest):
             "accessToken": new_access_token,
             "refreshToken": payload.refreshToken,
             "expiresIn": settings.JWT_EXPIRES_SECONDS,
+            "user": {  # 新增
+                "id": user.id,
+                "nickname": user.nickname,
+                "avatar": user.avatar,
+                "score": user.score,
+                "status": user.status,
+                "isAdmin": user.is_admin,
+            },
         }
     )
 

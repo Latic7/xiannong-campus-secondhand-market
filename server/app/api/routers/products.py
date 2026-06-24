@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Query, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from app.api.deps.auth import CurrentActor, get_current_actor
@@ -7,6 +7,7 @@ from app.core.exceptions import ResourceNotFoundError
 from app.core.response import api_ok
 from app.schemas.common import ProductCreateRequest, ProductUpdateRequest
 from app.services import product_service
+from app.crud import product as product_crud
 
 router = APIRouter(prefix="/api/products", tags=["Product"])
 
@@ -17,11 +18,23 @@ def list_products(
     size: int = Query(20, ge=1, le=100),
     keyword: str | None = None,
     sort: str | None = None,
-    categoryId: int | None = None,
+    categoryIds: str | None = Query(None, description="分类ID，多个用逗号分隔"),
+    status: str | None = Query(None, description="商品状态筛选，多个用逗号分隔（如 PUBLISHED,SOLD）"),
     ownerId: int | None = None,
     db: Session = Depends(get_db),
 ) -> dict:
-    return api_ok(product_service.list_products(db, page, size, keyword, sort, categoryId, owner_id=ownerId))
+    # 解析多分类
+    cat_ids = None
+    if categoryIds:
+        try:
+            cat_ids = [int(c.strip()) for c in categoryIds.split(",") if c.strip()]
+        except ValueError:
+            pass
+    # 解析状态筛选
+    status_list = None
+    if status:
+        status_list = [s.strip().upper() for s in status.split(",") if s.strip()]
+    return api_ok(product_service.list_products(db, page, size, keyword, sort, cat_ids, status_list=status_list, owner_id=ownerId))
 
 
 @router.post("")
@@ -87,3 +100,21 @@ def delete_product_image(
     actor: CurrentActor = Depends(get_current_actor),
 ) -> dict:
     return api_ok(product_service.delete_product_image(db, product_id, image_id, actor))
+
+
+@router.post("/{product_id}/cloud-images")
+def add_cloud_image(
+    product_id: int,
+    body: dict = Body(...),
+    db: Session = Depends(get_db),
+    actor: CurrentActor = Depends(get_current_actor),
+) -> dict:
+    """接收前端通过 wx.cloud.uploadFile 上传后得到的 cloud:// fileId"""
+    file_id = body.get("fileId", "")
+    if not file_id or not file_id.startswith("cloud://"):
+        from app.core.exceptions import InvalidRequestError
+        raise InvalidRequestError("invalid cloud fileId")
+    image = product_crud.add_product_image(db, product_id, file_id)
+    db.commit()
+    db.refresh(image)
+    return api_ok({"id": image.id, "productId": product_id, "url": image.url})

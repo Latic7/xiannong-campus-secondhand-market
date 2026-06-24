@@ -9,7 +9,7 @@ ProductUpdateStatusValue = Literal["PENDING", "PUBLISHED", "REMOVED"]
 
 class ProductCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=128)
-    price: float = Field(ge=0)
+    price: float = Field(ge=0, le=99999999.99)
     categoryId: int
     description: str | None = None
     images: list[str] = Field(default_factory=list)
@@ -17,7 +17,7 @@ class ProductCreateRequest(BaseModel):
 
 class ProductUpdateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=128)
-    price: float | None = Field(default=None, ge=0)
+    price: float | None = Field(default=None, ge=0, le=99999999.99)
     categoryId: int | None = None
     description: str | None = None
     status: ProductUpdateStatusValue | None = None

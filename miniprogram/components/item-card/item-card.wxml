@@ -1,11 +1,14 @@
 <view class="item-card" bindtap="onTap">
   <view class="image-wrapper">
-    <image src="{{computedImage}}" mode="aspectFill" class="product-image" />
-    <view class="status-tag {{computedStatusClass}}">{{displayStatus}}</view>
+    <image wx:if="{{computedImage}}" src="{{computedImage}}" mode="aspectFill" class="product-image {{imgFilterClass}}" />
+    <view wx:else class="image-placeholder">
+      <image class="placeholder-icon" src="/assets/icons/package.svg" mode="aspectFit" />
+    </view>
+    <view wx:if="{{displayStatus}}" class="status-tag {{computedStatusClass}}">{{displayStatus}}</view>
   </view>
   <view class="info">
     <view class="title">{{item.title}}</view>
     <view class="desc">{{item.description || '暂无描述'}}</view>
-    <view class="price">¥{{item.price}}</view>
+    <view class="price {{imgFilterClass}}">{{displayPrice}}</view>
   </view>
 </view>
