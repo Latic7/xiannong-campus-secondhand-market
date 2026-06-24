@@ -166,7 +166,7 @@ Page({
   // ── 检查当前用户对该商品是否有活跃订单 ──
   async checkActiveOrder(productId) {
     try {
-      const res = await orderService.list({ role: 'buyer', page: 1, size: 100 })
+      const res = await orderService.list({ page: 1, size: 100 })
       const orders = res.list || []
       const activeOrder = orders.find(
         o => Number(o.productId) === Number(productId) && ['RESERVED', 'CONFIRMED'].includes(o.status)
