@@ -111,12 +111,15 @@ def remove_product(db: Session, product_id: int, actor: CurrentActor) -> dict:
         return {"id": product_id, "deleted": True, "status": product.status}
     if product.status == ProductStatus.SOLD.value:
         raise StateConflictError("sold products cannot be unlisted", {"productId": product_id})
-    # 仅已确认订单（CONFIRMED）阻止下架，已预约（RESERVED）允许下架
+    # 仅已确认订单（CONFIRMED）阻止下架
     if order_crud.has_confirmed_order_for_product(db, product_id):
         raise StateConflictError("confirmed order prevents product unlisting", {"productId": product_id})
+    # 取消所有已预约（RESERVED）订单
+    reserved = order_crud.get_reserved_orders_for_product(db, product_id)
+    cancelled_count = order_crud.cancel_orders_batch(db, reserved) if reserved else 0
     product_crud.update_product(db, product, {"status": ProductStatus.REMOVED.value})
     db.commit()
-    return {"id": product_id, "deleted": True, "status": product.status}
+    return {"id": product_id, "deleted": True, "status": product.status, "cancelledOrders": cancelled_count}
 
 
 def upload_product_image(
@@ -166,7 +169,11 @@ def delete_product_image(db: Session, product_id: int, image_id: int, actor: Cur
 def list_pending_products(db: Session, page: int = 1, size: int = 20, status: str | None = None) -> dict:
     page = max(page, 1)
     size = min(max(size, 1), 100)
-    status_filter = status if status else ProductStatus.PENDING.value
+    if status:
+        # 支持逗号分隔的多个状态值
+        status_filter = [s.strip() for s in status.split(",") if s.strip()]
+    else:
+        status_filter = ProductStatus.PENDING.value
     items, total = product_crud.list_products(
         db,
         page,

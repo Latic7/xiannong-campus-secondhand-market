@@ -200,18 +200,18 @@ def list_admin_logs(db: Session, page: int = 1, size: int = 20, start_date: str 
 	stmt = stmt.offset((page - 1) * size).limit(size)
 	rows = db.scalars(stmt).all()
 	items = [
-			{
-				"id": row.id,
-				"actorId": row.actor_id,
-				"action": row.action,
-				"targetType": row.target_type,
-				"targetId": row.target_id,
-				"remark": row.remark,
-				"createdAt": row.created_at.isoformat(),
-			}
-			for row in rows
-		]
-		return {"list": items, "page": {"page": page, "size": size, "total": int(total)}}
+		{
+			"id": row.id,
+			"actorId": row.actor_id,
+			"action": row.action,
+			"targetType": row.target_type,
+			"targetId": row.target_id,
+			"remark": row.remark,
+			"createdAt": row.created_at.isoformat(),
+		}
+		for row in rows
+	]
+	return {"list": items, "page": {"page": page, "size": size, "total": int(total)}}
 
 
 def stats_trends(db: Session, start_date: str | None = None, end_date: str | None = None) -> dict:

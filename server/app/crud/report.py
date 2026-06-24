@@ -187,7 +187,10 @@ def list_reports_with_target(
 	size = _clamp_size(size)
 	filters = []
 	if status:
-		filters.append(Report.status == status)
+		if isinstance(status, list):
+			filters.append(Report.status.in_(status))
+		else:
+			filters.append(Report.status == status)
 	if target_type:
 		filters.append(Report.target_type == target_type)
 	if reporter_id is not None:

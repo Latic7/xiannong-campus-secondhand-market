@@ -56,7 +56,9 @@ def admin_reports(
 	status: str | None = None,
 	target_type: str | None = None,
 ) -> dict:
-	return list_report_queue(db, page=page, size=size, status=status, target_type=target_type)
+	# 支持逗号分隔的多个状态值
+	status_list = [s.strip() for s in status.split(",") if s.strip()] if status else None
+	return list_report_queue(db, page=page, size=size, status=status_list, target_type=target_type)
 
 
 def handle_report(db: Session, report_id: int, payload) -> dict:
