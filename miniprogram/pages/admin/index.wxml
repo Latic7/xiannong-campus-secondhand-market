@@ -16,6 +16,12 @@
     </view>
   </view>
 
+  <!-- 商品审核筛选 -->
+  <view wx:if="{{tabIndex === 0}}" class="filter-bar">
+    <view class="filter-btn {{prodFilter === 'pending' ? 'filter-active' : ''}}" data-filter="pending" bindtap="onProdFilterChange">待处理</view>
+    <view class="filter-btn {{prodFilter === 'handled' ? 'filter-active' : ''}}" data-filter="handled" bindtap="onProdFilterChange">已处理</view>
+  </view>
+
   <!-- 商品审核列表 -->
   <loading-state wx:if="{{tabIndex === 0 && prodLoading && products.length === 0}}" count="4" />
   <error-tip wx:elif="{{tabIndex === 0 && !prodLoading && prodError && products.length === 0}}" message="{{prodError}}" bind:retry="loadProducts" />
@@ -42,8 +48,14 @@
   </scroll-view>
   <empty-state wx:elif="{{tabIndex === 0 && !prodLoading && !prodError}}" message="暂无待审核商品" />
 
+  <!-- 举报审核筛选 -->
+  <view wx:if="{{tabIndex === 1}}" class="filter-bar">
+    <view class="filter-btn {{rptFilter === 'pending' ? 'filter-active' : ''}}" data-filter="pending" bindtap="onRptFilterChange">待处理</view>
+    <view class="filter-btn {{rptFilter === 'handled' ? 'filter-active' : ''}}" data-filter="handled" bindtap="onRptFilterChange">已处理</view>
+  </view>
+
   <!-- 举报审核列表 -->
-  <loading-state wx:elif="{{tabIndex === 1 && rptLoading && reports.length === 0}}" count="4" />
+  <loading-state wx:if="{{tabIndex === 1 && rptLoading && reports.length === 0}}" count="4" />
   <error-tip wx:elif="{{tabIndex === 1 && !rptLoading && rptError && reports.length === 0}}" message="{{rptError}}" bind:retry="loadReports" />
   <scroll-view wx:elif="{{tabIndex === 1 && reports.length > 0}}" class="list-scroll" scroll-y bindscrolltolower="onRptScrollBottom">
     <view class="admin-card" wx:for="{{reports}}" wx:key="id" wx:for-item="rpt" bindtap="onTapReportTarget" data-type="{{rpt.targetType}}" data-id="{{rpt.targetId}}">

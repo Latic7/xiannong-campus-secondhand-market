@@ -47,10 +47,11 @@ def patch_user_status(
 def pending_products(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    status: str | None = Query(None, description="商品状态筛选，为空则默认 PENDING"),
     db: Session = Depends(get_db),
     _: dict = Depends(get_current_admin),
 ) -> dict:
-    return api_ok(pending_products_service(db, page=page, size=size))
+    return api_ok(pending_products_service(db, page=page, size=size, status=status))
 
 
 @router.post("/products/{product_id}/review")

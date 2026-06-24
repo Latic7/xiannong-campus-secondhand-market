@@ -41,6 +41,9 @@ Page({
     // 待处理计数
     pendingReports: 0,
     pendingProducts: 0,
+    // 筛选开关（pending=待处理, handled=已处理）
+    prodFilter: 'pending',
+    rptFilter: 'pending',
     // ── 报表 ──
     statsDateStart: '',
     statsDateEnd: '',
@@ -88,13 +91,28 @@ Page({
     } catch (e) { /* 静默 */ }
   },
 
+  // ── 筛选切换 ──────────────────────────────
+  onProdFilterChange(e) {
+    const filter = e.currentTarget.dataset.filter
+    this.setData({ prodFilter: filter, products: [], prodPage: 1, prodHasMore: true })
+    this.loadProducts()
+  },
+
+  onRptFilterChange(e) {
+    const filter = e.currentTarget.dataset.filter
+    this.setData({ rptFilter: filter, reports: [], rptPage: 1, rptHasMore: true })
+    this.loadReports()
+  },
+
   // ── 商品审核 ──────────────────────────────
   async loadProducts({ append = false } = {}) {
     if (this.data.prodLoading) return
     this.setData({ prodLoading: true })
     try {
       const p = append ? this.data.prodPage : 1
-      const data = await adminService.listPendingProducts({ page: p, size: this.data.prodSize })
+      const params = { page: p, size: this.data.prodSize }
+      if (this.data.prodFilter === 'handled') params.status = 'PUBLISHED,REMOVED'
+      const data = await adminService.listPendingProducts(params)
       const list = (data.list || []).map(item => this.formatProduct(item))
       this.setData({
         products: append ? this.data.products.concat(list) : list,
@@ -154,7 +172,8 @@ Page({
     this.setData({ rptLoading: true })
     try {
       const p = append ? this.data.rptPage : 1
-      const data = await adminService.listReports({ status: 'OPEN', page: p, size: this.data.rptSize })
+      const rptStatus = this.data.rptFilter === 'handled' ? 'HANDLED,REJECTED' : 'OPEN'
+      const data = await adminService.listReports({ status: rptStatus, page: p, size: this.data.rptSize })
       const list = (data.list || []).map(item => this.formatReport(item))
       this.setData({
         reports: append ? this.data.reports.concat(list) : list,

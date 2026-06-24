@@ -163,14 +163,15 @@ def delete_product_image(db: Session, product_id: int, image_id: int, actor: Cur
     return {"productId": product_id, "imageId": image_id, "deleted": True}
 
 
-def list_pending_products(db: Session, page: int = 1, size: int = 20) -> dict:
+def list_pending_products(db: Session, page: int = 1, size: int = 20, status: str | None = None) -> dict:
     page = max(page, 1)
     size = min(max(size, 1), 100)
+    status_filter = status if status else ProductStatus.PENDING.value
     items, total = product_crud.list_products(
         db,
         page,
         size,
-        status=ProductStatus.PENDING.value,
+        status=status_filter,
     )
     return {"list": items, "page": {"page": page, "size": size, "total": total}}
 

@@ -28,7 +28,9 @@ def patch_user_status(db: Session, user_id: int, payload) -> dict:
     return {"userId": user_id, **payload.model_dump()}
 
 
-def pending_products(db: Session, page: int = 1, size: int = 20) -> dict:
+def pending_products(db: Session, page: int = 1, size: int = 20, status: str | None = None) -> dict:
+    if status:
+        return product_service.list_pending_products(db, page, size, status=status)
     return product_service.list_pending_products(db, page, size)
 
 

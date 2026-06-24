@@ -11,7 +11,7 @@ module.exports = {
     return api.post('/api/admin/reports/' + reportId + '/handle', data)
   },
 
-  /** 待审核商品列表 */
+  /** 待审核商品列表（支持 status 参数筛选状态） */
   listPendingProducts(params = {}) {
     return api.get('/api/admin/products/pending', params)
   },
