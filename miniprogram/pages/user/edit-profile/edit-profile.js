@@ -59,11 +59,12 @@ Page({
     const val = e.detail.value || ''
     // 只允许输入数字
     const digits = val.replace(/\D/g, '').slice(0, PHONE_MAX)
-    const result = validatePhone(digits)
+    // 仅在用户已输入内容但格式不对时显示错误，空值不报错
+    const showError = digits.length > 0 ? validatePhone(digits) : { valid: true }
     this.setData({
       phone: digits,
       phoneCount: digits.length,
-      phoneError: digits.length > 0 && !result.valid ? result.message : '',
+      phoneError: !showError.valid ? showError.message : '',
     })
   },
 
@@ -77,12 +78,14 @@ Page({
       return
     }
 
-    // 手机号校验（非空 + 合法格式）
-    const phoneResult = validatePhone(phone)
-    if (!phoneResult.valid) {
-      this.setData({ phoneError: phoneResult.message })
-      wx.showToast({ title: phoneResult.message, icon: 'none' })
-      return
+    // 手机号校验（有值时检查格式，允许为空）
+    if (phone) {
+      const phoneResult = validatePhone(phone)
+      if (!phoneResult.valid) {
+        this.setData({ phoneError: phoneResult.message })
+        wx.showToast({ title: phoneResult.message, icon: 'none' })
+        return
+      }
     }
 
     this.setData({ saving: true })

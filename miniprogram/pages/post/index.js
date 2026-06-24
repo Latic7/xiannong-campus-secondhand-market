@@ -234,6 +234,10 @@ Page({
       this.setError('price', '价格最多两位小数')
       return false
     }
+    if (priceNum > 99999999.99) {
+      this.setError('price', '价格超出上限（最高 99999999.99 元）')
+      return false
+    }
 
     if (categoryIndex < 0) {
       this.setError('category', '请选择商品分类')
@@ -298,7 +302,21 @@ Page({
       }, 2000)
     } catch (err) {
       wx.hideLoading()
-      wx.showToast({ title: err.message || '发布失败', icon: 'none' })
+      const msg = err.message || ''
+      // 根据后端返回的错误信息给出直观提示
+      if (msg.includes('price') && msg.includes('le')) {
+        wx.showToast({ title: '价格超出上限（最高 99999999.99 元）', icon: 'none' })
+      } else if (msg.includes('title') && (msg.includes('min_length') || msg.includes('max_length'))) {
+        wx.showToast({ title: '标题长度不符合要求（1-128字）', icon: 'none' })
+      } else if (msg.includes('category') || msg.includes('categoryId')) {
+        wx.showToast({ title: '请选择有效的商品分类', icon: 'none' })
+      } else if (msg.includes('validation error') || msg.includes('10001')) {
+        wx.showToast({ title: '表单数据有误，请检查输入内容', icon: 'none' })
+      } else if (msg.includes('internal server error')) {
+        wx.showToast({ title: '服务器开小差了，请稍后重试', icon: 'none' })
+      } else {
+        wx.showToast({ title: msg || '发布失败', icon: 'none' })
+      }
     } finally {
       this.setData({ submitting: false })
     }

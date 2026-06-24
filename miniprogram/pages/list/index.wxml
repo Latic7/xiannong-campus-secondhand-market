@@ -86,19 +86,6 @@
   <view class="filter-panel {{showFilter ? 'active' : ''}}" catchtap="noop">
     <view class="filter-section">
       <view class="filter-label">价格区间</view>
-      <view class="price-tags">
-        <view
-          class="price-tag {{selectedPriceIndex === index ? 'active' : ''}}"
-          wx:for="{{priceRanges}}"
-          wx:key="index"
-          data-min="{{item.min}}"
-          data-max="{{item.max}}"
-          data-index="{{index}}"
-          bindtap="onPriceRangeChange"
-        >
-          <text>{{item.label}}</text>
-        </view>
-      </view>
       <view class="custom-price-row">
         <input
           class="custom-price-input"
@@ -124,7 +111,7 @@
       <view class="filter-label">商品状态</view>
       <view class="status-tags">
         <view
-          class="status-tag {{statusFilter.indexOf(item.value) !== -1 ? 'active' : ''}}"
+          class="status-tag {{statusActiveSet[item.value] ? 'active' : ''}}"
           wx:for="{{statusOptions}}"
           wx:key="value"
           data-value="{{item.value}}"

@@ -41,24 +41,14 @@ Page({
 
     categories: [],
 
-    priceRanges: [
-      { label: '全部', min: null, max: null },
-      { label: '0-10元', min: 0, max: 10 },
-      { label: '10-30元', min: 10, max: 30 },
-      { label: '30-50元', min: 30, max: 50 },
-      { label: '50-100元', min: 50, max: 100 },
-      { label: '100元+', min: 100, max: null }
-    ],
-
     sortOptions: [
       { value: 'createdAt_desc', label: '默认排序' },
       { value: 'price_desc', label: '价格从高到低' },
       { value: 'price_asc', label: '价格从低到高' },
       { value: 'hot', label: '热门推荐' }
     ],
-    selectedPriceIndex: 0,
-
     statusFilter: [],          // 商品状态筛选，如 ['PUBLISHED', 'SOLD']
+    statusActiveSet: {},
     statusOptions: [
       { value: 'PUBLISHED', label: '在售' },
       { value: 'SOLD', label: '已售出' },
@@ -112,6 +102,13 @@ Page({
     return set;
   },
 
+  // 根据 statusFilter 生成选中集合，供 WXML 高效判断
+  computeStatusActiveSet(statusFilter) {
+    const set = {};
+    statusFilter.forEach(s => { set[s] = true; });
+    return set;
+  },
+
   computeActiveTags() {
     const { keyword, selectedCategoryIds, categories, priceMin, priceMax, statusFilter, statusOptions } = this.data;
     const tags = [];
@@ -142,7 +139,8 @@ Page({
     this.setData({
       activeTags: tags,
       hasFilters: tags.length > 0,
-      selectedCategorySet: this.computeCategoryActiveSet(selectedCategoryIds)
+      selectedCategorySet: this.computeCategoryActiveSet(selectedCategoryIds),
+      statusActiveSet: this.computeStatusActiveSet(statusFilter)
     });
   },
 
@@ -319,25 +317,11 @@ Page({
     } else {
       statusFilter = [...statusFilter, value];
     }
-    this.setData({ statusFilter, showFilter: false, showSortPanel: false });
-    this.reload();
+    // 不关闭面板，让用户能看见选中/取消的高亮反馈
+    this.setData({ statusFilter, statusActiveSet: this.computeStatusActiveSet(statusFilter) });
   },
 
   // ---- 价格筛选 ----
-
-  onPriceRangeChange(e) {
-    const { min, max, index } = e.currentTarget.dataset;
-    this.setData({
-      priceMin: min !== undefined ? min : null,
-      priceMax: max !== undefined ? max : null,
-      selectedPriceIndex: index,
-      customPriceMin: '',
-      customPriceMax: '',
-      showFilter: false,
-      showSortPanel: false
-    });
-    this.reload();
-  },
 
   onCustomPriceMinInput(e) {
     this.setData({ customPriceMin: e.detail.value });
@@ -354,7 +338,6 @@ Page({
     this.setData({
       priceMin: min,
       priceMax: max,
-      selectedPriceIndex: -1,
       showFilter: false,
       showSortPanel: false
     });
@@ -371,17 +354,23 @@ Page({
   },
 
   onFilterToggle() {
+    const wasOpen = this.data.showFilter;
     this.setData({
-      showFilter: !this.data.showFilter,
+      showFilter: !wasOpen,
       showSortPanel: false
     });
+    // 关闭筛选面板时触发刷新
+    if (wasOpen) this.reload();
   },
 
   onCloseFloatingPanels() {
+    const hadFilter = this.data.showFilter;
     this.setData({
       showSortPanel: false,
       showFilter: false
     });
+    // 关闭筛选面板时触发刷新
+    if (hadFilter) this.reload();
   },
 
   noop() {},
@@ -403,14 +392,15 @@ Page({
       this.setData({
         priceMin: null,
         priceMax: null,
-        selectedPriceIndex: 0,
         customPriceMin: '',
         customPriceMax: ''
       });
     } else if (key && key.startsWith('status-')) {
       const { statusFilter } = this.data;
+      const newFilter = statusFilter.filter(s => s !== statusvalue);
       this.setData({
-        statusFilter: statusFilter.filter(s => s !== statusvalue)
+        statusFilter: newFilter,
+        statusActiveSet: this.computeStatusActiveSet(newFilter)
       });
     }
     this.reload();
@@ -424,10 +414,10 @@ Page({
       selectedCategorySet: {},
       priceMin: null,
       priceMax: null,
-      selectedPriceIndex: 0,
       customPriceMin: '',
       customPriceMax: '',
       statusFilter: [],
+      statusActiveSet: {},
       showFilter: false,
       showSortPanel: false
     });
