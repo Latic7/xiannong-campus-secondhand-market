@@ -30,6 +30,7 @@ def _owner_to_seller_dict(owner: User | None) -> dict:
         "avatar": owner.avatar or "",
         "reputation": owner.score if owner.score is not None else 100,
         "contact": owner.contact or "",
+        "status": owner.status or "",
     }
 
 

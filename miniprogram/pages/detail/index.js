@@ -200,6 +200,8 @@ Page({
       this.setData({ orderBtnText: '我的商品', orderBtnDisabled: true })
     } else if (status !== 'PUBLISHED') {
       this.setData({ orderBtnText: '暂不可购买', orderBtnDisabled: true })
+    } else if ((product.seller?.status || '').toUpperCase() === 'BANNED') {
+      this.setData({ orderBtnText: '商家已被封禁', orderBtnDisabled: true })
     } else {
       this.setData({ orderBtnText: '立即购买', orderBtnDisabled: false })
     }
@@ -238,6 +240,7 @@ Page({
     if (this.data.orderBtnDisabled) { return }
     const p = this.data.product
     if (!p || normalizeStatus(p.status) !== 'PUBLISHED') { wx.showToast({ title: '该商品暂不可购买', icon: 'none' }); return }
+    if ((p.seller?.status || '').toUpperCase() === 'BANNED') { wx.showToast({ title: '商家已被封禁，无法购买', icon: 'none' }); return }
     wx.showModal({
       title: '确认下单',
       content: `确认购买「${p.title}」？\n价格：${p.priceText}`,
