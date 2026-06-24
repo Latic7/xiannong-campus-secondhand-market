@@ -93,7 +93,7 @@ def list_favorites(
     size: int = Query(20, ge=1, le=100, description="每页数量，最大100"),
     keyword: str | None = Query(None, description="模糊搜索关键词"),
     sort: str | None = Query(None, description="排序表达式"),
-    categoryId: int | None = Query(None, description="分类ID"),
+    categoryIds: str | None = Query(None, description="分类ID，多个用逗号分隔"),
     authorization: Optional[str] = Header(default=None),
     db: Session = Depends(get_db)
 ):
@@ -102,10 +102,18 @@ def list_favorites(
     if error:
         return error
     
+    # 解析多分类
+    cat_ids = None
+    if categoryIds:
+        try:
+            cat_ids = [int(c.strip()) for c in categoryIds.split(",") if c.strip()]
+        except ValueError:
+            pass
+    
     user_service = UserService(db)
     favorite_list, total = user_service.get_favorites(
         user_id, page, size,
-        keyword=keyword, sort=sort, category_id=categoryId
+        keyword=keyword, sort=sort, category_ids=cat_ids
     )
     
     return api_ok({
@@ -115,7 +123,7 @@ def list_favorites(
             "size": size,
             "total": total
         },
-        "filters": {"keyword": keyword, "sort": sort, "categoryId": categoryId},
+        "filters": {"keyword": keyword, "sort": sort, "categoryIds": cat_ids},
     })
 
 

@@ -18,11 +18,18 @@ def list_products(
     size: int = Query(20, ge=1, le=100),
     keyword: str | None = None,
     sort: str | None = None,
-    categoryId: int | None = None,
+    categoryIds: str | None = Query(None, description="分类ID，多个用逗号分隔"),
     ownerId: int | None = None,
     db: Session = Depends(get_db),
 ) -> dict:
-    return api_ok(product_service.list_products(db, page, size, keyword, sort, categoryId, owner_id=ownerId))
+    # 解析多分类
+    cat_ids = None
+    if categoryIds:
+        try:
+            cat_ids = [int(c.strip()) for c in categoryIds.split(",") if c.strip()]
+        except ValueError:
+            pass
+    return api_ok(product_service.list_products(db, page, size, keyword, sort, cat_ids, owner_id=ownerId))
 
 
 @router.post("")

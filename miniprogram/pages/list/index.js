@@ -23,7 +23,8 @@ Page({
     pageTitle: '全部商品',
 
     keyword: '',
-    categoryId: null,
+    categoryId: null,        // 单分类（首页分类入口传入，兼容用）
+    selectedCategoryIds: [], // 多分类选中
     sort: 'createdAt_desc',
     priceMin: null,
     priceMax: null,
@@ -36,6 +37,7 @@ Page({
     customPriceMin: '',
     customPriceMax: '',
     activeTags: [],
+    selectedCategorySet: {},
 
     categories: [],
 
@@ -74,7 +76,12 @@ Page({
       this.setData({ keyword: options.keyword });
     }
     if (options.categoryId) {
-      this.setData({ categoryId: parseInt(options.categoryId) });
+      const catId = parseInt(options.categoryId);
+      this.setData({
+        categoryId: catId,
+        selectedCategoryIds: [catId],
+        selectedCategorySet: this.computeCategoryActiveSet([catId])
+      });
     }
 
     this.loadData();
@@ -92,15 +99,26 @@ Page({
 
   // ---- 筛选状态管理 ----
 
+  // 根据 selectedCategoryIds 生成选中集合，供 WXML 高效判断
+  computeCategoryActiveSet(selectedCategoryIds) {
+    const set = {};
+    selectedCategoryIds.forEach(id => { set[id] = true; });
+    return set;
+  },
+
   computeActiveTags() {
-    const { keyword, categoryId, categories, priceMin, priceMax } = this.data;
+    const { keyword, selectedCategoryIds, categories, priceMin, priceMax } = this.data;
     const tags = [];
     if (keyword) {
       tags.push({ key: 'keyword', label: keyword, prefix: '搜索' });
     }
-    if (categoryId !== null) {
-      const cat = categories.find(c => c.id === categoryId);
-      if (cat) tags.push({ key: 'category', label: cat.name, prefix: '分类' });
+    if (selectedCategoryIds.length > 0) {
+      selectedCategoryIds.forEach(catId => {
+        const cat = categories.find(c => c.id === catId);
+        if (cat) {
+          tags.push({ key: 'category-' + catId, categoryId: catId, label: cat.name, prefix: '分类' });
+        }
+      });
     }
     if (priceMin !== null || priceMax !== null) {
       const low = priceMin !== null ? priceMin : '0';
@@ -109,20 +127,23 @@ Page({
     }
     this.setData({
       activeTags: tags,
-      hasFilters: tags.length > 0
+      hasFilters: tags.length > 0,
+      selectedCategorySet: this.computeCategoryActiveSet(selectedCategoryIds)
     });
   },
 
   hasActiveFilters() {
-    const { keyword, categoryId, priceMin, priceMax } = this.data;
-    return !!(keyword || categoryId !== null || priceMin !== null || priceMax !== null);
+    const { keyword, selectedCategoryIds, priceMin, priceMax } = this.data;
+    return !!(keyword || selectedCategoryIds.length > 0 || priceMin !== null || priceMax !== null);
   },
 
   buildParams() {
-    const { page, size, keyword, categoryId, sort, priceMin, priceMax } = this.data;
+    const { page, size, keyword, selectedCategoryIds, sort, priceMin, priceMax } = this.data;
     const params = { page, size, sort };
     if (keyword) params.keyword = keyword;
-    if (categoryId !== null) params.categoryId = categoryId;
+    if (selectedCategoryIds.length > 0) {
+      params.categoryIds = selectedCategoryIds.join(',');
+    }
     if (priceMin !== null) params.priceMin = priceMin;
     if (priceMax !== null) params.priceMax = priceMax;
     Object.keys(params).forEach(key => {
@@ -232,11 +253,28 @@ Page({
     this.reload();
   },
 
-  // ---- 分类 ----
+  // ---- 分类（多选）----
 
   onCategoryChange(e) {
     const { id } = e.currentTarget.dataset;
-    this.setData({ categoryId: id });
+    let { selectedCategoryIds } = this.data;
+    if (id === null || id === undefined) {
+      // 点击"全部"时清除所有分类
+      selectedCategoryIds = [];
+    } else {
+      const idx = selectedCategoryIds.indexOf(id);
+      if (idx !== -1) {
+        // 已选中则取消
+        selectedCategoryIds = selectedCategoryIds.filter(cid => cid !== id);
+      } else {
+        // 未选中则添加
+        selectedCategoryIds = [...selectedCategoryIds, id];
+      }
+    }
+    this.setData({
+      selectedCategoryIds,
+      selectedCategorySet: this.computeCategoryActiveSet(selectedCategoryIds)
+    });
     this.reload();
   },
 
@@ -319,11 +357,16 @@ Page({
   // ---- 已选标签操作 ----
 
   onRemoveTag(e) {
-    const { key } = e.currentTarget.dataset;
+    const { key, categoryid } = e.currentTarget.dataset;
     if (key === 'keyword') {
       this.setData({ keyword: '' });
-    } else if (key === 'category') {
-      this.setData({ categoryId: null });
+    } else if (key && key.startsWith('category-')) {
+      const { selectedCategoryIds } = this.data;
+      const newIds = selectedCategoryIds.filter(cid => cid !== categoryid);
+      this.setData({
+        selectedCategoryIds: newIds,
+        selectedCategorySet: this.computeCategoryActiveSet(newIds)
+      });
     } else if (key === 'price') {
       this.setData({
         priceMin: null,
@@ -340,6 +383,8 @@ Page({
     this.setData({
       keyword: '',
       categoryId: null,
+      selectedCategoryIds: [],
+      selectedCategorySet: {},
       priceMin: null,
       priceMax: null,
       selectedPriceIndex: 0,

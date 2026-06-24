@@ -25,6 +25,7 @@
           wx:for="{{activeTags}}"
           wx:key="key"
           data-key="{{item.key}}"
+          data-categoryid="{{item.categoryId}}"
           bindtap="onRemoveTag"
         >
           <text class="tag-prefix">{{item.prefix}}：</text>
@@ -42,7 +43,7 @@
   <scroll-view class="category-scroll" scroll-x>
     <view class="category-list">
       <view
-        class="category-item {{item.id === categoryId ? 'active' : ''}}"
+        class="category-item {{selectedCategorySet[item.id] ? 'active' : ''}}"
         wx:for="{{categories}}"
         wx:key="id"
         data-id="{{item.id}}"

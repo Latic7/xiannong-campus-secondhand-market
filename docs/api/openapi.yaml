@@ -142,10 +142,11 @@ paths:
         - $ref: '#/components/parameters/Size'
         - $ref: '#/components/parameters/Keyword'
         - $ref: '#/components/parameters/Sort'
-        - name: categoryId
+        - name: categoryIds
           in: query
+          description: 分类ID，多个用逗号分隔（如 "1,3,5"）
           schema:
-            type: integer
+            type: string
       responses:
         '200':
           description: Favorite list
@@ -239,10 +240,11 @@ paths:
         - $ref: '#/components/parameters/Size'
         - $ref: '#/components/parameters/Keyword'
         - $ref: '#/components/parameters/Sort'
-        - name: categoryId
+        - name: categoryIds
           in: query
+          description: 分类ID，多个用逗号分隔（如 "1,3,5"）
           schema:
-            type: integer
+            type: string
         - name: ownerId
           in: query
           description: Filter by product owner (for "my published" list).
@@ -1364,8 +1366,11 @@ components:
             sort:
               type: string
               nullable: true
-            categoryId:
-              type: integer
+            categoryIds:
+              type: array
+              description: 筛选使用的分类ID列表
+              items:
+                type: integer
               nullable: true
 
     Order:

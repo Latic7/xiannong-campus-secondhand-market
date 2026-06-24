@@ -178,7 +178,7 @@ class UserService:
         size: int = 20,
         keyword: str | None = None,
         sort: str | None = None,
-        category_id: int | None = None,
+        category_ids: list[int] | None = None,
     ) -> Tuple[list, int]:
         """
         获取收藏列表（分页 + 筛选），返回完整商品信息，对齐 OpenAPI ProductListPayload。
@@ -203,8 +203,8 @@ class UserService:
             query = query.filter(
                 Product.title.ilike(kw) | Product.description.ilike(kw)
             )
-        if category_id is not None:
-            query = query.filter(Product.category_id == category_id)
+        if category_ids:
+            query = query.filter(Product.category_id.in_(category_ids))
 
         # 统计总数
         total = query.count()
