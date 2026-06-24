@@ -141,6 +141,11 @@
     商品已下架
   </button>
 
+  <!-- 未登录时显示请先登录 -->
+  <button wx:elif="{{!isLoggedIn}}" class="action-btn-disabled" bindtap="onPlaceOrder">
+    请先登录后购买
+  </button>
+
   <!-- 下单按钮（文案与状态由 JS 控制） -->
   <button wx:elif="{{orderBtnDisabled}}" class="action-btn-disabled" disabled>
     {{orderBtnText}}

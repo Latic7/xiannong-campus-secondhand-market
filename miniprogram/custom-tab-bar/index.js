@@ -38,6 +38,14 @@ Component({
     switchTab(e) {
       const index = e.currentTarget.dataset.index;
       const url = this.data.list[index].pagePath;
+      // 发布页需要登录才能进入
+      if (index === 1) {
+        const user = getUserInfo()
+        if (!user || !user.id) {
+          wx.showToast({ title: '请先登录后再发布', icon: 'none' })
+          return
+        }
+      }
       // 先更新状态，切换页面后show会再次更新
       this.setData({ selected: index });
       wx.switchTab({ url });

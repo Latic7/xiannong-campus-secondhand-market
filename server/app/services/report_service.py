@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.api.deps.auth import CurrentActor
-from app.core.exceptions import ResourceNotFoundError
+from app.core.exceptions import InvalidRequestError, ResourceNotFoundError
 from app.crud.report import create_report as crud_create_report
 from app.crud.report import get_report as crud_get_report
 from app.crud.report import list_reports_with_target as crud_list_reports_with_target
@@ -15,6 +15,18 @@ from app.schemas.reports import AppealCreateRequest, ReportCreateRequest
 
 
 def create_report(payload: ReportCreateRequest, actor: CurrentActor | None = None) -> dict:
+    from app.core.database import SessionLocal
+    from app.core.status import ProductStatus
+
+    # 举报商品时，只允许针对"在售"商品
+    if payload.targetType == "PRODUCT":
+        with SessionLocal() as db:
+            product = db.get(Product, payload.targetId)
+            if product is None:
+                raise ResourceNotFoundError("商品不存在")
+            if product.status != ProductStatus.PUBLISHED.value:
+                raise InvalidRequestError("只能举报在售中的商品")
+
     reporter_id = actor.user_id if actor else 3
     report = crud_create_report(
         {
@@ -103,8 +115,11 @@ def handle_report(report_id: int, payload: ReportHandleRequest, actor: CurrentAc
         if payload.action != "reject" and target_user_id:
             user = db.get(User, target_user_id)
             if user:
-                deduction = {"warning": 10, "ban_user": 30, "unlist_product": 5}.get(payload.action, 10)
-                user.score = max(0, min(100, (user.score or 100) - deduction))
+                if payload.action == "ban_user":
+                    user.score = 0  # 封禁直接清零
+                else:
+                    deduction = {"warning": 5, "unlist_product": 15}.get(payload.action, 10)
+                    user.score = max(0, min(100, (user.score or 100) - deduction))
 
         # 下架商品：将目标商品状态设为 REMOVED
         if payload.action == "unlist_product" and report["targetType"] == "PRODUCT":
