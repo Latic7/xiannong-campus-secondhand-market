@@ -47,6 +47,7 @@ Page({
   async loadOrder() {
     try {
       const data = await orderService.getDetail(this.data.orderId)
+      const meta = getStatusMeta(ORDER_STATUS, data.status)
       const productStatus = (data.product?.status || '').toUpperCase()
       const isTerminal = data.status === 'CANCELLED' || data.status === 'COMPLETED' || productStatus === 'REMOVED'
       this.setData({

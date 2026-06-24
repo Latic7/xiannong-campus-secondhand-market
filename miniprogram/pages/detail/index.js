@@ -337,7 +337,13 @@ Page({
   onContactSellerChat() {
     const orderId = this.data.activeOrderId
     if (!orderId) {
-      wx.showToast({ title: '请先下单后再留言', icon: 'none' })
+      wx.showToast({ title: '请先下单后再使用聊天功能', icon: 'none' })
+      return
+    }
+    // 商品已下架时阻止进入聊天
+    const st = this.data.product?.status || ''
+    if (st === 'REMOVED') {
+      wx.showToast({ title: '商品已下架，无法继续沟通', icon: 'none' })
       return
     }
     wx.navigateTo({ url: `/pages/order-chat/index?orderId=${orderId}` })

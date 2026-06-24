@@ -133,9 +133,12 @@
     下架商品
   </button>
 
-  <!-- 给卖家留言（有活跃订单时才显示） -->
-  <button wx:elif="{{activeOrderId}}" class="action-btn-chat" bindtap="onContactSellerChat">
-    给卖家留言
+  <!-- 与商家沟通（有活跃订单且商品未下架时才显示） -->
+  <button wx:elif="{{activeOrderId && product.status !== 'REMOVED'}}" class="action-btn-chat" bindtap="onContactSellerChat">
+    与商家沟通详细事宜
+  </button>
+  <button wx:elif="{{activeOrderId && product.status === 'REMOVED'}}" class="action-btn-disabled" bindtap="onContactSellerChat">
+    商品已下架
   </button>
 
   <!-- 下单按钮（文案与状态由 JS 控制） -->
