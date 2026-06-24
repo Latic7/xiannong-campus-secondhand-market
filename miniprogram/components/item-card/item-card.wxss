@@ -129,4 +129,9 @@
   font-size: 34rpx;
   font-weight: 800;
   line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.price.img-grayscale {
+  color: #999;
 }

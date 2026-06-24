@@ -255,6 +255,11 @@
   font-size: 32rpx;
   font-weight: 700;
   line-height: 1.2;
+  transition: color 0.3s ease;
+}
+
+.recommend-price.price-gray {
+  color: #999;
 }
 
 .product-list {

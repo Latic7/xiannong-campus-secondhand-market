@@ -9,6 +9,6 @@
   <view class="info">
     <view class="title">{{item.title}}</view>
     <view class="desc">{{item.description || '暂无描述'}}</view>
-    <view class="price">{{displayPrice}}</view>
+    <view class="price {{imgFilterClass}}">{{displayPrice}}</view>
   </view>
 </view>

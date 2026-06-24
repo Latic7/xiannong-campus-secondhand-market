@@ -65,7 +65,7 @@
             </view>
             <view class="recommend-info">
               <text class="recommend-title">{{item.title}}</text>
-              <text class="recommend-price">¥{{item.price}}</text>
+              <text class="recommend-price {{item.status === 'REMOVED' || item.status === 'SOLD' ? 'price-gray' : ''}}">¥{{item.price}}</text>
             </view>
           </view>
         </block>
