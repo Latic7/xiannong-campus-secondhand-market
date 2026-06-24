@@ -30,7 +30,7 @@ def _verify_token(token: str) -> CurrentActor:
     )
 
 
-@router.websocket("/ws/orders/{order_id}/chat")
+@router.websocket("/api/ws/orders/{order_id}/chat")
 async def order_chat_ws(
     ws: WebSocket,
     order_id: int,
