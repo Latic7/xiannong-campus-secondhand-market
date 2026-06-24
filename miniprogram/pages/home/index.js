@@ -50,6 +50,7 @@ Page({
     const tabBar = this.getTabBar();
     if (tabBar) {
       tabBar.setData({ selected: 0 });
+      tabBar.refreshBadge();
     }
     // 每次回到首页自动刷新商品列表，按时间倒序
     this.loadData();

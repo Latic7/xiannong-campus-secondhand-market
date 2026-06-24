@@ -36,6 +36,7 @@ Page({
     const tabBar = this.getTabBar();
     if (tabBar) {
       tabBar.setData({ selected: 2 });
+      tabBar.refreshBadge();
     }
 
     // 每次显示时刷新登录态和用户信息

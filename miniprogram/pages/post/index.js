@@ -70,6 +70,7 @@ Page({
     const tabBar = this.getTabBar();
     if (tabBar) {
       tabBar.setData({ selected: 1 });
+      tabBar.refreshBadge();
     }
   },
 
