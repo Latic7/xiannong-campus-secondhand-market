@@ -37,6 +37,7 @@
           </view>
           <text class="card-sub">{{item.sellerName}}</text>
           <text class="card-desc">{{item.description || '暂无描述'}}</text>
+          <text wx:if="{{prodFilter === 'handled'}}" class="card-result" style="color:{{item.statusColor}}">审核结果：{{item.statusText}}</text>
         </view>
       </view>
       <view wx:if="{{prodFilter === 'pending'}}" class="card-actions" catchtap>
@@ -78,6 +79,9 @@
         <text class="rpt-meta-text">{{rpt.targetTypeText}} · 举报 #{{rpt.id}}</text>
         <text class="rpt-meta-text" style="color:{{rpt.statusColor}}">{{rpt.statusText}}</text>
       </view>
+      <view wx:if="{{rptFilter === 'handled' && rpt.handleActionText}}" class="rpt-result">
+        <text class="rpt-result-text">处理结果：{{rpt.handleActionText}}</text>
+      </view>
       <view wx:if="{{rptFilter === 'pending'}}" class="card-actions" catchtap>
         <button class="btn-approve" data-id="{{rpt.id}}" data-action="warning" bindtap="onHandleReport">警告</button>
         <button class="btn-approve" data-id="{{rpt.id}}" data-action="ban_user" bindtap="onHandleReport">封禁</button>
@@ -93,9 +97,13 @@
   <view wx:elif="{{tabIndex === 2}}" class="stats-section">
     <!-- 日期筛选 -->
     <view class="stats-date-bar">
-      <input class="stats-date-input" type="text" placeholder="起始日期" value="{{statsDateStart}}" bindinput="onStatsDateStartInput" />
+      <picker mode="date" value="{{statsDateStart}}" bindchange="onStatsDateStartChange">
+        <view class="stats-date-input">{{statsDateStart || '起始日期'}}</view>
+      </picker>
       <text class="stats-date-divider">至</text>
-      <input class="stats-date-input" type="text" placeholder="结束日期" value="{{statsDateEnd}}" bindinput="onStatsDateEndInput" />
+      <picker mode="date" value="{{statsDateEnd}}" bindchange="onStatsDateEndChange">
+        <view class="stats-date-input">{{statsDateEnd || '结束日期'}}</view>
+      </picker>
       <button class="stats-query-btn" size="mini" bindtap="loadStats">查询</button>
     </view>
 

@@ -143,6 +143,8 @@ class UserService:
         添加收藏
         返回: 是否新增成功（如果已存在则返回 False）
         """
+        from app.models.product import Product
+
         if self.is_favorited(user_id, product_id):
             return False
         
@@ -151,6 +153,10 @@ class UserService:
             product_id=product_id
         )
         self.db.add(favorite)
+        # 更新商品收藏数
+        self.db.query(Product).filter(Product.id == product_id).update(
+            {Product.favorite_count: Product.favorite_count + 1}
+        )
         self.db.commit()
         return True
     
@@ -159,6 +165,8 @@ class UserService:
         取消收藏
         返回: 是否删除成功
         """
+        from app.models.product import Product
+
         favorite = self.db.query(Favorite).filter(
             Favorite.user_id == user_id,
             Favorite.product_id == product_id
@@ -168,6 +176,12 @@ class UserService:
             return False
         
         self.db.delete(favorite)
+        # 更新商品收藏数（不低于 0）
+        self.db.query(Product).filter(
+            Product.id == product_id, Product.favorite_count > 0
+        ).update(
+            {Product.favorite_count: Product.favorite_count - 1}
+        )
         self.db.commit()
         return True
     

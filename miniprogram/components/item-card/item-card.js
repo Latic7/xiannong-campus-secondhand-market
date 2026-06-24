@@ -9,7 +9,8 @@ Component({
     computedImage: '',
     computedStatusClass: '',
     displayStatus: '',
-    displayPrice: ''
+    displayPrice: '',
+    imgFilterClass: '',
   },
   observers: {
     'item': function(item) {
@@ -37,11 +38,14 @@ Component({
         displayStatus = '';
       }
 
+      const imgFilterClass = (status === 'REMOVED' || status === 'SOLD') ? 'img-grayscale' : '';
+
       this.setData({
         computedImage: image,
         computedStatusClass: statusClass,
         displayStatus: displayStatus,
-        displayPrice: this.formatPrice(item.price)
+        displayPrice: this.formatPrice(item.price),
+        imgFilterClass,
       });
     }
   },

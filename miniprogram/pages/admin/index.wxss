@@ -240,6 +240,25 @@ page {
   background: var(--color-primary);
 }
 
+.card-result {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
+.rpt-result {
+  margin-top: 10rpx;
+  padding-top: 10rpx;
+  border-top: 1rpx solid var(--color-border);
+}
+
+.rpt-result-text {
+  color: var(--color-text-secondary);
+  font-size: 24rpx;
+  font-weight: 600;
+}
+
 /* ── 报表 ────────────────────────── */
 
 .stats-section {
@@ -256,12 +275,20 @@ page {
 .stats-date-input {
   flex: 1;
   height: 64rpx;
+  line-height: 64rpx;
   padding: 0 16rpx;
   color: var(--color-text);
   font-size: 24rpx;
   background: #f2f2f7;
   border-radius: 14rpx;
   box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+picker {
+  flex: 1;
 }
 
 .stats-date-divider {

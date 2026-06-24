@@ -1,6 +1,6 @@
 <view class="item-card" bindtap="onTap">
   <view class="image-wrapper">
-    <image wx:if="{{computedImage}}" src="{{computedImage}}" mode="aspectFill" class="product-image" />
+    <image wx:if="{{computedImage}}" src="{{computedImage}}" mode="aspectFill" class="product-image {{imgFilterClass}}" />
     <view wx:else class="image-placeholder">
       <image class="placeholder-icon" src="/assets/icons/package.svg" mode="aspectFit" />
     </view>

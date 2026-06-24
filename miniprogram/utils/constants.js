@@ -14,7 +14,7 @@ const PRODUCT_STATUS = {
   PENDING: { label: '待审核', color: '#f0ad4e' },
   PUBLISHED: { label: '已发布', color: '#5cb85c' },
   REMOVED: { label: '已下架', color: '#999' },
-  SOLD: { label: '已售出', color: '#337ab7' },
+  SOLD: { label: '已售出', color: '#ff3b30' },
 }
 
 // ── 订单状态 ───────────────────────────────────

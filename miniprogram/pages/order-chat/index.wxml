@@ -31,13 +31,18 @@
         <text class="header-tip">卖家已确认，完成交易后请确认收货</text>
       </block>
     </view>
+    <view wx:elif="{{isTerminal && order.productStatus === 'REMOVED'}}" class="header-tip muted">商品已下架，消息仅供查看</view>
     <view wx:elif="{{isTerminal}}" class="header-tip muted">订单已结束，消息仅供查看</view>
   </view>
 
   <!-- Messages list -->
   <scroll-view wx:if="{{order}}" class="msg-list" scroll-y scroll-into-view="msg-{{messages.length - 1}}">
     <!-- Terminal notice banner (prominent) -->
-    <view wx:if="{{isTerminal}}" class="terminated-banner">
+    <view wx:if="{{isTerminal && order.productStatus === 'REMOVED'}}" class="terminated-banner">
+      <image class="terminated-icon" src="/assets/icons/warning.svg" mode="aspectFit" />
+      <text class="terminated-text">商品已被下架，无法继续发送消息</text>
+    </view>
+    <view wx:elif="{{isTerminal}}" class="terminated-banner">
       <image class="terminated-icon" src="/assets/icons/info.svg" mode="aspectFit" />
       <text class="terminated-text">订单已结束，消息仅供查看，无法发送新消息</text>
     </view>

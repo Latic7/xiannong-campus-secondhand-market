@@ -13,6 +13,13 @@ const REPORT_ACTIONS = [
   { action: 'reject', label: '驳回举报', confirm: '确认驳回该举报？' },
 ]
 
+const HANDLE_ACTION_LABELS = {
+  warning: '警告',
+  ban_user: '封禁用户',
+  unlist_product: '下架商品',
+  reject: '驳回举报',
+}
+
 const TAB_OPTIONS = [
   { key: 'products', label: '商品审核' },
   { key: 'reports', label: '举报审核' },
@@ -200,6 +207,7 @@ Page({
       targetTypeText: targetType === 'PRODUCT' ? '商品' : targetType === 'USER' ? '用户' : targetType === 'ORDER' ? '订单' : '未知',
       statusText: meta.label,
       statusColor: meta.color,
+      handleActionText: HANDLE_ACTION_LABELS[report.handleAction] || report.handleAction || '',
       ...summary,
     }
   },
@@ -280,10 +288,10 @@ Page({
   },
 
   // ── 报表 ──────────────────────────────────
-  onStatsDateStartInput(e) {
+  onStatsDateStartChange(e) {
     this.setData({ statsDateStart: e.detail.value })
   },
-  onStatsDateEndInput(e) {
+  onStatsDateEndChange(e) {
     this.setData({ statsDateEnd: e.detail.value })
   },
 

@@ -55,7 +55,11 @@
       <view class="recommend-list">
         <block wx:for="{{recommends}}" wx:key="id">
           <view class="recommend-item" data-product-id="{{item.id}}" bindtap="onProductTap">
-            <image class="recommend-image" src="{{item.images[0]}}" mode="aspectFill" />
+            <view class="recommend-image-wrap">
+              <image class="recommend-image {{item.status === 'REMOVED' || item.status === 'SOLD' ? 'img-grayscale' : ''}}" src="{{item.images[0]}}" mode="aspectFill" />
+              <view wx:if="{{item.status === 'REMOVED'}}" class="recommend-status-tag status-removed">已下架</view>
+              <view wx:elif="{{item.status === 'SOLD'}}" class="recommend-status-tag status-sold">已售出</view>
+            </view>
             <view class="recommend-tags">
               <text class="recommend-condition">{{item.condition || '全新'}}</text>
             </view>

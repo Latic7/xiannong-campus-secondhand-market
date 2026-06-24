@@ -11,6 +11,7 @@ from app.core.exceptions import DuplicateConflictError, ForbiddenError, Resource
 from app.core.status import OrderStatus, ProductStatus
 from app.crud import order as order_crud
 from app.crud import product as product_crud
+from app.models.user import User
 from app.schemas.orders import OrderCreateRequest, OrderMessageCreateRequest, OrderReviewRequest
 
 
@@ -131,6 +132,10 @@ def complete_order(db: Session, order_id: int, actor: CurrentActor) -> dict:
     product = product_crud.get_product(db, order.product_id, for_update=True)
     if product is None:
         raise ResourceNotFoundError("product not found", {"productId": order.product_id})
+    # 给卖家加 5 点信誉分
+    seller = db.get(User, order.seller_id)
+    if seller:
+        seller.score = max(0, min(100, (seller.score or 100) + 5))
     order_crud.update_order_status(db, order, OrderStatus.COMPLETED.value)
     product_crud.update_product(db, product, {"status": ProductStatus.SOLD.value})
     db.commit()

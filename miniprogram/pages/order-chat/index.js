@@ -47,8 +47,8 @@ Page({
   async loadOrder() {
     try {
       const data = await orderService.getDetail(this.data.orderId)
-      const meta = getStatusMeta(ORDER_STATUS, data.status)
-      const isTerminal = data.status === 'CANCELLED' || data.status === 'COMPLETED'
+      const productStatus = (data.product?.status || '').toUpperCase()
+      const isTerminal = data.status === 'CANCELLED' || data.status === 'COMPLETED' || productStatus === 'REMOVED'
       this.setData({
         order: {
           ...data,
@@ -57,6 +57,7 @@ Page({
           statusColor: meta.color,
           productTitle: data.product?.title || '商品信息不可用',
           productImage: data.product?.image || '',
+          productStatus,
         },
         isTerminal,
         loading: false,
