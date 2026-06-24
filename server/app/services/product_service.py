@@ -37,17 +37,22 @@ def list_products(
     keyword: str | None = None,
     sort: str | None = None,
     category_ids: list[int] | None = None,
+    status_list: list[str] | None = None,
     owner_id: int | None = None,
 ) -> dict:
     page = max(page, 1)
     size = min(max(size, 1), 100)
-    # 公开列表只显示已发布或已售出商品；owner 自己的列表显示所有状态
-    statuses = [ProductStatus.PUBLISHED.value, ProductStatus.SOLD.value] if owner_id is None else None
+    # 如果前端传了 status_list 则用指定的状态，否则走默认逻辑
+    # 默认：公开列表只显示已发布或已售出商品；owner 自己的列表显示所有状态
+    if status_list is None:
+        statuses = [ProductStatus.PUBLISHED.value, ProductStatus.SOLD.value] if owner_id is None else None
+    else:
+        statuses = status_list
     items, total = product_crud.list_products(db, page, size, keyword, sort, category_ids, status=statuses, owner_id=owner_id)
     return {
         "list": items,
         "page": {"page": page, "size": size, "total": total},
-        "filters": {"keyword": keyword, "sort": sort, "categoryIds": category_ids},
+        "filters": {"keyword": keyword, "sort": sort, "categoryIds": category_ids, "status": status_list},
     }
 
 

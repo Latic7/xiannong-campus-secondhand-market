@@ -160,7 +160,8 @@
 }
 
 .category-item,
-.price-tag {
+.price-tag,
+.status-tag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -179,12 +180,14 @@
 }
 
 .category-item:active,
-.price-tag:active {
+.price-tag:active,
+.status-tag:active {
   transform: scale(0.97);
 }
 
 .category-item.active,
-.price-tag.active {
+.price-tag.active,
+.status-tag.active {
   color: #ffffff;
   font-weight: 600;
   background: var(--color-primary);
@@ -240,14 +243,16 @@
   font-weight: 700;
 }
 
-.price-tags {
+.price-tags,
+.status-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 12rpx;
   margin-bottom: 18rpx;
 }
 
-.price-tag {
+.price-tag,
+.status-tag {
   min-height: 58rpx;
   padding: 0 22rpx;
   color: var(--color-text-secondary);

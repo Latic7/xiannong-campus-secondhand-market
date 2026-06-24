@@ -57,6 +57,12 @@ Page({
       { value: 'hot', label: '热门推荐' }
     ],
     selectedPriceIndex: 0,
+
+    statusFilter: [],          // 商品状态筛选，如 ['PUBLISHED', 'SOLD']
+    statusOptions: [
+      { value: 'PUBLISHED', label: '在售' },
+      { value: 'SOLD', label: '已售出' },
+    ],
   },
 
   onLoad(options) {
@@ -107,7 +113,7 @@ Page({
   },
 
   computeActiveTags() {
-    const { keyword, selectedCategoryIds, categories, priceMin, priceMax } = this.data;
+    const { keyword, selectedCategoryIds, categories, priceMin, priceMax, statusFilter, statusOptions } = this.data;
     const tags = [];
     if (keyword) {
       tags.push({ key: 'keyword', label: keyword, prefix: '搜索' });
@@ -125,6 +131,14 @@ Page({
       const high = priceMax !== null ? priceMax : '∞';
       tags.push({ key: 'price', label: '¥' + low + ' - ¥' + high, prefix: '价格' });
     }
+    if (statusFilter.length > 0) {
+      statusFilter.forEach(st => {
+        const opt = statusOptions.find(o => o.value === st);
+        if (opt) {
+          tags.push({ key: 'status-' + st, statusValue: st, label: opt.label, prefix: '状态' });
+        }
+      });
+    }
     this.setData({
       activeTags: tags,
       hasFilters: tags.length > 0,
@@ -133,12 +147,12 @@ Page({
   },
 
   hasActiveFilters() {
-    const { keyword, selectedCategoryIds, priceMin, priceMax } = this.data;
-    return !!(keyword || selectedCategoryIds.length > 0 || priceMin !== null || priceMax !== null);
+    const { keyword, selectedCategoryIds, priceMin, priceMax, statusFilter } = this.data;
+    return !!(keyword || selectedCategoryIds.length > 0 || priceMin !== null || priceMax !== null || statusFilter.length > 0);
   },
 
   buildParams() {
-    const { page, size, keyword, selectedCategoryIds, sort, priceMin, priceMax } = this.data;
+    const { page, size, keyword, selectedCategoryIds, sort, priceMin, priceMax, statusFilter } = this.data;
     const params = { page, size, sort };
     if (keyword) params.keyword = keyword;
     if (selectedCategoryIds.length > 0) {
@@ -146,6 +160,9 @@ Page({
     }
     if (priceMin !== null) params.priceMin = priceMin;
     if (priceMax !== null) params.priceMax = priceMax;
+    if (statusFilter.length > 0) {
+      params.status = statusFilter.join(',');
+    }
     Object.keys(params).forEach(key => {
       if (params[key] === null || params[key] === '') delete params[key];
     });
@@ -291,6 +308,21 @@ Page({
     this.reload();
   },
 
+  // ---- 商品状态筛选（多选）----
+
+  onStatusToggle(e) {
+    const { value } = e.currentTarget.dataset;
+    let { statusFilter } = this.data;
+    const idx = statusFilter.indexOf(value);
+    if (idx !== -1) {
+      statusFilter = statusFilter.filter(s => s !== value);
+    } else {
+      statusFilter = [...statusFilter, value];
+    }
+    this.setData({ statusFilter, showFilter: false, showSortPanel: false });
+    this.reload();
+  },
+
   // ---- 价格筛选 ----
 
   onPriceRangeChange(e) {
@@ -357,7 +389,7 @@ Page({
   // ---- 已选标签操作 ----
 
   onRemoveTag(e) {
-    const { key, categoryid } = e.currentTarget.dataset;
+    const { key, categoryid, statusvalue } = e.currentTarget.dataset;
     if (key === 'keyword') {
       this.setData({ keyword: '' });
     } else if (key && key.startsWith('category-')) {
@@ -375,6 +407,11 @@ Page({
         customPriceMin: '',
         customPriceMax: ''
       });
+    } else if (key && key.startsWith('status-')) {
+      const { statusFilter } = this.data;
+      this.setData({
+        statusFilter: statusFilter.filter(s => s !== statusvalue)
+      });
     }
     this.reload();
   },
@@ -390,6 +427,7 @@ Page({
       selectedPriceIndex: 0,
       customPriceMin: '',
       customPriceMax: '',
+      statusFilter: [],
       showFilter: false,
       showSortPanel: false
     });

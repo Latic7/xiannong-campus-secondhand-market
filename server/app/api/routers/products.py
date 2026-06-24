@@ -19,6 +19,7 @@ def list_products(
     keyword: str | None = None,
     sort: str | None = None,
     categoryIds: str | None = Query(None, description="分类ID，多个用逗号分隔"),
+    status: str | None = Query(None, description="商品状态筛选，多个用逗号分隔（如 PUBLISHED,SOLD）"),
     ownerId: int | None = None,
     db: Session = Depends(get_db),
 ) -> dict:
@@ -29,7 +30,11 @@ def list_products(
             cat_ids = [int(c.strip()) for c in categoryIds.split(",") if c.strip()]
         except ValueError:
             pass
-    return api_ok(product_service.list_products(db, page, size, keyword, sort, cat_ids, owner_id=ownerId))
+    # 解析状态筛选
+    status_list = None
+    if status:
+        status_list = [s.strip().upper() for s in status.split(",") if s.strip()]
+    return api_ok(product_service.list_products(db, page, size, keyword, sort, cat_ids, status_list=status_list, owner_id=ownerId))
 
 
 @router.post("")
