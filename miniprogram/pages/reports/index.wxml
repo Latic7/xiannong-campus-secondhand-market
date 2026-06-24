@@ -1,5 +1,20 @@
 <image class="page-bg" src="/assets/images/Background.jpg" mode="aspectFill" />
 <view class="page">
+  <!-- tab 切换 -->
+  <view class="tab-bar">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="tab-item {{tabIndex === index ? 'tab-active' : ''}}"
+      data-index="{{index}}"
+      bindtap="onTabChange"
+    >
+      <text>{{item.label}}</text>
+      <view wx:if="{{item.key === 'against' && againstBadge > 0}}" class="tab-badge">{{againstBadge > 99 ? '99+' : againstBadge}}</view>
+      <view wx:if="{{tabIndex === index}}" class="tab-underline"></view>
+    </view>
+  </view>
+
   <loading-state wx:if="{{loading && reports.length === 0}}" count="4" />
   <error-tip wx:elif="{{!loading && errorMsg && reports.length === 0}}" message="{{errorMsg}}" bind:retry="onRetry" />
 

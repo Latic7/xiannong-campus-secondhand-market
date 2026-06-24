@@ -25,6 +25,8 @@ Page({
     loading: true,
     loginLoading: false,
     unreadOrders: 0,
+    reportsAgainstMe: 0,
+    adminPendingTotal: 0,
   },
 
   onLoad() {},
@@ -57,6 +59,10 @@ Page({
       this.fetchUserProfile()
       // 异步拉取未读消息数
       this.fetchUnreadCount()
+      // 异步拉取被举报数
+      this.fetchReportsAgainstMe()
+      // 异步拉取待审核总数（管理员可见）
+      this.fetchAdminPendingCount()
     } else {
       this.setData({
         isLoggedIn: false,
@@ -116,6 +122,42 @@ Page({
     } catch (err) {
       // 静默失败，不影响页面
       console.warn('获取未读消息数失败:', err.message)
+    }
+  },
+
+  // ── 获取管理后台待审核总数 ────────────────
+  async fetchAdminPendingCount() {
+    try {
+      const adminService = require('../../services/admin')
+      const [reportRes, productRes] = await Promise.all([
+        adminService.listReports({ status: 'OPEN', size: 1 }),
+        adminService.listPendingProducts({ size: 1 }),
+      ])
+      const reports = reportRes?.page?.total || 0
+      const products = productRes?.page?.total || 0
+      this.setData({ adminPendingTotal: reports + products })
+    } catch (e) {
+      console.warn('获取待审核数失败:', e.message)
+    }
+  },
+
+  // ── 强制刷新所有数据（供外部调用）──────────
+  forceRefresh() {
+    if (!this.data.isLoggedIn) return
+    this.fetchUserProfile()
+    this.fetchUnreadCount()
+    this.fetchReportsAgainstMe()
+    this.fetchAdminPendingCount()
+  },
+
+  // ── 获取被举报数 ──────────────────────────
+  async fetchReportsAgainstMe() {
+    try {
+      const reportService = require('../../services/report')
+      const data = await reportService.listAgainstMe({ size: 1 })
+      this.setData({ reportsAgainstMe: data?.page?.total || 0 })
+    } catch (err) {
+      // 静默失败
     }
   },
 

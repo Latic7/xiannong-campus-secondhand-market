@@ -6,9 +6,14 @@ const api = require('../utils/api')
 
 module.exports = {
 
-  /** 我的举报列表 */
+  /** 我的举报列表（我发起的） */
   listMine(params = {}) {
     return api.get('/api/reports', params)
+  },
+
+  /** 我被举报的列表（针对我的） */
+  listAgainstMe(params = {}) {
+    return api.get('/api/reports/against-me', params)
   },
 
   /** 创建举报 */

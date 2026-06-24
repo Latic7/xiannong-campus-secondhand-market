@@ -44,11 +44,6 @@ def list_my_reports(
     )
 
 
-@router.get("/api/reports/{report_id}")
-def get_report(report_id: int) -> dict:
-    return api_ok(get_report_service(report_id))
-
-
 @router.get("/api/reports/against-me")
 def list_reports_against_me(
     page: int = Query(1, ge=1),
@@ -66,6 +61,11 @@ def list_reports_against_me(
             size=size,
         )
     )
+
+
+@router.get("/api/reports/{report_id}")
+def get_report(report_id: int) -> dict:
+    return api_ok(get_report_service(report_id))
 
 
 @router.post("/api/appeals")

@@ -7,7 +7,58 @@ page {
   background: rgba(245, 245, 247, 0.2);
   min-height: 100vh;
   padding: 24rpx;
+  padding-top: 0;
   box-sizing: border-box;
+}
+
+.tab-bar {
+  display: flex;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(245, 245, 247, 0.95);
+  padding: 0 24rpx;
+  margin: 0 -24rpx 20rpx;
+}
+
+.tab-item {
+  position: relative;
+  padding: 24rpx 20rpx;
+  font-size: 28rpx;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+.tab-active {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.tab-underline {
+  position: absolute;
+  bottom: 0;
+  left: 20rpx;
+  right: 20rpx;
+  height: 4rpx;
+  background: var(--color-primary);
+  border-radius: 2rpx;
+}
+
+.tab-badge {
+  position: absolute;
+  top: 12rpx;
+  right: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28rpx;
+  height: 28rpx;
+  padding: 0 6rpx;
+  background: #ff3b30;
+  color: #fff;
+  font-size: 18rpx;
+  font-weight: 700;
+  border-radius: 14rpx;
 }
 
 /* 举报列表 */

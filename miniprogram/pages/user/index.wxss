@@ -228,6 +228,12 @@ page {
   border-bottom: 0;
 }
 
+.menu-right {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
 .menu-left {
   display: flex;
   align-items: center;
@@ -265,6 +271,10 @@ page {
   line-height: 32rpx;
   text-align: center;
   border-radius: 16rpx;
+}
+
+.unread-badge-warning {
+  background: #ff9500;
 }
 
 .menu-arrow {

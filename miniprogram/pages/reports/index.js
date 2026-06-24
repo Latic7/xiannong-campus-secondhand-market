@@ -71,17 +71,42 @@ function formatTarget(report) {
   return null
 }
 
+const TAB_OPTIONS = [
+  { key: 'mine', label: '我举报的' },
+  { key: 'against', label: '我被举报的' },
+]
+
 Page({
   data: {
+    tabIndex: 0,
+    tabs: TAB_OPTIONS,
     reports: [],
     page: 1,
     size: 20,
     hasMore: true,
     loading: false,
     errorMsg: '',
+    againstBadge: 0,
   },
 
   onLoad() {
+    this.loadReports()
+    this.loadAgainstBadge()
+  },
+
+  async loadAgainstBadge() {
+    try {
+      const data = await reportService.listAgainstMe({ size: 1 })
+      this.setData({ againstBadge: data?.page?.total || 0 })
+    } catch (e) {
+      // 静默
+    }
+  },
+
+  onTabChange(e) {
+    const idx = typeof e === 'number' ? e : (e.currentTarget?.dataset?.index ?? 0)
+    if (idx === this.data.tabIndex) return
+    this.setData({ tabIndex: idx, page: 1, reports: [], hasMore: true })
     this.loadReports()
   },
 
@@ -107,7 +132,9 @@ Page({
     this.setData({ loading: true, errorMsg: append ? this.data.errorMsg : '' })
     try {
       const targetPage = append ? this.data.page : 1
-      const data = await reportService.listMine({ page: targetPage, size: this.data.size })
+      const isAgainst = this.data.tabIndex === 1
+      const fetcher = isAgainst ? reportService.listAgainstMe : reportService.listMine
+      const data = await fetcher({ page: targetPage, size: this.data.size })
       const list = (data.list || []).map(item => this.formatReport(item))
       this.setData({
         reports: append ? this.data.reports.concat(list) : list,

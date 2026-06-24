@@ -118,6 +118,7 @@
         <image class="menu-icon-img" src="/assets/icons/warning.svg" mode="aspectFit" />
         <text class="menu-text">我的举报</text>
       </view>
+      <view wx:if="{{reportsAgainstMe > 0}}" class="unread-badge unread-badge-warning">{{reportsAgainstMe > 99 ? '99+' : reportsAgainstMe}}</view>
       <text class="menu-arrow">›</text>
     </view>
   </view>
@@ -140,7 +141,10 @@
         <image class="menu-icon-img" src="/assets/icons/clipboard.svg" mode="aspectFit" />
         <text class="menu-text">管理后台</text>
       </view>
-      <text class="menu-arrow">›</text>
+      <view class="menu-right">
+        <view wx:if="{{adminPendingTotal > 0}}" class="unread-badge">{{adminPendingTotal > 99 ? '99+' : adminPendingTotal}}</view>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
   </view>
 

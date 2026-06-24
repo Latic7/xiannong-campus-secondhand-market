@@ -7,8 +7,10 @@
         <image class="menu-icon-img" src="/assets/icons/package.svg" mode="aspectFit" />
         <text class="menu-text">商品审核</text>
       </view>
-      <view wx:if="{{pendingProducts > 0}}" class="badge">{{pendingProducts > 99 ? '99+' : pendingProducts}}</view>
-      <text class="menu-arrow">›</text>
+      <view class="menu-right">
+        <view wx:if="{{pendingProducts > 0}}" class="badge">{{pendingProducts > 99 ? '99+' : pendingProducts}}</view>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
 
     <view class="menu-divider"></view>
@@ -18,8 +20,10 @@
         <image class="menu-icon-img" src="/assets/icons/warning.svg" mode="aspectFit" />
         <text class="menu-text">举报审核</text>
       </view>
-      <view wx:if="{{pendingReports > 0}}" class="badge badge-warning">{{pendingReports > 99 ? '99+' : pendingReports}}</view>
-      <text class="menu-arrow">›</text>
+      <view class="menu-right">
+        <view wx:if="{{pendingReports > 0}}" class="badge badge-warning">{{pendingReports > 99 ? '99+' : pendingReports}}</view>
+        <text class="menu-arrow">›</text>
+      </view>
     </view>
   </view>
 </view>
