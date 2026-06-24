@@ -78,11 +78,51 @@ page {
   margin-bottom: 20rpx;
 }
 
+/* 左侧缩略图 + 右侧信息 */
+.card-row {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 16rpx;
+}
+
+.card-thumb {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+  background: #f2f2f7;
+}
+
+.card-thumb-placeholder {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+  background: #f2f2f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-thumb-placeholder::after {
+  content: '暂无图片';
+  font-size: 22rpx;
+  color: #c7c7cc;
+}
+
+.card-info {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12rpx;
+  margin-bottom: 6rpx;
 }
 
 .card-title {
@@ -100,12 +140,13 @@ page {
   font-weight: 700;
   color: var(--color-primary);
   flex-shrink: 0;
+  margin-left: 12rpx;
 }
 
-.card-status {
-  font-size: 26rpx;
-  font-weight: 600;
-  flex-shrink: 0;
+.card-sub {
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
+  margin-bottom: 4rpx;
 }
 
 .card-body {
@@ -116,10 +157,26 @@ page {
 }
 
 .card-desc {
+  font-size: 26rpx;
+  color: var(--color-text-secondary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 举报元信息 */
+.rpt-meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  border-top: 1rpx solid var(--color-border);
+  margin-bottom: 12rpx;
+}
+
+.rpt-meta-text {
+  font-size: 24rpx;
+  color: var(--color-text-tertiary);
 }
 
 .card-actions {

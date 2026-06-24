@@ -104,7 +104,10 @@ Page({
       ...product,
       statusText: meta.label,
       statusColor: meta.color,
-      priceText: product.price != null ? Number(product.price).toFixed(2) : '0.00',
+      priceText: product.price != null ? '¥' + Number(product.price).toFixed(2) : '¥0.00',
+      // 取第一张图片（可能是云存储 fileID）
+      coverImage: (product.images && product.images.length > 0) ? product.images[0] : '',
+      sellerName: product.seller?.nickname || '未知卖家',
     }
   },
 
@@ -158,12 +161,64 @@ Page({
   formatReport(report) {
     const meta = getStatusMeta(REPORT_STATUS, report.status)
     const targetType = String(report.targetType || '').toUpperCase()
+    const target = report.target || {}
+    const summary = this.formatTargetSummary(report, target)
     return {
       ...report,
       targetType,
+      targetTypeText: targetType === 'PRODUCT' ? '商品' : targetType === 'USER' ? '用户' : targetType === 'ORDER' ? '订单' : '未知',
       statusText: meta.label,
       statusColor: meta.color,
+      ...summary,
     }
+  },
+
+  formatTargetSummary(report, target) {
+    if (report.targetType === 'PRODUCT') {
+      return {
+        targetTitle: target.title || '商品信息不可用',
+        targetImage: target.image || '',
+        targetPrice: target.price != null ? '¥' + Number(target.price).toFixed(2) : '',
+        targetSeller: target.seller?.nickname || '',
+        targetStatus: target.status || '',
+      }
+    }
+    if (report.targetType === 'USER') {
+      return {
+        targetTitle: target.nickname || '未知用户',
+        targetImage: target.avatar || '',
+        targetScore: target.score != null ? '信誉: ' + target.score : '',
+        targetStatus: target.status || '',
+      }
+    }
+    if (report.targetType === 'ORDER') {
+      return {
+        targetTitle: target.product?.title || '订单商品不可用',
+        targetImage: target.product?.image || '',
+        targetPrice: target.amount != null ? '¥' + Number(target.amount).toFixed(2) : '',
+        targetStatus: target.status || '',
+      }
+    }
+    return {}
+  },
+
+  // 点击商品卡片 → 跳转商品详情
+  onTapProduct(e) {
+    const id = e.currentTarget.dataset.id
+    if (id) wx.navigateTo({ url: '/pages/detail/index?id=' + id })
+  },
+
+  // 点击举报目标 → 跳转对应详情
+  onTapReportTarget(e) {
+    const { type, id } = e.currentTarget.dataset
+    if (!id) return
+    if (type === 'PRODUCT') {
+      wx.navigateTo({ url: '/pages/detail/index?id=' + id })
+    } else if (type === 'USER') {
+      // 暂跳转到该用户的商品列表
+      wx.navigateTo({ url: '/pages/list/index?ownerId=' + id })
+    }
+    // ORDER 暂不跳转
   },
 
   async onHandleReport(e) {

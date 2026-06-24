@@ -20,15 +20,20 @@
   <loading-state wx:if="{{tabIndex === 0 && prodLoading && products.length === 0}}" count="4" />
   <error-tip wx:elif="{{tabIndex === 0 && !prodLoading && prodError && products.length === 0}}" message="{{prodError}}" bind:retry="loadProducts" />
   <scroll-view wx:elif="{{tabIndex === 0 && products.length > 0}}" class="list-scroll" scroll-y bindscrolltolower="onProdScrollBottom">
-    <view class="admin-card" wx:for="{{products}}" wx:key="id">
-      <view class="card-header">
-        <text class="card-title">{{item.title}}</text>
-        <text class="card-price">{{item.priceText}}</text>
+    <view class="admin-card" wx:for="{{products}}" wx:key="id" bindtap="onTapProduct" data-id="{{item.id}}">
+      <view class="card-row">
+        <image wx:if="{{item.coverImage}}" class="card-thumb" src="{{item.coverImage}}" mode="aspectFill" />
+        <view wx:else class="card-thumb-placeholder"></view>
+        <view class="card-info">
+          <view class="card-header">
+            <text class="card-title">{{item.title}}</text>
+            <text class="card-price">{{item.priceText}}</text>
+          </view>
+          <text class="card-sub">{{item.sellerName}}</text>
+          <text class="card-desc">{{item.description || '暂无描述'}}</text>
+        </view>
       </view>
-      <view class="card-body">
-        <text class="card-desc">{{item.description || '暂无描述'}}</text>
-      </view>
-      <view class="card-actions">
+      <view class="card-actions" catchtap>
         <button class="btn-approve" data-id="{{item.id}}" data-action="approved" bindtap="onReviewProduct">通过</button>
         <button class="btn-reject" data-id="{{item.id}}" data-action="rejected" bindtap="onReviewProduct">驳回</button>
       </view>
@@ -41,16 +46,27 @@
   <loading-state wx:elif="{{tabIndex === 1 && rptLoading && reports.length === 0}}" count="4" />
   <error-tip wx:elif="{{tabIndex === 1 && !rptLoading && rptError && reports.length === 0}}" message="{{rptError}}" bind:retry="loadReports" />
   <scroll-view wx:elif="{{tabIndex === 1 && reports.length > 0}}" class="list-scroll" scroll-y bindscrolltolower="onRptScrollBottom">
-    <view class="admin-card" wx:for="{{reports}}" wx:key="id" wx:for-item="rpt">
-      <view class="card-header">
-        <text class="card-title">举报 #{{rpt.id}}</text>
-        <text class="card-status" style="color:{{rpt.statusColor}}">{{rpt.statusText}}</text>
+    <view class="admin-card" wx:for="{{reports}}" wx:key="id" wx:for-item="rpt" bindtap="onTapReportTarget" data-type="{{rpt.targetType}}" data-id="{{rpt.targetId}}">
+      <!-- 被举报对象摘要 -->
+      <view class="card-row">
+        <image wx:if="{{rpt.targetImage}}" class="card-thumb" src="{{rpt.targetImage}}" mode="aspectFill" />
+        <view wx:else class="card-thumb-placeholder"></view>
+        <view class="card-info">
+          <view class="card-header">
+            <text class="card-title">{{rpt.targetTitle || ('目标 #' + rpt.targetId)}}</text>
+            <text class="card-price">{{rpt.targetPrice || ''}}</text>
+          </view>
+          <text class="card-sub" wx:if="{{rpt.targetSeller}}">卖家: {{rpt.targetSeller}}</text>
+          <text class="card-sub" wx:elif="{{rpt.targetScore}}">{{rpt.targetScore}}</text>
+          <text class="card-desc">举报理由: {{rpt.reason}}</text>
+        </view>
       </view>
-      <view class="card-body">
-        <text>被举报{{rpt.targetType === 'PRODUCT' ? '商品' : rpt.targetType === 'USER' ? '用户' : '订单'}} #{{rpt.targetId}}</text>
-        <text>\n理由：{{rpt.reason}}</text>
+      <!-- 举报元信息 -->
+      <view class="rpt-meta">
+        <text class="rpt-meta-text">{{rpt.targetTypeText}} · 举报 #{{rpt.id}}</text>
+        <text class="rpt-meta-text" style="color:{{rpt.statusColor}}">{{rpt.statusText}}</text>
       </view>
-      <view class="card-actions">
+      <view class="card-actions" catchtap>
         <button class="btn-approve" data-id="{{rpt.id}}" data-action="warning" bindtap="onHandleReport">警告</button>
         <button class="btn-approve" data-id="{{rpt.id}}" data-action="ban_user" bindtap="onHandleReport">封禁</button>
         <button class="btn-action" data-id="{{rpt.id}}" data-action="unlist_product" bindtap="onHandleReport">下架</button>
