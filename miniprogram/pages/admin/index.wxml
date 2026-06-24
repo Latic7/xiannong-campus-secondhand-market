@@ -39,14 +39,14 @@
           <text class="card-desc">{{item.description || '暂无描述'}}</text>
         </view>
       </view>
-      <view class="card-actions" catchtap>
+      <view wx:if="{{prodFilter === 'pending'}}" class="card-actions" catchtap>
         <button class="btn-approve" data-id="{{item.id}}" data-action="approved" bindtap="onReviewProduct">通过</button>
         <button class="btn-reject" data-id="{{item.id}}" data-action="rejected" bindtap="onReviewProduct">驳回</button>
       </view>
     </view>
     <loading-state wx:if="{{prodLoading && products.length > 0}}" count="1" />
   </scroll-view>
-  <empty-state wx:elif="{{tabIndex === 0 && !prodLoading && !prodError}}" message="暂无待审核商品" />
+  <empty-state wx:elif="{{tabIndex === 0 && !prodLoading && !prodError}}" message="暂无{{prodFilter === 'handled' ? '已审核' : '待审核'}}商品" />
 
   <!-- 举报审核筛选 -->
   <view wx:if="{{tabIndex === 1}}" class="filter-bar">
@@ -78,7 +78,7 @@
         <text class="rpt-meta-text">{{rpt.targetTypeText}} · 举报 #{{rpt.id}}</text>
         <text class="rpt-meta-text" style="color:{{rpt.statusColor}}">{{rpt.statusText}}</text>
       </view>
-      <view class="card-actions" catchtap>
+      <view wx:if="{{rptFilter === 'pending'}}" class="card-actions" catchtap>
         <button class="btn-approve" data-id="{{rpt.id}}" data-action="warning" bindtap="onHandleReport">警告</button>
         <button class="btn-approve" data-id="{{rpt.id}}" data-action="ban_user" bindtap="onHandleReport">封禁</button>
         <button class="btn-action" data-id="{{rpt.id}}" data-action="unlist_product" bindtap="onHandleReport">下架</button>
@@ -87,7 +87,7 @@
     </view>
     <loading-state wx:if="{{rptLoading && reports.length > 0}}" count="1" />
   </scroll-view>
-  <empty-state wx:elif="{{tabIndex === 1 && !rptLoading && !rptError}}" message="暂无待处理举报" />
+  <empty-state wx:elif="{{tabIndex === 1 && !rptLoading && !rptError}}" message="暂无{{rptFilter === 'handled' ? '已处理' : '待处理'}}举报" />
 
   <!-- ── 报表 ──────────────────────────────── -->
   <view wx:elif="{{tabIndex === 2}}" class="stats-section">
