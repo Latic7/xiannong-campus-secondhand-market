@@ -64,9 +64,7 @@ page {
   border-radius: 14rpx;
 }
 
-.tab-badge-warning {
-  background: #ff9500;
-}
+
 
 
 

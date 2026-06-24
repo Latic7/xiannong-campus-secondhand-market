@@ -11,7 +11,7 @@
     >
       <text>{{item.label}}</text>
       <view wx:if="{{item.key === 'products' && pendingProducts > 0}}" class="tab-badge">{{pendingProducts > 99 ? '99+' : pendingProducts}}</view>
-      <view wx:if="{{item.key === 'reports' && pendingReports > 0}}" class="tab-badge tab-badge-warning">{{pendingReports > 99 ? '99+' : pendingReports}}</view>
+      <view wx:if="{{item.key === 'reports' && pendingReports > 0}}" class="tab-badge">{{pendingReports > 99 ? '99+' : pendingReports}}</view>
       <view wx:if="{{tabIndex === index}}" class="tab-underline"></view>
     </view>
   </view>

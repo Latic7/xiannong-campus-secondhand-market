@@ -273,10 +273,6 @@ page {
   border-radius: 16rpx;
 }
 
-.unread-badge-warning {
-  background: #ff9500;
-}
-
 .menu-arrow {
   color: var(--color-text-tertiary);
   font-size: 34rpx;
